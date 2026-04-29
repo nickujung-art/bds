@@ -1,0 +1,375 @@
+# 아키텍처
+
+## 시스템 컨텍스트
+
+```
+┌────────────────────────────────────────┐
+│        사용자 (모바일/데스크톱)         │
+└────────────────────────────────────────┘
+                    │
+           ┌────────┴────────┐
+           │   Vercel Edge   │  (Next.js 15 App Router + RSC + ISR)
+           └────────┬────────┘
+       ┌────────────┼────────────┐
+       ▼            ▼            ▼
+  ┌─────────┐  ┌──────────┐  ┌──────────┐
+  │Supabase │  │ NextAuth │  │카카오맵  │
+  │Postgres │  │ (Naver)  │  │(브라우저)│
+  │+ RLS    │  └──────────┘  └──────────┘
+  └────┬────┘
+       │ (배치)
+       ▼
+  ┌────────────────────────────────────────┐
+  │ 데이터 파이프라인                       │
+  │  Vercel Cron (일배치) +                │
+  │  GitHub Actions (10년 백필)            │
+  │  국토부 / 행안부 / 학교알리미 / K-apt / │
+  │  카카오 로컬                           │
+  └────────────────────────────────────────┘
+       │
+       ▼
+  ┌────────────────────────────────────────┐
+  │ 알림 워커 (Vercel Cron 5분)            │
+  │  Resend (이메일) + web-push (VAPID)    │
+  └────────────────────────────────────────┘
+
+관측: PostHog + Sentry + Vercel Logs
+```
+
+## 기술 스택
+
+### 프레임워크 / 언어
+- Next.js 15 App Router + RSC (Server Components 기본, 인터랙션만 `'use client'`)
+- TypeScript strict + `noUncheckedIndexedAccess`
+- Tailwind CSS 3.4+ + `@tailwindcss/typography`
+- Node.js 20 LTS (Vercel runtime)
+
+### 클라이언트 라이브러리
+| 용도 | 선택 |
+|---|---|
+| 차트 | Recharts (V2: ECharts 검토) |
+| 폼 | react-hook-form + zod |
+| 서버 상태 | TanStack Query v5 |
+| 지도 | react-kakao-maps-sdk + supercluster |
+| 아이콘 | Lucide React (strokeWidth 1.75) |
+| 토스트 | sonner |
+| 다이얼로그 | Radix UI Primitives |
+| 날짜 | date-fns |
+| 마크다운 (V1.5) | react-markdown + rehype-sanitize |
+
+### PWA
+- Serwist (next-pwa 후속, Next 15 호환)
+- VAPID 키 페어 → `push_subscriptions` 테이블
+- iOS Safari 16.4+ 호환, 미만은 이메일 fallback
+
+### Auth
+- NextAuth.js v5 — Naver OAuth (1순위) + Resend Magic Link
+- Session: JWT (HttpOnly, SameSite=Lax, Secure), 7일 sliding refresh
+- Supabase JWT 동기화: NextAuth 콜백에서 Supabase JWT 발급 → RLS 컨텍스트
+- 광고주 role: `raw_app_meta_data.role = 'advertiser'`
+
+### DB (Supabase Postgres + PostGIS)
+- 확장: `postgis`, `pg_trgm`, `unaccent`, `pgcrypto`
+- 검색: Postgres FTS + `pg_trgm` trigram (단지명·주소 자동완성)
+- RLS: 모든 사용자 데이터 테이블에 정책 명시
+
+### 외부 API
+| API | 용도 | 한도 |
+|---|---|---|
+| 국토부 실거래가 | 매매·전세·월세 × 아파트·오피스텔 | 일 10,000회 |
+| 행안부 도로명주소 | 지오코딩 1차 | 일 10,000회 |
+| 카카오 로컬 | 지오코딩 2차 + 반경 POI | 일 100,000회 |
+| 카카오맵 JS SDK | 지도 렌더링 | 무료 |
+| 학교알리미 | 학군 (배정 초·중·고) | 분기 1회 갱신 |
+| K-apt | 관리비 | 월 1회 갱신 |
+
+### 알림
+- 이메일: Resend Free (100/일, 3k/월) + React Email 템플릿
+- 웹 푸시: web-push npm + VAPID
+- 알림 큐: `notifications` 테이블 + 워커 cron (5분)
+- dedupe: `UNIQUE(user_id, event_type, target_id, dedupe_key)`
+
+### 관측
+- Analytics: PostHog Free (1M events/월)
+- Errors: Sentry Free (5k errors/월)
+- Custom audit: `audit_logs` 테이블
+
+### 테스트
+- Unit: Vitest — 산식(랭킹·평당가·갱신폭) + 어댑터 변환
+- Integration: Vitest + Supabase 로컬 인스턴스 — RLS 정책 검증
+- E2E: Playwright — 골든패스 5개 (검색→상세, 회원가입, 즐겨찾기, 알림 수신, 광고 노출)
+
+## 디렉토리 구조
+
+```
+src/
+├── app/
+│   ├── (public)/
+│   │   ├── page.tsx                  # 랜딩
+│   │   ├── search/page.tsx
+│   │   ├── danji/[id]/page.tsx
+│   │   └── map/page.tsx
+│   ├── (auth)/
+│   │   ├── favorites/page.tsx
+│   │   └── settings/page.tsx
+│   ├── (admin)/
+│   │   └── admin/...
+│   ├── api/
+│   │   ├── auth/[...nextauth]/route.ts
+│   │   ├── transactions/route.ts
+│   │   ├── ranking/[type]/route.ts
+│   │   ├── notifications/
+│   │   ├── ingest/                   # CRON_SECRET 검증 필수
+│   │   └── ads/
+│   └── layout.tsx
+├── components/
+│   ├── danji/
+│   ├── landing/
+│   ├── map/
+│   ├── ads/
+│   ├── ui/                           # atoms (shadcn 스타일)
+│   └── shared/
+├── lib/
+│   ├── supabase/{server,client,admin}.ts
+│   ├── auth/
+│   ├── ranking/{pool,tabs}.ts
+│   ├── notifications/{email,web-push,queue}.ts
+│   ├── data/{realprice,facility}.ts
+│   ├── api/{rate-limit,error}.ts
+│   └── validation/
+├── services/                         # 외부 API 어댑터 (얇은 래퍼)
+│   ├── molit.ts
+│   ├── juso.ts
+│   ├── kakao-local.ts
+│   ├── school-alimi.ts
+│   └── kapt.ts
+├── types/
+│   ├── domain.ts
+│   ├── api.ts
+│   └── db.ts                         # Supabase 자동 생성
+
+supabase/
+├── migrations/
+│   ├── 0001_init_complexes.sql
+│   ├── 0002_transactions.sql
+│   ├── 0003_facility.sql
+│   ├── 0004_users_favorites.sql
+│   ├── 0005_notifications.sql
+│   ├── 0006_ads.sql
+│   └── 0007_indexes.sql
+└── seed/
+
+scripts/
+├── execute.py
+├── backfill-realprice.ts
+├── geocoding-batch.ts
+└── cost-report.ts
+
+phases/
+├── index.json
+├── 0-mvp/
+├── 1-launch/
+├── 2-community/
+└── 3-extras/
+```
+
+## 데이터 모델 (핵심 테이블)
+
+### complexes (단지 — Golden Record)
+```sql
+id               uuid PK
+canonical_name   text                   -- 사이트 표준 표기
+name_normalized  text                   -- 검색용 (NFC+공백제거+lower)
+molit_complex_code text UNIQUE NULL
+kapt_code        text NULL
+sgg_code         text                   -- 시군구코드 5자리
+road_address     text
+location         geometry(POINT, 4326)  -- PostGIS
+geocoding_accuracy numeric
+household_count  int
+built_year       int
+status           enum(pre_sale, under_construction, recently_built,
+                      active, in_redevelopment, demolished)
+predecessor_id   uuid FK NULL           -- 재건축 옛 단지
+successor_id     uuid FK NULL           -- 재건축 신 단지
+data_completeness jsonb                 -- 섹션별 가용성 플래그
+```
+
+### complex_aliases (별칭 학습)
+```sql
+complex_id   uuid FK
+source       enum(molit_trade, kapt, school_alimi, kakao_poi, juso, manual, ...)
+alias_name   text
+confidence   numeric
+UNIQUE(complex_id, source, alias_name)
+```
+
+### complex_match_queue (매칭 검수 큐)
+```sql
+source       text
+raw_payload  jsonb
+candidate_ids uuid[]
+reason       enum(low_confidence, conflict, no_match)
+status       enum(pending, resolved, rejected)
+```
+
+### transactions (거래)
+```sql
+id            bigserial PK
+complex_id    uuid FK
+deal_type     enum(sale, jeonse, monthly)
+deal_subtype  enum(sale, occupancy_right, pre_sale_right)
+deal_date     date
+price         bigint                    -- 만원 단위
+area_m2       numeric(6,2)
+floor         int
+cancel_date   date NULL                 -- 거래 취소
+superseded_by bigint FK NULL           -- 정정 신고
+dedupe_key    text UNIQUE               -- 멱등성 키
+```
+
+**dedupe_key**: `(sgg_code, deal_ym, complex_code, deal_date, price, area)` — 국토부에 안정 ID 없음
+
+### data_sources (소스 메타)
+```sql
+id                      text PK         -- 'molit_trade', 'kapt', ...
+cadence                 enum(daily, monthly, quarterly, annual, manual)
+expected_freshness_hours int
+last_synced_at          timestamptz
+last_status             enum(success, partial, failed)
+consecutive_failures    int
+ui_label                text            -- "전월 기준" 등
+```
+
+### ai_estimates (AI 추정값)
+```sql
+target_complex_id   uuid FK
+estimated_value     jsonb
+method              enum(nearest_neighbors, similar_complex, regression)
+reference_complex_ids uuid[]
+confidence          numeric
+status              enum(active, superseded, rejected)
+```
+UI: 반드시 "AI가 자동 추정한 값입니다 — 정확하지 않을 수 있어요" 라벨 표시
+
+### 나머지 핵심 테이블
+- `ingest_runs` — 적재 런 추적 (멱등성, 재개 가능)
+- `facility_school`, `facility_kapt`, `facility_poi` — 시설 정보
+- `profiles` — 사용자 확장 (cafe_nickname, signup_source, role)
+- `favorites` — 즐겨찾기 (RLS: user_id만 접근)
+- `push_subscriptions` — VAPID 구독
+- `notifications` — 알림 큐 + 이력
+- `ad_campaigns`, `ad_events` — 광고 + 노출/클릭
+- `ranking_pool`, `ranking_snapshots` — 랭킹 캐시
+- `redevelopment_projects` — 재건축 단계 (운영자 수동, V1.5)
+- `reviews`, `review_verifications` — 익명 후기 + GPS 인증 (V1.5)
+- `cafe_post_queue` — 카드뉴스 발행 큐
+- `audit_logs` — 모든 민감 액션 감사
+
+## 핵심 인덱스 / 제약
+```sql
+transactions.dedupe_key UNIQUE
+transactions(complex_id, deal_date DESC)
+transactions(sgg_code, deal_date) WHERE cancel_date IS NULL AND superseded_by IS NULL
+complexes USING gist(location)
+complexes USING gin(name_normalized gin_trgm_ops)
+notifications UNIQUE(user_id, event_type, target_id, dedupe_key)
+```
+
+## RLS 정책 (요지)
+- `favorites`, `notifications`, `push_subscriptions`: `auth.uid() = user_id`만 접근
+- `complexes`, `transactions`, `facility_*`: 전체 SELECT (공개). INSERT/UPDATE는 `service_role`만
+- `ad_campaigns`: advertiser는 본인 row만. status='approved'만 일반 SELECT
+- `ad_events`: 일반 사용자는 INSERT만 (impression/click 기록)
+
+## 주요 시퀀스
+
+### 단지 검색 자동완성
+```
+키 입력 → 디바운스 200ms
+  → GET /api/search/suggest?q= (Edge, 200ms 캐시)
+  → Supabase FTS: name_normalized %% :q ORDER BY similarity LIMIT 8
+  → 결과 + 강조표시
+```
+
+### 단지 상세 (10년 그래프)
+```
+GET /danji/:id (SSG + ISR 1h)
+  → RSC: 단지 + 최근 거래 200건 + 시설 V1
+  → Recharts 그래프 렌더
+  → 신고가 갱신 시 on-demand revalidate
+```
+
+### 신고가 알림
+```
+일배치 cron (04:00 KST)
+  → 전일 신규 거래 fetch → 단지·평형별 직전 최고가 비교
+  → 갱신분 → notifications 큐 enqueue
+알림 워커 (5분 cron)
+  → status='pending' 50건 → Resend / web-push 발송
+  → 실패 3회 → status='failed' + Sentry
+```
+
+### 광고 게재
+```
+RSC 렌더 시 → getCreative(slot, context)
+  → WHERE slot=:slot AND status='approved'
+       AND now() BETWEEN starts_at AND ends_at
+  → 가중치 랜덤 선택 → 렌더 + impression INSERT
+  → 클릭 → /api/ads/click → ad_events + redirect
+```
+
+## 캐싱 전략
+| 레이어 | 대상 | 정책 |
+|---|---|---|
+| Vercel Edge | 외부 API 응답 | 단지 메타 1h, 시설 24h |
+| Next ISR | 단지 상세 | revalidate 3600s + on-demand |
+| TanStack Query | 즐겨찾기·랭킹 | staleTime 60s |
+| 카카오맵 | 클러스터 | 줌별 supercluster 캐시 |
+
+## 보안
+- CSP: `default-src 'self'; script-src 'self' dapi.kakao.com`
+- CRON_SECRET: `/api/ingest/*` 모든 cron 호출 검증
+- Rate limit: `/api/search/suggest` Edge IP 기반 60req/min
+- SQL injection: Supabase prepared statements
+- XSS: React 기본 + 후기 마크다운 rehype-sanitize allowlist
+- CSRF: NextAuth 내장 + SameSite=Lax
+- IP: `sha256(ip + secret)` 해시 저장 (광고 트래킹)
+
+## 성능 예산
+| 페이지 | LCP | TTFB | JS bundle |
+|---|---|---|---|
+| 랜딩 | ≤ 1.8s | ≤ 400ms | ≤ 180KB gzip |
+| 검색 결과 | ≤ 2.0s | ≤ 500ms | ≤ 200KB |
+| 단지 상세 | ≤ 2.5s | ≤ 600ms | ≤ 250KB |
+| 지도 | ≤ 3.0s | ≤ 700ms | ≤ 300KB |
+
+## 환경 분리
+| 환경 | URL | DB |
+|---|---|---|
+| local | localhost:3000 | Supabase 로컬 Docker |
+| preview | *.vercel.app | Supabase preview 프로젝트 |
+| production | danjiondo.com | Supabase 메인 |
+
+## 비용 가드레일
+| 자원 | 무료 한도 | 알람 임계 |
+|---|---|---|
+| Vercel bandwidth | 100GB/월 | 80GB |
+| Supabase DB | 500MB | 400MB |
+| Supabase Egress | 5GB/월 | 4GB |
+| Resend | 3k/월 | 2.4k |
+| 카카오맵/로컬 | 일 100k | 일 80k |
+
+## 데이터 흐름
+```
+사용자 입력
+  → Client Component (react-hook-form)
+  → Server Action 또는 API Route
+  → src/services/ 어댑터 (외부 API) 또는 Supabase
+  → 응답 → TanStack Query 캐시 업데이트 → UI
+```
+
+## 상태 관리
+- 서버 상태: RSC fetch + TanStack Query v5 (캐시·optimistic)
+- 클라이언트 상태: useState / useReducer (최소화)
+- 전역 상태: Context API (인증·테마) — Zustand 등 별도 스토어 금지 (V1)

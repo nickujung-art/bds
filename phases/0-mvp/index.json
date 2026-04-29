@@ -1,0 +1,27 @@
+{
+  "phase_id": "0-mvp",
+  "title": "V0.9 비공개 베타",
+  "target_version": "0.9",
+  "branch": "feat-0-mvp",
+  "steps": [
+    { "id": "step0-project-setup",              "title": "Next.js 15 + TS strict + Tailwind + PWA scaffold + 스크립트" },
+    { "id": "step1-supabase-bootstrap",         "title": "Supabase 연결 (server/client/admin 분리, 로컬 Docker)" },
+    { "id": "step2-db-schema",                  "title": "마이그레이션 0001~0009 + RLS 정책 전체" },
+    { "id": "step3-seed-region",                "title": "창원·김해 행정동·단지 마스터 적재 + data_sources 시드" },
+    { "id": "step3b-complex-matching-pipeline", "title": "정규화 + 3축 매칭 + 별칭 테이블 + 운영자 매칭 큐" },
+    { "id": "step4-ingest-molit-trade",         "title": "매매 어댑터 + zod 검증 + 10년 백필 + 일배치 + 정정/취소" },
+    { "id": "step5-ingest-molit-rent",          "title": "전월세 어댑터 + 백필" },
+    { "id": "step6-juso-geocoding",             "title": "도로명 → 카카오 fallback 지오코딩. 정확도 ≥ 95%" },
+    { "id": "step7-ingest-school",              "title": "학교알리미 학군 적재" },
+    { "id": "step8-ingest-kapt",                "title": "K-apt 관리비 적재" },
+    { "id": "step9-ingest-poi",                 "title": "카카오 로컬 POI 반경 적재" },
+    { "id": "step10-ingest-scheduler",          "title": "소스별 차등 cron + ingest_runs + 실패 grace + 알람" },
+    { "id": "step11-search-page",               "title": "단지 검색 자동완성 + 결과 + 필터 (SSR)" },
+    { "id": "step12-danji-detail",              "title": "10년 그래프 + 거래 표 + 시설 V1 + 기준일 라벨 + 신축/재건축 배너" },
+    { "id": "step13-map-view",                  "title": "카카오맵 + 평당가 핀 라벨 + 클러스터링" },
+    { "id": "step14-seo-meta",                  "title": "sitemap + OpenGraph 메타 + schema.org" },
+    { "id": "step15-observability",             "title": "PostHog + Sentry + Vercel Logs + cost-report" },
+    { "id": "step16-admin-core",                "title": "/admin 진입 + 2FA + audit_logs + 단지 관리 + 매칭 큐 + 데이터 소스 모니터링" },
+    { "id": "step17-ai-estimates",              "title": "신축 K-apt 부재 시 인근 유사 단지 통계 추정 + AI 추정 UI 라벨" }
+  ]
+}

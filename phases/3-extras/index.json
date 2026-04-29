@@ -1,0 +1,19 @@
+{
+  "phase_id": "3-extras",
+  "title": "V2 차별화 자산",
+  "target_version": "2.0",
+  "branch": "feat-3-extras",
+  "steps": [
+    { "id": "step0-gamification-marks",    "title": "👑🔥💬 게이미피케이션 마크 + 회원 등급" },
+    { "id": "step1-cafe-text-matching",    "title": "카페 글 NLP 매칭 + 단지 페이지 연동" },
+    { "id": "step2-redevelopment-data",    "title": "창원시·김해시 재개발 행정 데이터 자동 적재 (출처 확보 시)" },
+    { "id": "step3-sgis-stats",            "title": "SGIS 인구·세대 통계 분기 적재" },
+    { "id": "step4-ad-analytics-v2",       "title": "광고 통계 고도화 (전환 추적·ROI·이상 트래픽)" },
+    { "id": "step5-review-l2-l3",          "title": "GPS 다회+시간패턴(L2) + 우편/관리비 인증(L3)" },
+    { "id": "step6-ai-chat",               "title": "Claude API + RAG 단지 상담 봇" },
+    { "id": "step7-kakao-channel",         "title": "카카오톡 채널 알리미 (푸시 거부 대안)" },
+    { "id": "step8-ad-ai-copy",            "title": "광고주 카피 AI 어시스트 + 표시광고법 감지" },
+    { "id": "step9-member-tier",           "title": "회원 등급 시스템 + 우선 알림 혜택" },
+    { "id": "step10-cafe-auto-publish",    "title": "카카오 카페 매니저 OAuth 카드뉴스 자동 발행 (약관 검토 후)" }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "phases": [
+    {
+      "id": "0-mvp",
+      "title": "V0.9 비공개 베타 — 검색·상세·지도·시설",
+      "target_version": "0.9",
+      "status": "ready",
+      "step_count": 18,
+      "gate": "lint + build + test + Lighthouse mobile ≥ 85 + 골든패스 5종"
+    },
+    {
+      "id": "1-launch",
+      "title": "V1.0 정식 출시 — 회원·랜딩·광고·법무",
+      "target_version": "1.0",
+      "status": "draft",
+      "step_count": 17,
+      "gate": "lint + build + test + Lighthouse mobile ≥ 90 + a11y axe 0 critical + 광고 법무 체크리스트"
+    },
+    {
+      "id": "2-community",
+      "title": "V1.5 커뮤니티 — 후기·신고·분양",
+      "target_version": "1.5",
+      "status": "draft",
+      "step_count": 11
+    },
+    {
+      "id": "3-extras",
+      "title": "V2 차별화 자산 — 게이미피케이션·NLP·AI 봇",
+      "target_version": "2.0",
+      "status": "draft",
+      "step_count": 11
+    }
+  ]
+}
