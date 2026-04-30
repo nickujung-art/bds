@@ -1,0 +1,29 @@
+name: Notify Worker
+
+on:
+  schedule:
+    # 매 5분마다 실행 (KST 06:00-24:00 = UTC 21:00-15:00)
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  notify:
+    name: Poll & deliver notifications
+    runs-on: ubuntu-latest
+    timeout-minutes: 4  # 5분 내 완료 보장
+
+    steps:
+      - name: Call notify worker
+        run: |
+          STATUS=$(curl -sSf -o /tmp/notify_response.json -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/worker/notify")
+
+          echo "HTTP status: $STATUS"
+          cat /tmp/notify_response.json
+
+          if [ "$STATUS" != "200" ]; then
+            echo "Notify worker returned $STATUS"
+            exit 1
+          fi

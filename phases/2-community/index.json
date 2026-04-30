@@ -1,0 +1,20 @@
+{
+  "phase_id": "2-community",
+  "title": "V1.5 커뮤니티",
+  "target_version": "1.5",
+  "branch": "feat-2-community",
+  "gate": "lint + build + test + a11y axe 0 critical + 후기 작성 ≥ 50건 (베타 기간) + 신고 → 운영자 처리 SLA ≤ 24h + 욕설 필터 recall ≥ 95%",
+  "steps": [
+    { "id": "step0-reviews",           "title": "익명 후기 작성 + 평가 항목 + 신고 + 모더레이션", "moved_to": "0-mvp/step18-reviews", "note": "V0.9로 이동됨 — community 선행 구현" },
+    { "id": "step1-review-gps-l1",     "title": "GPS 위치 인증 L1 (단지 ±100m) + 인증 배지", "moved_to": "0-mvp/step19-review-gps-l1", "note": "V0.9 스키마 준비는 step19. V1.0 인증 연동 후 배지 활성화" },
+    { "id": "step2-comments",          "title": "후기 댓글 (단순 텍스트, RLS)" },
+    { "id": "step3-cafe-link",         "title": "단지 페이지 → 카페 검색 외부 링크" },
+    { "id": "step4-kapt-extra",        "title": "K-apt 부대시설 데이터 추가" },
+    { "id": "step5-report-flow",       "title": "데이터 오류·후기 신고·매칭 신고 통합 큐" },
+    { "id": "step6-pre-sale-data",     "title": "신축 분양 정보 등록 + 분양권 거래 분리 UI" },
+    { "id": "step7-redev-manual",      "title": "재건축 단계 운영자 수동 입력 UI + 진행 타임라인" },
+    { "id": "step8-value-matrix",      "title": "가성비 분석 4분면 (평당가 × 학군 점수)" },
+    { "id": "step9-listing-gap-label", "title": "매물가 vs 실거래가 갭 라벨" },
+    { "id": "step10-cafe-signup-code", "title": "주간 회전 카페 가입 코드 시스템" }
+  ]
+}

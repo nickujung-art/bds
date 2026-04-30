@@ -1,0 +1,503 @@
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { createReadonlyClient } from '@/lib/supabase/readonly'
+import { getComplexById, getComplexTransactionSummary } from '@/lib/data/complex-detail'
+import { getActiveAds } from '@/lib/data/ads'
+import { getComplexReviews, getComplexReviewStats } from '@/lib/data/reviews'
+import { DealTypeTabs } from '@/components/complex/DealTypeTabs'
+import { FavoriteButton } from '@/components/complex/FavoriteButton'
+import { AdBanner } from '@/components/ads/AdBanner'
+import { NeighborhoodOpinion } from '@/components/reviews/NeighborhoodOpinion'
+
+export const revalidate = 86400
+
+interface Props {
+  params: Promise<{ id: string }>
+}
+
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://danjiondo.kr'
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const supabase = createReadonlyClient()
+  const complex = await getComplexById(id, supabase)
+  if (!complex) return { title: '단지를 찾을 수 없습니다' }
+  const title = `${complex.canonical_name} 실거래가 | 단지온도`
+  const description = `${complex.canonical_name} 매매·전세·월세 실거래가 추이. ${[complex.si, complex.gu, complex.dong].filter(Boolean).join(' ')} 아파트 시세를 확인하세요.`
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url:      `${SITE}/complexes/${id}`,
+      siteName: '단지온도',
+      locale:   'ko_KR',
+      type:     'website',
+    },
+    alternates: {
+      canonical: `${SITE}/complexes/${id}`,
+    },
+  }
+}
+
+function ShareIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M7 17 17 7M9 7h8v8" />
+    </svg>
+  )
+}
+
+
+function FireIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 1 1 2 2 2 0-3-1-5 1-8z" />
+    </svg>
+  )
+}
+
+function ArrUpIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <path d="m6 14 6-6 6 6" />
+    </svg>
+  )
+}
+
+function SchoolIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 10 12 5l9 5-9 5zM7 12v5c2 1.5 3 2 5 2s3-.5 5-2v-5" />
+    </svg>
+  )
+}
+
+function BusIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="5" y="4" width="14" height="14" rx="2" />
+      <path d="M5 14h14M9 18v2M15 18v2" />
+    </svg>
+  )
+}
+
+function WonIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 7h18M3 12h18M6 7l3 11 3-7 3 7 3-11" />
+    </svg>
+  )
+}
+
+function BellIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9z" />
+      <path d="M10 20a2 2 0 0 0 4 0" />
+    </svg>
+  )
+}
+
+function formatPrice(price: number): string {
+  const uk = Math.floor(price / 10000)
+  const man = price % 10000
+  if (uk > 0 && man > 0) return `${uk}억 ${man.toLocaleString()}`
+  if (uk > 0) return `${uk}억`
+  return `${price.toLocaleString()}만`
+}
+
+export default async function ComplexDetailPage({ params }: Props) {
+  const { id } = await params
+  const supabase = createReadonlyClient()
+
+  const [complex, saleData, jeonseData, monthlyData, sidebarAds, reviews, reviewStats] = await Promise.all([
+    getComplexById(id, supabase),
+    getComplexTransactionSummary(id, 'sale', supabase),
+    getComplexTransactionSummary(id, 'jeonse', supabase),
+    getComplexTransactionSummary(id, 'monthly', supabase),
+    getActiveAds('sidebar', supabase),
+    getComplexReviews(id, supabase),
+    getComplexReviewStats(id, supabase),
+  ])
+
+  if (!complex) notFound()
+
+  const breadcrumb = [complex.si, complex.gu, complex.dong].filter(Boolean)
+  const latestSale = saleData.at(-1)
+  const address = complex.road_address ?? breadcrumb.join(' ')
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type':    'ApartmentComplex',
+    name:       complex.canonical_name,
+    address: {
+      '@type':          'PostalAddress',
+      addressLocality:  breadcrumb.join(' '),
+      streetAddress:    complex.road_address ?? undefined,
+      addressCountry:   'KR',
+    },
+    ...(complex.lat && complex.lng ? {
+      geo: {
+        '@type':    'GeoCoordinates',
+        latitude:   complex.lat,
+        longitude:  complex.lng,
+      },
+    } : {}),
+    ...(complex.built_year ? { yearBuilt: String(complex.built_year) } : {}),
+    ...(complex.household_count ? { numberOfRooms: complex.household_count } : {}),
+    url: `${SITE}/complexes/${id}`,
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--bg-canvas)',
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      {/* Nav */}
+      <header
+        style={{
+          height: 60,
+          background: '#fff',
+          borderBottom: '1px solid var(--line-default)',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 32px',
+          gap: 24,
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        <Link href="/" className="dj-logo">
+          <span className="mark">단</span>
+          <span>단지온도</span>
+        </Link>
+        <span style={{ font: '500 13px/1 var(--font-sans)', color: 'var(--fg-tertiary)' }}>
+          {breadcrumb.join(' › ')} › {complex.canonical_name}
+        </span>
+        <div style={{ flex: 1 }} />
+        <button
+          className="btn btn-md btn-ghost"
+          style={{ color: 'var(--fg-sec)' }}
+          aria-label="공유"
+        >
+          <ShareIcon />
+        </button>
+        <FavoriteButton complexId={id} />
+        <Link
+          href={`/login?next=/complexes/${id}`}
+          className="btn btn-md btn-orange"
+          style={{ textDecoration: 'none', gap: 6 }}
+        >
+          <BellIcon />
+          알림 설정
+        </Link>
+      </header>
+
+      {/* Body */}
+      <div
+        style={{
+          padding: '24px 32px',
+          display: 'grid',
+          gridTemplateColumns: '1fr 360px',
+          gap: 24,
+          maxWidth: 1280,
+          margin: '0 auto',
+        }}
+      >
+        {/* Main column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Header card */}
+          <div className="card" style={{ padding: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                  <span className="badge orange">
+                    <FireIcon />
+                    신고가
+                  </span>
+                  {complex.built_year && (
+                    <span className="badge neutral">{complex.built_year}년 입주</span>
+                  )}
+                  {complex.household_count && (
+                    <span className="badge neutral">
+                      {complex.household_count.toLocaleString()}세대
+                    </span>
+                  )}
+                </div>
+                <h1
+                  style={{
+                    font: '700 28px/1.25 var(--font-sans)',
+                    letterSpacing: '-0.024em',
+                    margin: '0 0 4px',
+                  }}
+                >
+                  {complex.canonical_name}
+                </h1>
+                <div
+                  style={{
+                    font: '500 14px/1.4 var(--font-sans)',
+                    color: 'var(--fg-sec)',
+                  }}
+                >
+                  {address}
+                  {complex.floors_above && ` · ${complex.floors_above}층`}
+                </div>
+              </div>
+              {latestSale && (
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div
+                    style={{
+                      font: '500 12px/1 var(--font-sans)',
+                      color: 'var(--fg-tertiary)',
+                      marginBottom: 4,
+                    }}
+                  >
+                    최근 실거래 (평균 {Math.round((latestSale.avgArea ?? 0) / 3.3058)}평)
+                  </div>
+                  <div
+                    className="tnum"
+                    style={{
+                      font: '700 32px/1 var(--font-sans)',
+                      letterSpacing: '-0.024em',
+                    }}
+                  >
+                    {formatPrice(Math.round(latestSale.avgPrice))}
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-end',
+                      gap: 4,
+                      marginTop: 4,
+                      color: 'var(--dj-orange)',
+                      font: '600 13px/1 var(--font-sans)',
+                    }}
+                  >
+                    <ArrUpIcon />
+                    <span className="tnum">{latestSale.yearMonth}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Chart card */}
+          <div className="card" style={{ padding: 24 }}>
+            <h3
+              style={{
+                font: '700 18px/1.4 var(--font-sans)',
+                letterSpacing: '-0.005em',
+                margin: '0 0 16px',
+              }}
+            >
+              실거래가 추이
+            </h3>
+            <DealTypeTabs
+              saleData={saleData}
+              jeonseData={jeonseData}
+              monthlyData={monthlyData}
+            />
+          </div>
+
+          {/* Facilities card */}
+          <div className="card" style={{ padding: 20 }}>
+            <h3
+              style={{
+                font: '700 15px/1.4 var(--font-sans)',
+                margin: '0 0 12px',
+              }}
+            >
+              단지 기본 정보
+            </h3>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: 12,
+              }}
+            >
+              {[
+                {
+                  icon: <SchoolIcon />,
+                  label: '준공연도',
+                  value: complex.built_year ? `${complex.built_year}년` : '-',
+                  sub: '',
+                },
+                {
+                  icon: <BusIcon />,
+                  label: '세대수',
+                  value: complex.household_count
+                    ? `${complex.household_count.toLocaleString()}세대`
+                    : '-',
+                  sub: '',
+                },
+                {
+                  icon: <WonIcon />,
+                  label: '최고층',
+                  value: complex.floors_above ? `${complex.floors_above}층` : '-',
+                  sub: '',
+                },
+                {
+                  icon: <BellIcon />,
+                  label: '지역',
+                  value: [complex.si, complex.gu].filter(Boolean).join(' ') || '-',
+                  sub: complex.dong ?? '',
+                },
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}
+                >
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      background: 'var(--bg-surface-2)',
+                      display: 'grid',
+                      placeItems: 'center',
+                      flexShrink: 0,
+                      color: 'var(--fg-sec)',
+                    }}
+                  >
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        font: '500 11px/1 var(--font-sans)',
+                        color: 'var(--fg-tertiary)',
+                        marginBottom: 2,
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                    <div style={{ font: '700 14px/1.3 var(--font-sans)' }}>
+                      {item.value}
+                    </div>
+                    {item.sub && (
+                      <div
+                        style={{
+                          font: '500 11px/1.3 var(--font-sans)',
+                          color: 'var(--fg-sec)',
+                        }}
+                      >
+                        {item.sub}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 동네 의견 */}
+          <div
+            className="card"
+            style={{
+              padding: 20,
+              background: '#FFFAF5',
+              borderColor: 'rgba(234,88,12,0.18)',
+            }}
+          >
+            <NeighborhoodOpinion
+              complexId={id}
+              initialReviews={reviews}
+              initialStats={reviewStats}
+            />
+          </div>
+        </div>
+
+        {/* Right rail */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="card" style={{ padding: 20 }}>
+            <h3
+              style={{
+                font: '700 15px/1.4 var(--font-sans)',
+                margin: '0 0 12px',
+              }}
+            >
+              최근 거래
+            </h3>
+            {saleData.length > 0 ? (
+              <div>
+                {saleData
+                  .slice(-6)
+                  .reverse()
+                  .map((t, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '10px 0',
+                        borderBottom:
+                          i < 5 ? '1px solid var(--line-subtle)' : 'none',
+                      }}
+                    >
+                      <span
+                        className="tnum"
+                        style={{
+                          font: '500 12px/1 var(--font-sans)',
+                          color: 'var(--fg-tertiary)',
+                          width: 56,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {t.yearMonth}
+                      </span>
+                      <span
+                        style={{
+                          flex: 1,
+                          font: '500 13px/1 var(--font-sans)',
+                          color: 'var(--fg-sec)',
+                        }}
+                      >
+                        {t.count}건
+                      </span>
+                      <span
+                        className="tnum"
+                        style={{
+                          font: '600 13px/1 var(--font-sans)',
+                          color: i === 0 ? 'var(--dj-orange)' : 'var(--fg-pri)',
+                        }}
+                      >
+                        {formatPrice(Math.round(t.avgPrice))}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p
+                style={{
+                  font: '500 13px/1.4 var(--font-sans)',
+                  color: 'var(--fg-tertiary)',
+                  margin: 0,
+                }}
+              >
+                거래 데이터가 없습니다.
+              </p>
+            )}
+          </div>
+
+          {/* Sidebar ads */}
+          {sidebarAds.map(ad => (
+            <AdBanner key={ad.id} ad={ad} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}

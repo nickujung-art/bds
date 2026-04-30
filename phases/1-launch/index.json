@@ -1,0 +1,26 @@
+{
+  "phase_id": "1-launch",
+  "title": "V1.0 정식 출시",
+  "target_version": "1.0",
+  "branch": "feat-1-launch",
+  "steps": [
+    { "id": "step0-auth",               "title": "NextAuth v5 + Naver OAuth + 이메일 매직링크 + Supabase JWT + 카페 닉네임" },
+    { "id": "step1-pwa-push",           "title": "Serwist manifest + VAPID 웹 푸시 + push_subscriptions" },
+    { "id": "step2-favorites",          "title": "즐겨찾기 + RLS + optimistic 업데이트" },
+    { "id": "step3-notification-engine","title": "알림 큐 + Resend 이메일 + web-push + dedupe" },
+    { "id": "step4-ranking-pool",       "title": "지역 인기 단지 풀 정의 SQL + 일배치" },
+    { "id": "step5-ranking-tabs",       "title": "랭킹 4종 산식 + API + 1h cron" },
+    { "id": "step6-landing",            "title": "오늘 신고가 카드 + 4종 랭킹 탭 랜딩 (ISR 60s)" },
+    { "id": "step7-ad-zones",           "title": "광고 슬롯 컴포넌트 + 명시 라벨 + 표시광고법 고지" },
+    { "id": "step8-ad-admin",           "title": "광고주 어드민 — 캠페인 등록·검수·상태머신·통계 + 결제·청구서 (step8-5 흡수)" },
+    { "id": "step9-ad-serving",         "title": "광고 게재 로직 + 노출/클릭 트래킹 + fraud 방어" },
+    { "id": "step10-legal-policy",      "title": "약관·개인정보·광고 정책 페이지 + 동의 흐름 + 탈퇴 + 이메일 지원 채널" },
+    { "id": "step11-a11y-audit",        "title": "axe-core CI + 키보드 탐색 + 스크린리더 검증" },
+    { "id": "step12-admin-extended",    "title": "회원 관리(카페 닉네임 검증) + 광고 검수 + 신고 큐 + 시스템·정책 메뉴" },
+    { "id": "step13-card-news-pipeline","title": "@vercel/og + Recharts SSR 카드뉴스 자동 생성 + 어드민 1-click 발행" },
+    { "id": "step14-og-share",          "title": "단지 OG 이미지 + 카카오톡/네이버 공유" },
+    { "id": "step15-digest-weekly",     "title": "주간 다이제스트 이메일 + 알림 토픽 채널" },
+    { "id": "step16-compare-mode",      "title": "즐겨찾기 단지 2~4개 비교 표" },
+    { "id": "step17-backup",            "title": "주간 pg_dump + GitHub private repo 백업 + 복구 런북 (ADR-029)" }
+  ]
+}

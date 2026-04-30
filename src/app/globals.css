@@ -1,0 +1,344 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design tokens ─── */
+:root {
+  /* Brand */
+  --dj-orange: #ea580c;
+  --dj-orange-tint: #fff1e8;
+  --dj-orange-dark: #c2410c;
+
+  /* Foreground */
+  --fg-pri: #171719;
+  --fg-sec: rgba(55, 56, 60, 0.61);
+  --fg-tertiary: rgba(55, 56, 60, 0.35);
+  --fg-brand: #0066ff;
+  --fg-positive: #16a34a;
+  --fg-negative: #dc2626;
+
+  /* Borders */
+  --line-default: rgba(112, 115, 124, 0.22);
+  --line-subtle: rgba(112, 115, 124, 0.12);
+  --line-strong: rgba(112, 115, 124, 0.5);
+
+  /* Backgrounds */
+  --bg-canvas: #f7f7f8;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #f4f4f5;
+  --bg-brand: #0066ff;
+  --bg-brand-tint: #eef3ff;
+  --bg-positive-tint: #ecfdf5;
+  --bg-negative-tint: #fef2f2;
+  --bg-cautionary-tint: #fffbeb;
+
+  /* Radius */
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.16);
+
+  /* Color palette */
+  --color-cool-10: #171719;
+  --color-cool-90: #c2c4c8;
+  --color-blue-45: #0055dd;
+  --color-green-30: #16a34a;
+  --color-red-30: #dc2626;
+  --color-orange-30: #ea580c;
+
+  /* Font */
+  --font-sans: var(--font-pretendard), 'Pretendard Variable', 'Pretendard',
+    -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--fg-pri);
+  font-family: var(--font-sans);
+}
+
+/* ─── Tabular nums ─── */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* ─── Logo ─── */
+.dj-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 800 19px/1 var(--font-sans);
+  letter-spacing: -0.025em;
+  color: var(--fg-pri);
+  text-decoration: none;
+}
+.dj-logo .mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--dj-orange);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: 120ms ease;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  white-space: nowrap;
+}
+.btn-sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.btn-md {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  border-radius: var(--radius-lg);
+}
+.btn-lg {
+  height: 48px;
+  padding: 0 20px;
+  font-size: 16px;
+  border-radius: var(--radius-xl);
+}
+.btn-primary {
+  background: var(--bg-brand);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--color-blue-45);
+}
+.btn-secondary {
+  background: var(--bg-surface);
+  color: var(--fg-pri);
+  border-color: var(--line-default);
+}
+.btn-secondary:hover {
+  background: var(--bg-surface-2);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--fg-pri);
+}
+.btn-ghost:hover {
+  background: var(--bg-surface-2);
+}
+.btn-orange {
+  background: var(--dj-orange);
+  color: #fff;
+}
+.btn-orange:hover {
+  background: var(--dj-orange-dark);
+}
+.btn-dark {
+  background: var(--color-cool-10);
+  color: #fff;
+}
+.btn-icon {
+  width: 40px;
+  padding: 0;
+}
+
+/* ─── Input ─── */
+.input {
+  height: 44px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-default);
+  background: var(--bg-surface);
+  padding: 0 14px;
+  font: 500 15px/1.4 var(--font-sans);
+  color: var(--fg-pri);
+  outline: none;
+  width: 100%;
+}
+.input::placeholder {
+  color: var(--fg-tertiary);
+}
+.input:focus {
+  border-color: var(--dj-orange);
+  box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.12);
+}
+
+/* ─── Chips ─── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--bg-surface-2);
+  color: var(--fg-pri);
+  font: 600 13px/1 var(--font-sans);
+  letter-spacing: -0.005em;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.chip.selected {
+  background: var(--color-cool-10);
+  color: #fff;
+}
+.chip.outlined {
+  background: var(--bg-surface);
+  border-color: var(--line-default);
+}
+.chip.brand {
+  background: var(--bg-brand-tint);
+  color: var(--fg-brand);
+}
+.chip.orange {
+  background: var(--dj-orange-tint);
+  color: var(--dj-orange);
+}
+.chip.sm {
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+/* ─── Badges ─── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font: 600 11px/1 var(--font-sans);
+  letter-spacing: 0.02em;
+}
+.badge.brand {
+  background: var(--bg-brand-tint);
+  color: var(--fg-brand);
+}
+.badge.pos {
+  background: var(--bg-positive-tint);
+  color: var(--color-green-30);
+}
+.badge.neg {
+  background: var(--bg-negative-tint);
+  color: var(--color-red-30);
+}
+.badge.caut {
+  background: var(--bg-cautionary-tint);
+  color: var(--color-orange-30);
+}
+.badge.neutral {
+  background: var(--bg-surface-2);
+  color: var(--fg-pri);
+}
+.badge.orange {
+  background: var(--dj-orange-tint);
+  color: var(--dj-orange);
+}
+.badge.dark {
+  background: var(--color-cool-10);
+  color: #fff;
+}
+.badge.sm {
+  height: 18px;
+  padding: 0 6px;
+  font-size: 10px;
+}
+
+/* ─── Cards ─── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--line-default);
+  border-radius: var(--radius-3xl);
+  padding: 24px;
+}
+.card-flat {
+  background: var(--bg-surface);
+  border-radius: var(--radius-2xl);
+  padding: 16px;
+  border: 1px solid var(--line-default);
+}
+
+/* ─── Tabs ─── */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line-default);
+}
+.tab {
+  padding: 12px 16px;
+  font: 600 14px/1 var(--font-sans);
+  letter-spacing: -0.005em;
+  color: var(--fg-sec);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+.tab.active,
+.tab[data-active='true'] {
+  color: var(--fg-pri);
+  border-bottom-color: var(--fg-pri);
+}
+.tab.orange-active,
+.tab[data-orange-active='true'] {
+  color: var(--dj-orange);
+  border-bottom-color: var(--dj-orange);
+}
+
+/* ─── Divider ─── */
+.hr {
+  height: 1px;
+  background: var(--line-default);
+  border: 0;
+  margin: 0;
+}
+
+/* ─── Mini sparkline ─── */
+.mini-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 28px;
+}
+.mini-bar > span {
+  flex: 1;
+  background: var(--color-cool-90);
+  border-radius: 1px;
+}
+.mini-bar > span.hi {
+  background: var(--dj-orange);
+}
