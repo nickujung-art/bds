@@ -7,6 +7,7 @@ import { getActiveAds } from '@/lib/data/ads'
 import { getComplexReviews, getComplexReviewStats } from '@/lib/data/reviews'
 import { DealTypeTabs } from '@/components/complex/DealTypeTabs'
 import { FavoriteButton } from '@/components/complex/FavoriteButton'
+import { ShareButton } from '@/components/complex/ShareButton'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { NeighborhoodOpinion } from '@/components/reviews/NeighborhoodOpinion'
 
@@ -41,15 +42,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
   }
 }
-
-function ShareIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M7 17 17 7M9 7h8v8" />
-    </svg>
-  )
-}
-
 
 function FireIcon() {
   return (
@@ -186,13 +178,11 @@ export default async function ComplexDetailPage({ params }: Props) {
           {breadcrumb.join(' › ')} › {complex.canonical_name}
         </span>
         <div style={{ flex: 1 }} />
-        <button
-          className="btn btn-md btn-ghost"
-          style={{ color: 'var(--fg-sec)' }}
-          aria-label="공유"
-        >
-          <ShareIcon />
-        </button>
+        <ShareButton
+          complexId={id}
+          complexName={complex.canonical_name}
+          location={[complex.si, complex.gu, complex.dong].filter(Boolean).join(' ')}
+        />
         <FavoriteButton complexId={id} />
         <Link
           href={`/login?next=/complexes/${id}`}
