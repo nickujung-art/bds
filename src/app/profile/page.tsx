@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { hasPushSubscription, getFavoritesCount, getReviewsCount } from '@/lib/data/profile'
 import { signOut } from '@/lib/auth/actions'
+import { deleteAccount } from '@/lib/auth/consent-actions'
 import { PushToggle } from '@/components/profile/PushToggle'
 
 export const revalidate = 0
@@ -232,6 +233,48 @@ export default async function ProfilePage() {
             로그아웃
           </button>
         </form>
+
+        {/* 위험 구역 — 계정 탈퇴 (LEGAL-04, D-06) */}
+        <div
+          style={{
+            marginTop:  32,
+            paddingTop: 24,
+            borderTop:  '1px solid var(--line-subtle)',
+          }}
+        >
+          <h3
+            style={{
+              font:         '700 13px/1.3 var(--font-sans)',
+              color:        '#dc2626',
+              margin:       '0 0 8px',
+            }}
+          >
+            위험 구역
+          </h3>
+          <p
+            style={{
+              font:         '500 12px/1.5 var(--font-sans)',
+              color:        'var(--fg-tertiary)',
+              margin:       '0 0 12px',
+            }}
+          >
+            탈퇴 후 30일 이내에는 재활성화 가능, 이후 모든 데이터가 영구 삭제됩니다.
+          </p>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <form action={deleteAccount as any}>
+            <button
+              type="submit"
+              className="btn btn-md btn-ghost"
+              style={{
+                width:  '100%',
+                color:  '#dc2626',
+                border: '1px solid rgba(220,38,38,0.5)',
+              }}
+            >
+              계정 탈퇴
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   )

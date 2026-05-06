@@ -761,30 +761,39 @@ export type Database = {
           avatar_url: string | null
           cafe_nickname: string | null
           created_at: string
+          deleted_at: string | null
           id: string
           nickname: string | null
           role: string
           signup_source: string | null
+          suspended_at: string | null
+          terms_agreed_at: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           cafe_nickname?: string | null
           created_at?: string
+          deleted_at?: string | null
           id: string
           nickname?: string | null
           role?: string
           signup_source?: string | null
+          suspended_at?: string | null
+          terms_agreed_at?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           cafe_nickname?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           nickname?: string | null
           role?: string
           signup_source?: string | null
+          suspended_at?: string | null
+          terms_agreed_at?: string | null
           updated_at?: string
         }
         Relationships: []
