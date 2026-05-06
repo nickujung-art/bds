@@ -125,6 +125,21 @@
 - A11Y-02: 키보드 탐색 검증
 - A11Y-03: 스크린리더 라벨 검증
 
+**Plans:** 5 plans / 4 waves
+
+**Wave 0** *(독립 실행)*
+- [ ] 03-01-PLAN.md — 마이그레이션 + RED 테스트 + @axe-core/playwright 설치 + [BLOCKING] supabase db push (SHARE-03/04, LEGAL-01/04/05, ADMIN-01/03/04, A11Y-01/02/03 기반)
+
+**Wave 1** *(blocked on Wave 0)*
+- [ ] 03-02-PLAN.md — 동의·탈퇴·재활성화 + auth/callback + 법적 페이지 + Footer + hard delete cron (LEGAL-01/02/03/04/05)
+
+**Wave 2** *(blocked on Wave 0; 03-03/04 병렬 실행 가능 — files_modified 무중복)*
+- [ ] 03-03-PLAN.md — 카드뉴스 Route Handler + /admin/cardnews UI (SHARE-03, SHARE-04)
+- [ ] 03-04-PLAN.md — admin-actions.ts + 회원/신고/시스템 상태 페이지 (ADMIN-01, ADMIN-02 회귀, ADMIN-03, ADMIN-04)
+
+**Wave 3** *(blocked on Wave 1·2)*
+- [ ] 03-05-PLAN.md — accessibility E2E GREEN + CI 게이트 (A11Y-01/02/03)
+
 **Success Criteria:**
 1. 이용약관·개인정보·광고 정책 페이지가 존재하고 가입 흐름에 동의 체크가 포함된다
 2. 탈퇴 요청 후 30일 이내 계정이 소프트 삭제되고 30일 후 hard delete cron이 실행된다
