@@ -799,33 +799,93 @@ export type Database = {
           avatar_url: string | null
           cafe_nickname: string | null
           created_at: string
+          deleted_at: string | null
           id: string
           nickname: string | null
           role: string
           signup_source: string | null
+          suspended_at: string | null
+          terms_agreed_at: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           cafe_nickname?: string | null
           created_at?: string
+          deleted_at?: string | null
           id: string
           nickname?: string | null
           role?: string
           signup_source?: string | null
+          suspended_at?: string | null
+          terms_agreed_at?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           cafe_nickname?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           nickname?: string | null
           role?: string
           signup_source?: string | null
+          suspended_at?: string | null
+          terms_agreed_at?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["report_target_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -2039,6 +2099,8 @@ export type Database = {
       match_reason: "low_confidence" | "conflict" | "no_match"
       match_status: "pending" | "resolved" | "rejected"
       rank_type: "high_price" | "volume" | "price_per_pyeong" | "interest"
+      report_status: "pending" | "accepted" | "rejected"
+      report_target_type: "review" | "user" | "ad"
       redevelopment_phase:
         | "rumor"
         | "proposed"
@@ -2222,6 +2284,8 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      report_status: ["pending", "accepted", "rejected"],
+      report_target_type: ["review", "user", "ad"],
     },
   },
 } as const
