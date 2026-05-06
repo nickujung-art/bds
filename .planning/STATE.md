@@ -9,21 +9,22 @@ See: .planning/PROJECT.md (updated 2026-05-06)
 
 ## Current Phase
 
-**Phase 1: 보안·인프라·배포** ⬜ Not Started
+**Phase 1: 보안·인프라·배포** 📋 Ready to Execute
 
 Goal: V0.9 로컬 코드를 프로덕션에서 안전하게 운영 가능한 상태로 전환.
 
 Requirements: INFRA-01~03, SEC-01~04
 
-Next step: `/gsd-plan-phase 1`
+Next step: `/gsd-execute-phase 1`
 
+Plans: 5 plans / 3 waves — planned 2026-05-06
 Context gathered: 2026-05-06 — `.planning/phases/01-security-infra-deploy/01-CONTEXT.md`
 
 ## Phase Progress
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | 보안·인프라·배포 | ⬜ Not Started |
+| 1 | 보안·인프라·배포 | 📋 Ready to Execute |
 | 2 | 랭킹·랜딩·공유 | ⬜ Not Started |
 | 3 | 카드뉴스·법적·운영 | ⬜ Not Started |
 | 4 | 커뮤니티 기초 | ⬜ Not Started |
