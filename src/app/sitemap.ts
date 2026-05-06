@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { createReadonlyClient } from '@/lib/supabase/readonly'
 import { getComplexesForSitemap } from '@/lib/data/sitemap'
 
+export const dynamic = 'force-dynamic'
 export const revalidate = 86400
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://danjiondo.kr'
