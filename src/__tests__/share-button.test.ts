@@ -12,16 +12,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // RED 단계: 이 import는 Wave 2 완료 전까지 실패한다 (ShareButton 미존재)
 // GREEN 단계: Wave 2에서 src/components/complex/ShareButton.tsx 생성 후 PASS
+// @ts-expect-error Wave 2 구현 전까지 모듈 미존재 (RED 단계)
 import { handleKakaoShare, handleCopyLink } from '@/components/complex/ShareButton'
 
 describe('ShareButton — Kakao SDK 없을 때 폴백', () => {
   beforeEach(() => {
     // window.Kakao 제거 (Kakao SDK 미로드 시나리오)
-    delete (window as Record<string, unknown>).Kakao
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).Kakao
   })
 
   it('window.Kakao 없을 때 handleKakaoShare가 조용히 반환 (오류 없음)', () => {
     expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       handleKakaoShare({
         complexId: 'test-id',
         complexName: '테스트단지',
@@ -39,6 +42,7 @@ describe('ShareButton — Kakao SDK 없을 때 폴백', () => {
       configurable: true,
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await handleCopyLink({
       complexId: 'test-complex-id',
       siteUrl: 'https://danjiondo.vercel.app',
