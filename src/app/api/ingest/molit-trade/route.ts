@@ -58,5 +58,34 @@ export async function GET(request: Request): Promise<Response> {
     failed:       total.filter(r => r.status === 'failed').length,
   }
 
-  return Response.json({ summary, results })
+  // ── Phase 3 LEGAL-04: 30일 경과 탈퇴 계정 hard delete (D-07) ──
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86_400_000).toISOString()
+  const { data: expiredProfiles, error: expErr } = await supabase
+    .from('profiles')
+    .select('id')
+    .not('deleted_at', 'is', null)
+    .lt('deleted_at', thirtyDaysAgo)
+
+  let hardDeleted = 0
+  let hardDeleteFailed = 0
+
+  if (expErr) {
+    console.error('[hard-delete] expiredProfiles query failed:', expErr.message)
+  } else {
+    for (const { id } of (expiredProfiles ?? []) as { id: string }[]) {
+      const { error: delErr } = await supabase.auth.admin.deleteUser(id)
+      if (delErr) {
+        hardDeleteFailed += 1
+        console.error(`[hard-delete] auth.admin.deleteUser failed for ${id}:`, delErr.message)
+        continue
+      }
+      // auth.users ON DELETE CASCADE → profiles 자동 삭제
+      hardDeleted += 1
+    }
+  }
+
+  return Response.json({
+    summary: { ...summary, hardDeleted, hardDeleteFailed },
+    results,
+  })
 }

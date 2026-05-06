@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import Script from 'next/script'
+import { Footer } from '@/components/layout/Footer'
 import './globals.css'
 
 const pretendard = localFont({
@@ -45,6 +46,7 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
         {children}
+        <Footer />
       </body>
     </html>
   )
