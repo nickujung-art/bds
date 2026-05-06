@@ -71,8 +71,27 @@
 - RANK-01: 지역 인기 단지 풀 정의 SQL + 일배치
 - RANK-02: 랭킹 4종 산식 (신고가·거래량·평당가·관심도) + 1h cron
 - RANK-03: 랜딩 완성 — 오늘 신고가 카드 + 4종 랭킹 탭 (ISR 60s)
-- SHARE-01: 단지별 동적 OG 이미지 (`@vercel/og`)
+- SHARE-01: 단지별 동적 OG 이미지 (`next/og` 내장)
 - SHARE-02: 카카오톡·네이버 공유 버튼 + 단지 상세 공유 UX
+
+**Plans:** 5 plans / 3 waves
+
+**Wave 1** *(독립 실행 가능)*
+- [ ] 02-01-PLAN.md — DB 마이그레이션 + TTF 폰트 + 테스트 스캐폴드 (RANK-01 전제조건)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 02-02-PLAN.md — 랭킹 데이터 레이어 + cron endpoint + GitHub Actions (RANK-01, RANK-02)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 02-03-PLAN.md — 랜딩 페이지 ISR 완성 — 신고가 카드 + 4종 랭킹 탭 (RANK-03)
+- [ ] 02-04-PLAN.md — 단지별 동적 OG 이미지 opengraph-image.tsx (SHARE-01)
+- [ ] 02-05-PLAN.md — 카카오톡·네이버·링크복사 공유 버튼 ShareButton (SHARE-02)
+
+**Cross-cutting constraints:**
+- `createSupabaseAdminClient()` — cron route에서만 사용
+- `createReadonlyClient()` — page.tsx, opengraph-image.tsx에서 유지 (ISR 조건)
+- 모든 transactions 쿼리: `cancel_date IS NULL AND superseded_by IS NULL` 필수
+- AI 슬롭 금지: backdrop-blur, gradient-text, glow, 보라/인디고, gradient orb
 
 **Success Criteria:**
 1. 랜딩 페이지에 오늘 신고가 카드 ≥ 3개가 표시된다
