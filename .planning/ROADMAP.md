@@ -7,7 +7,7 @@
 | # | Phase | Version | Goal | Requirements | Status |
 |---|-------|---------|------|--------------|--------|
 | 1 | 보안·인프라·배포 | V1.0 | 프로덕션 배포 가능 상태 + 보안 기반 확립 | INFRA-01~03, SEC-01~04 | ✅ Complete |
-| 2 | 랭킹·랜딩·공유 | V1.0 | 핵심 UX 완성 — 사용자가 처음 봐야 할 화면 | RANK-01~03, SHARE-01~02 | ⬜ Not Started |
+| 2 | 랭킹·랜딩·공유 | V1.0 | 핵심 UX 완성 — 사용자가 처음 봐야 할 화면 | RANK-01~03, SHARE-01~02 | ✅ Complete |
 | 3 | 카드뉴스·법적·운영 | V1.0 | V1.0 정식 출시 가능 상태 | SHARE-03~04, LEGAL-01~05, ADMIN-01~04, A11Y-01~03 | ⬜ Not Started |
 | 4 | 커뮤니티 기초 | V1.5 | 참여·소통 기능 + 데이터 확장 | COMM-01~05, DATA-01~02, NOTIF-01~02 | ⬜ Not Started |
 | 5 | 데이터 확장·운영 | V1.5 | V1.5 완성 — 데이터 깊이 + 운영 안정성 | DATA-03~05, OPS-01 | ⬜ Not Started |
@@ -77,15 +77,15 @@
 **Plans:** 5 plans / 3 waves
 
 **Wave 1** *(독립 실행 가능)*
-- [ ] 02-01-PLAN.md — DB 마이그레이션 + TTF 폰트 + 테스트 스캐폴드 (RANK-01 전제조건)
+- [x] 02-01-PLAN.md — DB 마이그레이션 + TTF 폰트 + 테스트 스캐폴드 (RANK-01 전제조건)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 02-02-PLAN.md — 랭킹 데이터 레이어 + cron endpoint + GitHub Actions (RANK-01, RANK-02)
+- [x] 02-02-PLAN.md — 랭킹 데이터 레이어 + cron endpoint + GitHub Actions (RANK-01, RANK-02)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 02-03-PLAN.md — 랜딩 페이지 ISR 완성 — 신고가 카드 + 4종 랭킹 탭 (RANK-03)
-- [ ] 02-04-PLAN.md — 단지별 동적 OG 이미지 opengraph-image.tsx (SHARE-01)
-- [ ] 02-05-PLAN.md — 카카오톡·네이버·링크복사 공유 버튼 ShareButton (SHARE-02)
+- [x] 02-03-PLAN.md — 랜딩 페이지 ISR 완성 — 신고가 카드 + 4종 랭킹 탭 (RANK-03)
+- [x] 02-04-PLAN.md — 단지별 동적 OG 이미지 opengraph-image.tsx (SHARE-01)
+- [x] 02-05-PLAN.md — 카카오톡·네이버·링크복사 공유 버튼 ShareButton (SHARE-02)
 
 **Cross-cutting constraints:**
 - `createSupabaseAdminClient()` — cron route에서만 사용

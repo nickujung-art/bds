@@ -9,20 +9,20 @@ See: .planning/PROJECT.md (updated 2026-05-06)
 
 ## Current Phase
 
-**Phase 2: 랭킹·랜딩·공유** ⬜ Not Started
+**Phase 3: 카드뉴스·법적·운영** ⬜ Not Started
 
-Goal: 핵심 UX 완성 — 사용자가 처음 봐야 할 화면 (랭킹, 랜딩, 공유).
+Goal: V1.0 정식 출시에 필요한 법적 요건 충족, 운영 어드민 완성, a11y 기준 통과.
 
-Requirements: RANK-01~03, SHARE-01~02
+Requirements: SHARE-03~04, LEGAL-01~05, ADMIN-01~04, A11Y-01~03
 
-Next step: `/gsd-plan-phase 2`
+Next step: `/gsd-discuss-phase 3`
 
 ## Phase Progress
 
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | 보안·인프라·배포 | ✅ Complete |
-| 2 | 랭킹·랜딩·공유 | ⬜ Not Started |
+| 2 | 랭킹·랜딩·공유 | ✅ Complete |
 | 3 | 카드뉴스·법적·운영 | ⬜ Not Started |
 | 4 | 커뮤니티 기초 | ⬜ Not Started |
 | 5 | 데이터 확장·운영 안정성 | ⬜ Not Started |
