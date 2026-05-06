@@ -65,11 +65,11 @@ export default async function HomePage() {
 
   const [highRecords, rankHighPrice, rankVolume, rankPricePerPyeong, rankInterest] =
     await Promise.all([
-      getRecentHighRecords(supabase, 4),
-      getRankingsByType(supabase, 'high_price', 10),
-      getRankingsByType(supabase, 'volume', 10),
-      getRankingsByType(supabase, 'price_per_pyeong', 10),
-      getRankingsByType(supabase, 'interest', 10),
+      getRecentHighRecords(supabase, 4).catch(() => []),
+      getRankingsByType(supabase, 'high_price', 10).catch(() => []),
+      getRankingsByType(supabase, 'volume', 10).catch(() => []),
+      getRankingsByType(supabase, 'price_per_pyeong', 10).catch(() => []),
+      getRankingsByType(supabase, 'interest', 10).catch(() => []),
     ])
 
   const rankingData = {
