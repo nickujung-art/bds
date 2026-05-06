@@ -21,6 +21,7 @@ export async function getComplexesForMap(
     .in('sgg_code', sggCodes)
     .not('lat', 'is', null)
     .not('lng', 'is', null)
+    .eq('status', 'active')
 
   if (error) throw new Error(`getComplexesForMap failed: ${error.message}`)
   return (data ?? []) as ComplexMapItem[]

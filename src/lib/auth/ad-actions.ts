@@ -1,11 +1,13 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { Database } from '@/types/database'
 
-async function requireAdmin(): Promise<{ error: string | null; admin: ReturnType<typeof createClient<Database>> | null }> {
+type AdminClient = ReturnType<typeof createSupabaseAdminClient>
+
+async function requireAdmin(): Promise<{ error: string | null; admin: AdminClient | null }> {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다', admin: null }
@@ -20,12 +22,7 @@ async function requireAdmin(): Promise<{ error: string | null; admin: ReturnType
     return { error: '관리자 권한이 필요합니다', admin: null }
   }
 
-  const adminClient = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  )
-  return { error: null, admin: adminClient }
+  return { error: null, admin: createSupabaseAdminClient() }
 }
 
 async function updateStatus(
