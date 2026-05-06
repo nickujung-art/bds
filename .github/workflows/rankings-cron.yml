@@ -1,0 +1,29 @@
+name: Rankings Cron
+
+on:
+  schedule:
+    # 매 시간 정각 실행 (UTC 기준)
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  compute-rankings:
+    name: Compute & store rankings
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Call rankings cron endpoint
+        run: |
+          STATUS=$(curl -sSf -o /tmp/rankings_response.json -w "%{http_code}" \
+            -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/cron/rankings")
+
+          echo "HTTP status: $STATUS"
+          cat /tmp/rankings_response.json
+
+          if [ "$STATUS" != "200" ]; then
+            echo "Rankings cron returned $STATUS"
+            exit 1
+          fi

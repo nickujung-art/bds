@@ -350,6 +350,44 @@ export type Database = {
           },
         ]
       }
+      complex_rankings: {
+        Row: {
+          id: string
+          complex_id: string
+          rank_type: Database["public"]["Enums"]["rank_type"]
+          score: number
+          rank: number
+          window_days: number
+          computed_at: string
+        }
+        Insert: {
+          id?: string
+          complex_id: string
+          rank_type: Database["public"]["Enums"]["rank_type"]
+          score: number
+          rank: number
+          window_days?: number
+          computed_at?: string
+        }
+        Update: {
+          id?: string
+          complex_id?: string
+          rank_type?: Database["public"]["Enums"]["rank_type"]
+          score?: number
+          rank?: number
+          window_days?: number
+          computed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complex_rankings_complex_id_fkey"
+            columns: ["complex_id"]
+            isOneToOne: false
+            referencedRelation: "complexes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       complexes: {
         Row: {
           built_year: number | null
@@ -2000,6 +2038,7 @@ export type Database = {
       estimate_status: "active" | "superseded" | "rejected"
       match_reason: "low_confidence" | "conflict" | "no_match"
       match_status: "pending" | "resolved" | "rejected"
+      rank_type: "high_price" | "volume" | "price_per_pyeong" | "interest"
       redevelopment_phase:
         | "rumor"
         | "proposed"
