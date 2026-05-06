@@ -708,27 +708,19 @@ export async function GET(request: Request): Promise<Response> {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **sgg_code 동적 vs 하드코딩**
-   - What we know: `regions` 테이블에 `is_active=true` 필드 존재. 현재 코드는 하드코딩 패턴 혼재
-   - What's unclear: `computeRankings`에서 `regions` 테이블을 동적 조회할지, 상수로 고정할지
-   - Recommendation: `regions` 테이블에서 동적 조회 (`WHERE is_active = true`). 확장성 확보
+   - RESOLVED: 하드코딩으로 결정 — `ACTIVE_SGG_CODES = ['48121','48123','48125','48127','48129','48250']` 상수 배열. 확장 필요 시 regions 테이블 동적 조회로 교체 가능하도록 rankings.ts 주석 명시
 
 2. **rankings cron이 GitHub Actions 무료 한도를 초과할 리스크**
-   - What we know: notify-worker(1,440분/월) + rankings-cron(360분/월) ≈ 1,800분/월. 한도 2,000분
-   - What's unclear: 실제 실행 시간이 예측보다 길 경우 초과 가능
-   - Recommendation: `timeout-minutes: 3` 명시 + cron 완료 시간 Sentry/로그 추적
+   - RESOLVED: `timeout-minutes: 3` 명시로 수용. 예상 사용량 ≈ 1,800분/월 (한도 2,000분). 실제 실행 후 초과 시 유료 플랜 전환 기준으로 처리
 
 3. **Pretendard TTF 라이센스 및 서브셋 여부**
-   - What we know: Pretendard는 SIL OFL 라이센스 (서브셋 허용). 풀 TTF는 ~4MB
-   - What's unclear: Vercel Edge Function 또는 Node.js runtime에서 4MB TTF 로드 성능
-   - Recommendation: opengraph-image.tsx를 Edge runtime이 아닌 Node.js runtime으로 명시 (`export const runtime = 'nodejs'`). Node.js는 4MB 폰트도 처리 가능
+   - RESOLVED: `export const runtime = 'nodejs'` 사용으로 결정 (Node.js runtime은 4MB TTF 허용). Edge runtime 불필요. Pretendard SIL OFL 라이센스 — 서브셋 허용
 
 4. **SHARE-02: 네이버 공유 방식**
-   - What we know: 네이버는 공식 공유 SDK 없음. URL 리디렉션 방식 (`share.naver.com`)
-   - What's unclear: 모바일 네이버 앱과의 딥링크 연동
-   - Recommendation: URL 방식(`window.open`)으로 구현. 앱 딥링크는 SHARE-02 범위 초과
+   - RESOLVED: URL 방식(`window.open('https://share.naver.com/web/shareView?url=...&title=...')`)으로 구현. 모바일 앱 딥링크는 SHARE-02 범위 초과 — defer
 
 ---
 
