@@ -6,7 +6,7 @@
 
 | # | Phase | Version | Goal | Requirements | Status |
 |---|-------|---------|------|--------------|--------|
-| 1 | 보안·인프라·배포 | V1.0 | 프로덕션 배포 가능 상태 + 보안 기반 확립 | INFRA-01~03, SEC-01~04 | 📋 Ready to Execute |
+| 1 | 보안·인프라·배포 | V1.0 | 프로덕션 배포 가능 상태 + 보안 기반 확립 | INFRA-01~03, SEC-01~04 | ✅ Complete |
 | 2 | 랭킹·랜딩·공유 | V1.0 | 핵심 UX 완성 — 사용자가 처음 봐야 할 화면 | RANK-01~03, SHARE-01~02 | ⬜ Not Started |
 | 3 | 카드뉴스·법적·운영 | V1.0 | V1.0 정식 출시 가능 상태 | SHARE-03~04, LEGAL-01~05, ADMIN-01~04, A11Y-01~03 | ⬜ Not Started |
 | 4 | 커뮤니티 기초 | V1.5 | 참여·소통 기능 + 데이터 확장 | COMM-01~05, DATA-01~02, NOTIF-01~02 | ⬜ Not Started |
@@ -36,15 +36,15 @@
 **Plans:** 5 plans / 3 waves
 
 **Wave 1** *(독립 실행 가능)*
-- [ ] 01-01-PLAN.md — 보안 패치 (SEC-01 rate limit + SEC-02 admin client + SEC-03 status filter)
-- [ ] 01-02-PLAN.md — Sentry 에러 트래킹 초기화 (SEC-04)
+- [x] 01-01-PLAN.md — 보안 패치 (SEC-01 rate limit + SEC-02 admin client + SEC-03 status filter)
+- [x] 01-02-PLAN.md — Sentry 에러 트래킹 초기화 (SEC-04)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 01-03-PLAN.md — GitHub Actions CI 워크플로우 + .env.local.example 최신화 (INFRA-02, INFRA-01)
-- [ ] 01-04-PLAN.md — Playwright E2E 골든패스 5종 (INFRA-03)
+- [x] 01-03-PLAN.md — GitHub Actions CI 워크플로우 + .env.local.example 최신화 (INFRA-02, INFRA-01)
+- [x] 01-04-PLAN.md — Playwright E2E 골든패스 5종 (INFRA-03)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 01-05-PLAN.md — Vercel 프로덕션 배포 + branch protection 활성화 (INFRA-01) `[CHECKPOINT]`
+- [x] 01-05-PLAN.md — Vercel 프로덕션 배포 + branch protection 활성화 (INFRA-01) `[CHECKPOINT]`
 
 **Cross-cutting constraints:**
 - 모든 Wave의 서버 코드: `createSupabaseAdminClient()` 경유 필수

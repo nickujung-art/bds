@@ -9,22 +9,19 @@ See: .planning/PROJECT.md (updated 2026-05-06)
 
 ## Current Phase
 
-**Phase 1: 보안·인프라·배포** 📋 Ready to Execute
+**Phase 2: 랭킹·랜딩·공유** ⬜ Not Started
 
-Goal: V0.9 로컬 코드를 프로덕션에서 안전하게 운영 가능한 상태로 전환.
+Goal: 핵심 UX 완성 — 사용자가 처음 봐야 할 화면 (랭킹, 랜딩, 공유).
 
-Requirements: INFRA-01~03, SEC-01~04
+Requirements: RANK-01~03, SHARE-01~02
 
-Next step: `/gsd-execute-phase 1`
-
-Plans: 5 plans / 3 waves — planned 2026-05-06
-Context gathered: 2026-05-06 — `.planning/phases/01-security-infra-deploy/01-CONTEXT.md`
+Next step: `/gsd-plan-phase 2`
 
 ## Phase Progress
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | 보안·인프라·배포 | 📋 Ready to Execute |
+| 1 | 보안·인프라·배포 | ✅ Complete |
 | 2 | 랭킹·랜딩·공유 | ⬜ Not Started |
 | 3 | 카드뉴스·법적·운영 | ⬜ Not Started |
 | 4 | 커뮤니티 기초 | ⬜ Not Started |
