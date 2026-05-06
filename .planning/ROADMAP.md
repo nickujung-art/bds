@@ -1,0 +1,209 @@
+# Roadmap — 단지온도
+
+**7 phases** | **37 requirements mapped** | All v1~v3 requirements covered ✓
+
+## Overview
+
+| # | Phase | Version | Goal | Requirements | Status |
+|---|-------|---------|------|--------------|--------|
+| 1 | 보안·인프라·배포 | V1.0 | 프로덕션 배포 가능 상태 + 보안 기반 확립 | INFRA-01~03, SEC-01~04 | ⬜ Not Started |
+| 2 | 랭킹·랜딩·공유 | V1.0 | 핵심 UX 완성 — 사용자가 처음 봐야 할 화면 | RANK-01~03, SHARE-01~02 | ⬜ Not Started |
+| 3 | 카드뉴스·법적·운영 | V1.0 | V1.0 정식 출시 가능 상태 | SHARE-03~04, LEGAL-01~05, ADMIN-01~04, A11Y-01~03 | ⬜ Not Started |
+| 4 | 커뮤니티 기초 | V1.5 | 참여·소통 기능 + 데이터 확장 | COMM-01~05, DATA-01~02, NOTIF-01~02 | ⬜ Not Started |
+| 5 | 데이터 확장·운영 | V1.5 | V1.5 완성 — 데이터 깊이 + 운영 안정성 | DATA-03~05, OPS-01 | ⬜ Not Started |
+| 6 | AI·차별화 기술 | V2.0 | 기술 차별화 — AI 봇 + 고도화 분석 | DIFF-03, DATA-06~07, AD-01~02, AUTH-01 | ⬜ Not Started |
+| 7 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
+
+---
+
+## Phase Details
+
+### Phase 1: 보안·인프라·배포
+
+**Goal:** V0.9 로컬 코드를 프로덕션에서 안전하게 운영 가능한 상태로 전환. 보안 취약점 제거, CI 자동화, E2E 골든패스 확보.
+
+**Version:** V1.0 (1주차 목표)
+
+**Requirements:**
+- INFRA-01: Vercel 프로덕션 배포 + 환경 변수 검증 + `.env.local.example` 최신화
+- INFRA-02: GitHub Actions CI — PR마다 lint/build/test 자동 실행
+- INFRA-03: Playwright E2E — 골든패스 5종 자동화
+- SEC-01: 광고 이벤트 rate limiting + IP hash
+- SEC-02: createSupabaseAdminClient() 통합 (3곳 inline 교체)
+- SEC-03: 지도 쿼리 status='active' 필터
+- SEC-04: Sentry 초기화 또는 플레이스홀더 제거
+
+**Success Criteria:**
+1. `main` 브랜치 PR에서 lint/build/test가 자동 실행되고 통과한다
+2. Vercel 프로덕션 URL이 존재하고 단지 상세 페이지가 정상 렌더된다
+3. `/api/ads/events`에 1분 내 100회 이상 POST 시 rate limit 429가 반환된다
+4. E2E 5종 테스트가 CI에서 자동 실행되고 통과한다
+5. 서비스 역할 클라이언트 생성이 `createSupabaseAdminClient()` 단일 경로로만 이뤄진다
+
+**UI hint**: no
+
+---
+
+### Phase 2: 랭킹·랜딩·공유
+
+**Goal:** 사용자가 처음 방문했을 때 보는 화면(랜딩)과 카카오톡 공유 링크를 완성. 신규 유입의 첫 인상 결정.
+
+**Version:** V1.0 (2주차 목표)
+
+**Requirements:**
+- RANK-01: 지역 인기 단지 풀 정의 SQL + 일배치
+- RANK-02: 랭킹 4종 산식 (신고가·거래량·평당가·관심도) + 1h cron
+- RANK-03: 랜딩 완성 — 오늘 신고가 카드 + 4종 랭킹 탭 (ISR 60s)
+- SHARE-01: 단지별 동적 OG 이미지 (`@vercel/og`)
+- SHARE-02: 카카오톡·네이버 공유 버튼 + 단지 상세 공유 UX
+
+**Success Criteria:**
+1. 랜딩 페이지에 오늘 신고가 카드 ≥ 3개가 표시된다
+2. 랭킹 탭 4종이 데이터와 함께 정상 렌더된다 (ISR 60s 확인)
+3. 단지 URL을 카카오톡으로 공유 시 단지명·가격이 담긴 OG 카드가 노출된다
+4. 랭킹 cron이 1시간마다 데이터를 갱신한다 (ingest_runs 기록 확인)
+
+**UI hint**: yes
+
+---
+
+### Phase 3: 카드뉴스·법적·운영
+
+**Goal:** V1.0 정식 출시에 필요한 법적 요건 충족, 운영 어드민 완성, a11y 기준 통과, 카드뉴스 파이프라인 완성.
+
+**Version:** V1.0 (3~4주차 목표)
+
+**Requirements:**
+- SHARE-03: 카드뉴스 자동 생성 (Recharts SSR + @vercel/og)
+- SHARE-04: 어드민 카드뉴스 1-click 발행 UI
+- LEGAL-01: 이용약관 + 가입 동의 흐름
+- LEGAL-02: 개인정보처리방침
+- LEGAL-03: 광고 정책 + 표시광고법 고지
+- LEGAL-04: 탈퇴 플로우 (30일 grace + hard delete cron)
+- LEGAL-05: 이메일 지원 채널 설정
+- ADMIN-01: 회원 관리 (카페 닉네임·계정 정지)
+- ADMIN-02: 광고 검수 상태 머신
+- ADMIN-03: 신고 큐 운영자 처리 UI
+- ADMIN-04: 시스템 상태 모니터링 메뉴
+- A11Y-01: axe-core CI (critical 0건)
+- A11Y-02: 키보드 탐색 검증
+- A11Y-03: 스크린리더 라벨 검증
+
+**Success Criteria:**
+1. 이용약관·개인정보·광고 정책 페이지가 존재하고 가입 흐름에 동의 체크가 포함된다
+2. 탈퇴 요청 후 30일 이내 계정이 소프트 삭제되고 30일 후 hard delete cron이 실행된다
+3. axe-core CI에서 critical 접근성 이슈 0건으로 통과한다
+4. 어드민에서 광고를 등록→검수→승인까지 상태 전환할 수 있다
+5. 카드뉴스를 어드민에서 1-click으로 생성·발행할 수 있다
+6. `npm run lint && npm run build && npm run test` + E2E 전부 통과한다
+
+**UI hint**: yes
+
+---
+
+### Phase 4: 커뮤니티 기초
+
+**Goal:** 후기·댓글·외부 연결 등 커뮤니티 참여 기능 + 데이터 깊이 확장. Persona A(실수요자)의 "이웃 의견" 수요 충족.
+
+**Version:** V1.5
+
+**Requirements:**
+- COMM-01: 후기 댓글 (텍스트, RLS, 신고)
+- COMM-02: GPS L1 인증 배지 활성화
+- COMM-03: 단지 페이지 → 카페 검색 외부 링크
+- COMM-04: 신고 통합 큐 + SLA ≤ 24h 운영
+- COMM-05: 주간 회전 카페 가입 코드
+- DATA-01: K-apt 부대시설 데이터 (단지 상세 시설 탭)
+- DATA-02: 신축 분양 정보 + 분양권 거래 분리 UI
+- NOTIF-01: 주간 다이제스트 이메일
+- NOTIF-02: 알림 토픽 채널 구독
+
+**Success Criteria:**
+1. 후기에 댓글을 달 수 있고, 댓글 신고 시 신고 큐에 쌓인다
+2. GPS L1 인증(단지 ±100m)을 통과한 후기에 배지가 표시된다
+3. 단지 상세에 카페 검색 외부 링크가 표시된다
+4. 구독 회원에게 매주 관심 단지 다이제스트 이메일이 발송된다
+5. 카페 가입 코드가 매주 갱신되고 어드민에서 확인 가능하다
+
+**UI hint**: yes
+
+---
+
+### Phase 5: 데이터 확장·운영 안정성
+
+**Goal:** 단지 데이터 깊이 확장 (재건축·가성비·갭) + 운영 백업 자동화로 V1.5 완성.
+
+**Version:** V1.5
+
+**Requirements:**
+- DATA-03: 재건축 단계 운영자 수동 입력 + 타임라인
+- DATA-04: 가성비 분석 4분면 (평당가 × 학군 점수)
+- DATA-05: 매물가 vs 실거래가 갭 라벨
+- OPS-01: DB 백업 자동화 (pg_dump + GitHub private repo 주간)
+
+**Success Criteria:**
+1. 재건축 단계가 있는 단지 상세에 진행 타임라인이 표시된다
+2. 가성비 4분면 차트에서 단지 위치를 확인할 수 있다
+3. 단지 상세에 매물가 대비 실거래가 갭 라벨이 표시된다
+4. 매주 pg_dump가 실행되고 GitHub private repo에 백업이 저장된다
+
+**UI hint**: yes
+
+---
+
+### Phase 6: AI·차별화 기술
+
+**Goal:** Claude API RAG 봇 + SGIS 통계 + 광고 고도화 + GPS L2/L3 인증. 기술 차별화 자산 구축.
+
+**Version:** V2.0
+
+**Requirements:**
+- DIFF-03: Claude API + RAG 단지 상담 봇 (환각률 ≤ 5%)
+- DATA-06: SGIS 인구·세대 통계 분기 적재
+- DATA-07: 재개발 행정 데이터 자동 적재 (출처 확보 시)
+- AD-01: 광고 통계 고도화 (전환·ROI·이상 트래픽)
+- AD-02: 광고주 카피 AI 어시스트 + 표시광고법 감지
+- AUTH-01: GPS L2+L3 인증 (다회+시간패턴 / 우편·관리비)
+
+**Success Criteria:**
+1. 단지 상담 봇이 단지 데이터 기반으로 답변하고, human eval 100건 기준 환각률 ≤ 5%
+2. SGIS 통계가 분기마다 자동 적재되고 단지 상세에 표시된다
+3. 광고주 대시보드에서 전환율·ROI를 확인할 수 있다
+4. GPS L2 인증(다회 방문 패턴)을 통과한 후기에 상위 배지가 표시된다
+
+**UI hint**: yes
+
+---
+
+### Phase 7: 커뮤니티 심화·자동화
+
+**Goal:** 게이미피케이션 + 카페 NLP 연동 + 카카오톡 채널 + 비교 모드 + 카페 자동 발행. V2.0 완성.
+
+**Version:** V2.0
+
+**Requirements:**
+- DIFF-01: 게이미피케이션 마크 (👑🔥💬) + 회원 등급 UI
+- DIFF-02: 카페 글 NLP 단지 매칭 (정확도 ≥ 85%)
+- DIFF-04: 카카오톡 채널 알리미 (푸시 거부 대안)
+- DIFF-05: 회원 등급 시스템 + 우선 알림 혜택
+- DIFF-06: 즐겨찾기 단지 2~4개 비교 표
+- OPS-02: 카카오 카페 매니저 OAuth 카드뉴스 자동 발행 (법무 승인 후)
+
+**Success Criteria:**
+1. 활동 기반으로 회원 등급이 부여되고 마크가 후기에 표시된다
+2. 카페 글이 NLP로 단지에 매칭되어 단지 페이지에 연동 표시된다 (정확도 ≥ 85%)
+3. 카카오톡 채널을 통해 알림이 발송된다
+4. 즐겨찾기 단지 2~4개를 선택해 비교 표를 볼 수 있다
+5. 카드뉴스가 카페에 자동 발행된다 (법무 승인 조건부)
+
+**UI hint**: yes
+
+---
+
+## Milestone Summary
+
+| Milestone | Phases | Gate |
+|-----------|--------|------|
+| **V1.0 정식 출시** | Phase 1~3 | lint + build + test + E2E 5종 + axe-core 0 critical + 법적 페이지 존재 + Vercel 배포 |
+| **V1.5 커뮤니티** | Phase 4~5 | Phase 1~3 gate + 후기 댓글 + 신고 SLA ≤ 24h + DB 백업 |
+| **V2.0 차별화** | Phase 6~7 | Phase 4~5 gate + AI 봇 환각률 ≤ 5% + NLP 정확도 ≥ 85% + 광고 AI 법무 승인 |
