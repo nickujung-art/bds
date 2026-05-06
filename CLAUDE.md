@@ -7,9 +7,9 @@
 - TypeScript strict mode + `noUncheckedIndexedAccess`
 - Tailwind CSS 3.4+
 - Supabase Postgres + PostGIS + RLS
-- NextAuth.js v5 (Naver OAuth + Email Magic Link)
+- Supabase Auth (`@supabase/ssr`) — Naver OAuth + Email Magic Link (OTP)
 - Serwist PWA + VAPID web push
-- Recharts / TanStack Query v5 / react-hook-form + zod
+- Recharts / react-hook-form + zod
 - react-kakao-maps-sdk + supercluster
 - Resend + React Email
 - Vitest + Playwright
