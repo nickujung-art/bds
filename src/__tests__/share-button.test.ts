@@ -10,9 +10,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// RED 단계: 이 import는 Wave 2 완료 전까지 실패한다 (ShareButton 미존재)
 // GREEN 단계: Wave 2에서 src/components/complex/ShareButton.tsx 생성 후 PASS
-// @ts-expect-error Wave 2 구현 전까지 모듈 미존재 (RED 단계)
 import { handleKakaoShare, handleCopyLink } from '@/components/complex/ShareButton'
 
 describe('ShareButton — Kakao SDK 없을 때 폴백', () => {
