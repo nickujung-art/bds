@@ -37,3 +37,6 @@ public/sw.js.map
 # phase execution outputs
 phases/**/phase*-output.json
 phases/**/step*-output.json
+
+# E2E auth storage state (contains session tokens)
+e2e/.auth/user.json
