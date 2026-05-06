@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/types/database'
 import { getAllAdCampaigns } from '@/lib/data/ads'
 import { AdminCampaignActions } from '@/components/ads/AdminCampaignActions'
@@ -49,11 +49,7 @@ export default async function AdminAdsPage() {
   }
 
   // 서비스 롤로 전체 캠페인 조회 (RLS 우회)
-  const adminClient = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  )
+  const adminClient = createSupabaseAdminClient()
   const campaigns = await getAllAdCampaigns(adminClient)
 
   return (

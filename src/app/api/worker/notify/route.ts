@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { generatePriceAlerts } from '@/lib/notifications/generate-alerts'
 import { deliverPendingNotifications } from '@/lib/notifications/deliver'
 
@@ -12,11 +11,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  )
+  const supabase = createSupabaseAdminClient()
 
   const generated = await generatePriceAlerts(supabase)
   const { sent, failed } = await deliverPendingNotifications(supabase)
