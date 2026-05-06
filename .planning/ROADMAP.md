@@ -33,6 +33,15 @@
 - SEC-03: 지도 쿼리 status='active' 필터
 - SEC-04: Sentry 초기화 또는 플레이스홀더 제거
 
+**Plans:** 5 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — 보안 패치 (SEC-01 rate limit + SEC-02 admin client + SEC-03 status filter)
+- [ ] 01-02-PLAN.md — Sentry 에러 트래킹 초기화 (SEC-04)
+- [ ] 01-03-PLAN.md — GitHub Actions CI 워크플로우 + .env.local.example 최신화 (INFRA-02, INFRA-01)
+- [ ] 01-04-PLAN.md — Playwright E2E 골든패스 5종 (INFRA-03)
+- [ ] 01-05-PLAN.md — Vercel 프로덕션 배포 + branch protection 활성화 (INFRA-01)
+
 **Success Criteria:**
 1. `main` 브랜치 PR에서 lint/build/test가 자동 실행되고 통과한다
 2. Vercel 프로덕션 URL이 존재하고 단지 상세 페이지가 정상 렌더된다
