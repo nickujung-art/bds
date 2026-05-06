@@ -15,7 +15,9 @@ Goal: V0.9 로컬 코드를 프로덕션에서 안전하게 운영 가능한 상
 
 Requirements: INFRA-01~03, SEC-01~04
 
-Next step: `/gsd-discuss-phase 1` 또는 `/gsd-plan-phase 1`
+Next step: `/gsd-plan-phase 1`
+
+Context gathered: 2026-05-06 — `.planning/phases/01-security-infra-deploy/01-CONTEXT.md`
 
 ## Phase Progress
 
