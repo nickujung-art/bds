@@ -723,12 +723,14 @@ export async function submitComment(input: {
   content: string
 }): Promise<{ error: string | null }> {
   const { reviewId, complexId, content } = input
-  if (content.length < 10 || content.length > 500)
-    return { error: '댓글은 10자 이상 500자 이하로 작성해주세요.' }
 
+  // auth-first 패턴: 인증 확인 먼저 (기존 review-actions.ts 패턴 일치)
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }
+
+  if (content.length < 10 || content.length > 500)
+    return { error: '댓글은 10자 이상 500자 이하로 작성해주세요.' }
 
   const { error } = await supabase
     .from('comments')
@@ -826,6 +828,8 @@ export async function fetchPresaleTrades(
 ### Wave 0 Gaps
 - [ ] `src/lib/auth/comment-actions.test.ts` — COMM-01
 - [ ] `src/lib/auth/review-actions.test.ts` — COMM-02 (GPS 검증 케이스 추가)
+- [ ] `src/lib/data/cafe-link.test.ts` — COMM-03 (카페 링크 URL 생성 함수)
+- [ ] `src/components/admin/SlaUtils.test.ts` — COMM-04 (SLA 24h 계산)
 - [ ] `src/services/kapt.test.ts` — DATA-01
 - [ ] `src/services/molit-presale.test.ts` — DATA-02
 - [ ] `src/lib/notifications/digest.test.ts` — NOTIF-01
@@ -845,15 +849,20 @@ Wave 0: [BLOCKING] DB 마이그레이션 + RED 테스트 스캐폴드
   - 모든 테스트 파일 skeleton 생성 (RED)
   - [BLOCKING] 완료 후 Wave 1~N 병렬 가능
 
-Wave 1 (병렬 실행 가능 그룹 A — 단지 상세 페이지 기반):
+Wave 1 (병렬 실행 가능 — 단지 상세 페이지 기반):
   - 04-01-PLAN: 댓글 시스템 (COMM-01) — comments 테이블 + Server Action + UI
+    [files_modified: ReviewList+CommentSection, comment-actions, comments]
   - 04-02-PLAN: GPS L1 인증 (COMM-02) — ReviewForm 버튼 + check_gps_proximity
-  - 04-03-PLAN: 카페 링크 + SLA 배지 (COMM-03, COMM-04)
-    [files_modified 무중복: 01=ReviewList+CommentSection, 02=ReviewForm+review-actions, 03=reports/page+links]
+    [files_modified: ReviewForm, review-actions]
+  [충돌 없음: 04-01과 04-02는 서로 다른 파일만 수정]
 
-Wave 2 (blocked on Wave 0; Wave 1과 병렬 가능 — 신규 페이지/cron):
+Wave 2 (blocked on Wave 1):
+  - 04-03-PLAN: 카페 링크 + SLA 배지 (COMM-03, COMM-04) — Wave 2로 이동
+    [depends_on: 04-01 — ReviewList.tsx를 04-01이 먼저 수정한 후 04-03이 CafeLink 추가]
+    [files_modified: ReviewList+admin/reports/page]
   - 04-04-PLAN: K-apt 부대시설 (DATA-01) — kapt.ts 확장 + facility_kapt 컬럼 + 단지 상세 탭
   - 04-05-PLAN: MOLIT 분양 (DATA-02) — molit-presale.ts + new_listings + /presale 페이지
+  [04-03, 04-04, 04-05는 서로 다른 파일을 수정하므로 병렬 가능]
 
 Wave 3 (blocked on Wave 1 + 2):
   - 04-06-PLAN: 카페 가입 코드 (COMM-05) — cafe-code worker + GitHub Actions
@@ -904,23 +913,20 @@ Wave 3 (blocked on Wave 1 + 2):
 
 ## Open Questions
 
-1. **new_listings 데이터 소스**
-   - What we know: D-08은 MOLIT API 자동 연동으로 결정됨
-   - What's unclear: MOLIT 분양권전매 API는 실거래 데이터이지 분양 공고 마스터가 아님. new_listings에 `name, region, price_min/max, total_units, move_in_date`를 넣으려면 청약홈 파일 또는 별도 수동 입력 필요
-   - Recommendation: 플래너가 DATA-02 PLAN 작성 시 사용자 확인 또는 "분양권전매 거래로 new_listings를 역방향 populate"로 scope를 조정
+1. **new_listings 데이터 소스** [RESOLVED]
+   - RESOLVED: 분양권전매 역방향 UPSERT로 new_listings 생성.
+     - price_min/price_max는 deal price 기반 (min=max=deal price 만원 단위).
+     - total_units와 move_in_date는 null 허용 (V1.5 scope 축소 — PresaleCard에서 '미정'으로 표시).
+     - complex_id는 nullable 허용 (골든레코드 원칙 유지 — MOLIT 분양권전매 API에 좌표 정보 없어 자동 매칭 불가. Phase 5에서 어드민 수동 매칭 UI 예정).
+     - 04-05-PLAN: PresaleCard는 complex_id 있을 때만 단지 링크 활성화, 없을 때 단순 카드 표시.
 
-2. **XML 파싱 라이브러리**
-   - What we know: MOLIT API는 XML 반환
-   - What's unclear: Node.js 18+ 내장 DOMParser로 충분한지, fast-xml-parser 추가 필요한지
-   - Recommendation: 플래너는 fast-xml-parser 없이 내장 파싱으로 구현 지시 (의존성 최소화)
+2. **XML 파싱 라이브러리** [RESOLVED]
+   - RESOLVED: 내장 정규식 파싱 사용 (Node.js 18+ 내장 regex 기반 parseXmlItems 함수). fast-xml-parser 의존성 추가 불필요.
 
-3. **/profile 페이지 존재 여부**
-   - What we know: Phase 3에서 회원 관리는 어드민용으로 구현됨
-   - What's unclear: 일반 사용자 프로필 설정 페이지가 있는지
-   - Recommendation: `src/app/profile/page.tsx` 신규 생성으로 계획
+3. **/profile 페이지 존재 여부** [RESOLVED]
+   - RESOLVED: src/app/profile/page.tsx 신규 생성. Phase 3에서 일반 사용자 프로필 페이지 미구현 확인.
 
 ---
-
 ## Security Domain
 
 ### Applicable ASVS Categories
