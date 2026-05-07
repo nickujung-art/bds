@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: unknown
 last_updated: "2026-05-07T00:30:13.509Z"
-last_activity: 2026-05-07 — Phase 3 all 5 plans complete
+last_activity: 2026-05-07 — Phase 4 planning complete (9 plans)
 progress:
   total_phases: 7
   completed_phases: 3
-  total_plans: 15
+  total_plans: 24
   completed_plans: 15
-  percent: 100
+  percent: 63
 ---
 
 # Project State — 단지온도
@@ -24,16 +24,14 @@ See: .planning/PROJECT.md (updated 2026-05-06)
 
 ## Current Phase
 
-**Phase 3: 카드뉴스·법적·운영** ✅ Complete
+**Phase 4: 커뮤니티 기초** 🔄 Ready to Execute
 
-Goal: V1.0 정식 출시에 필요한 법적 요건 충족, 운영 어드민 완성, a11y 기준 통과.
+Goal: 후기·댓글·외부 연결 등 커뮤니티 참여 기능 + 데이터 깊이 확장 (V1.5)
 
-Requirements: SHARE-03~04, LEGAL-01~05, ADMIN-01~04, A11Y-01~03
+Requirements: COMM-01~05, DATA-01~02, NOTIF-01~02
 
-Plans: 5/5 complete (03-01 ~ 03-05)
-Last Activity: 2026-05-07 — 03-05 A11Y gate complete (axe-core critical=0, 9 tests GREEN)
-
-Next step: `/gsd-execute-phase 4` (커뮤니티 기초)
+Plans: 0/9 complete (04-00 ~ 04-08) — planning complete 2026-05-07
+Next step: `/gsd-execute-phase 4` (Wave 0부터 순서대로)
 
 ## Phase Progress
 
@@ -42,7 +40,7 @@ Next step: `/gsd-execute-phase 4` (커뮤니티 기초)
 | 1 | 보안·인프라·배포 | ✅ Complete |
 | 2 | 랭킹·랜딩·공유 | ✅ Complete |
 | 3 | 카드뉴스·법적·운영 | ✅ Complete (5/5 plans) |
-| 4 | 커뮤니티 기초 | ⬜ Not Started |
+| 4 | 커뮤니티 기초 | 🔄 Ready to Execute (9 plans) |
 | 5 | 데이터 확장·운영 안정성 | ⬜ Not Started |
 | 6 | AI·차별화 기술 | ⬜ Not Started |
 | 7 | 커뮤니티 심화·자동화 | ⬜ Not Started |
