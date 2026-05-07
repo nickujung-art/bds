@@ -57,7 +57,7 @@ export async function upsertListingPrice(input: {
   // 2. zod validation (after auth confirmed)
   const parsed = listingPriceSchema.safeParse(input)
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? '입력값이 유효하지 않습니다' }
+    return { error: parsed.error.issues[0]?.message ?? '입력값이 유효하지 않습니다' }
   }
 
   // 3. upsert with onConflict — (complex_id, recorded_date, source) unique constraint
@@ -89,7 +89,7 @@ export async function deleteListingPrice(id: string): Promise<{ error: string | 
   // 2. zod validation (after auth confirmed)
   const parsed = deleteSchema.safeParse({ id })
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? '유효하지 않은 ID입니다' }
+    return { error: parsed.error.issues[0]?.message ?? '유효하지 않은 ID입니다' }
   }
 
   // 3. delete
