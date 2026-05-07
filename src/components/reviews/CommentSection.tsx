@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { submitComment } from '@/lib/auth/comment-actions'
+import { submitComment, reportComment } from '@/lib/auth/comment-actions'
 import type { Comment } from '@/lib/data/comments'
 
 interface Props {
@@ -21,6 +21,14 @@ export function CommentSection({ reviewId, complexId, initialComments, currentUs
   const [content, setContent] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const [reportedIds, setReportedIds] = useState<Set<string>>(new Set())
+
+  function handleReport(commentId: string) {
+    startTransition(async () => {
+      const result = await reportComment(commentId)
+      if (!result.error) setReportedIds(prev => new Set(prev).add(commentId))
+    })
+  }
 
   const visible = showAll ? initialComments : initialComments.slice(0, 3)
 
@@ -63,6 +71,24 @@ export function CommentSection({ reviewId, complexId, initialComments, currentUs
                 <span style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)' }}>
                   {formatNick(c.user_id)} · {new Date(c.created_at).toLocaleDateString('ko-KR')}
                 </span>
+                {currentUserId && currentUserId !== c.user_id && (
+                  <button
+                    type="button"
+                    aria-label="댓글 신고"
+                    disabled={reportedIds.has(c.id)}
+                    onClick={() => handleReport(c.id)}
+                    style={{
+                      font: '500 10px/1 var(--font-sans)',
+                      color: reportedIds.has(c.id) ? 'var(--fg-tertiary)' : 'var(--fg-sec)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: reportedIds.has(c.id) ? 'default' : 'pointer',
+                      padding: 0,
+                    }}
+                  >
+                    {reportedIds.has(c.id) ? '신고됨' : '신고'}
+                  </button>
+                )}
               </div>
               <p style={{ font: '500 13px/1.55 var(--font-sans)', color: 'var(--fg-pri)', margin: 0 }}>
                 {c.content}

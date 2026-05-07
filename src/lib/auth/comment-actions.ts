@@ -29,6 +29,23 @@ export async function submitComment(input: {
   return { error: null }
 }
 
+export async function reportComment(
+  commentId: string,
+  reason = '부적절한 내용',
+): Promise<{ error: string | null }> {
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '로그인이 필요합니다.' }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from('reports')
+    .insert({ reporter_id: user.id, target_type: 'comment', target_id: commentId, reason })
+
+  if (error) return { error: (error as { message: string }).message }
+  return { error: null }
+}
+
 export async function deleteComment(
   commentId: string,
   complexId: string,
