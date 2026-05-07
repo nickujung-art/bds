@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-07T16:00:00.000Z"
-last_activity: 2026-05-07 — Phase 5 planning complete (5 plans: 05-00~05-04)
+last_updated: "2026-05-07T07:36:28Z"
+last_activity: 2026-05-07 — Phase 5 05-00 Task 2 complete (molit-backfill-once.yml), Task 1 awaiting operator
 progress:
   total_phases: 7
   completed_phases: 4
@@ -34,14 +34,15 @@ Plans: 9/9 complete (04-00 ~ 04-08) — verified + security fixes 2026-05-07
 
 ---
 
-**Phase 5: 데이터 확장·운영 안정성** 📋 Ready to execute
+**Phase 5: 데이터 확장·운영 안정성** 🔄 In Progress
 
 Goal: 단지 데이터 깊이 확장 (재건축·가성비·갭) + 운영 백업 자동화로 V1.5 완성
 
 Requirements: DATA-03~05, OPS-01
 
-Plans: 5 plans (05-00 ~ 05-04) — planned 2026-05-07
-Next step: `/gsd-execute-phase 5`
+Plans: 5 plans (05-00 ~ 05-04) — 1/5 in progress
+Current: 05-00 (Task 2 완료, Task 1 운영자 수동 실행 대기 → BLOCKING)
+Next step: Task 1 완료 후 Wave 1 (05-01~05-04) 실행
 
 ## Phase Progress
 
@@ -77,6 +78,8 @@ Next step: `/gsd-execute-phase 5`
 | 2026-05-07 | visible h1 in SidePanel (not sr-only) — Playwright toBeVisible() requires non-zero bounding box | 03-05 |
 | 2026-05-07 | global-setup warn-not-throw on Supabase unavailability — enables a11y tests without DB | 03-05 |
 | 2026-05-07 | map page .catch(()=>[]) for Supabase errors — 200 with empty state vs 500 | 03-05 |
+| 2026-05-07 | MOLIT 백필 workflow_dispatch 전용 (schedule 없음) — 1회성이므로 자동 실행 불필요 | 05-00 |
+| 2026-05-07 | timeout-minutes: 300 — API 한도(일 10,000회)로 창원+김해 전체 3일 분할 실행 최대 5시간 | 05-00 |
 
 ---
 *Initialized: 2026-05-06*

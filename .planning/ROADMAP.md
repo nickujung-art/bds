@@ -10,7 +10,7 @@
 | 2 | 랭킹·랜딩·공유 | V1.0 | 핵심 UX 완성 — 사용자가 처음 봐야 할 화면 | RANK-01~03, SHARE-01~02 | ✅ Complete |
 | 3 | 카드뉴스·법적·운영 | V1.0 | V1.0 정식 출시 가능 상태 | SHARE-03~04, LEGAL-01~05, ADMIN-01~04, A11Y-01~03 | ✅ Complete |
 | 4 | 커뮤니티 기초 | V1.5 | 참여·소통 기능 + 데이터 확장 | COMM-01~05, DATA-01~02, NOTIF-01~02 | ✅ Complete |
-| 5 | 데이터 확장·운영 | V1.5 | V1.5 완성 — 데이터 깊이 + 운영 안정성 | DATA-03~05, OPS-01 | ⬜ Not Started |
+| 5 | 데이터 확장·운영 | V1.5 | V1.5 완성 — 데이터 깊이 + 운영 안정성 | DATA-03~05, OPS-01 | 🔄 In Progress (1/5) |
 | 6 | AI·차별화 기술 | V2.0 | 기술 차별화 — AI 봇 + 고도화 분석 | DIFF-03, DATA-06~07, AD-01~02, AUTH-01 | ⬜ Not Started |
 | 7 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
 
@@ -220,7 +220,7 @@
 **Plans:** 5 plans / 3 waves
 
 **Wave 0** *(BLOCKING — autonomous: false, 운영자 직접 실행)*
-- [ ] 05-00-PLAN.md — supabase link + db push (22개 마이그레이션 적용) + molit-backfill-once.yml 생성
+- [x] 05-00-PLAN.md — supabase link + db push (22개 마이그레이션 적용) + molit-backfill-once.yml 생성 (Task 2 완료, Task 1 운영자 수동 실행 대기)
 
 **Wave 1** *(blocked on Wave 0; 05-01/02/03 병렬 실행 가능 — files_modified 무중복)*
 - [ ] 05-01-PLAN.md — 재건축 타임라인 (RLS + 데이터 레이어 + RedevelopmentTimeline + 어드민) (DATA-03)
