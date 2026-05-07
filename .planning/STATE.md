@@ -9,24 +9,24 @@ See: .planning/PROJECT.md (updated 2026-05-06)
 
 ## Current Phase
 
-**Phase 1: 보안·인프라·배포** 📋 Ready to Execute
+**Phase 3: 카드뉴스·법적·운영** ✅ Plan 05 Complete
 
-Goal: V0.9 로컬 코드를 프로덕션에서 안전하게 운영 가능한 상태로 전환.
+Goal: 카드뉴스 생성, 법적 문서, 운영 어드민, 접근성 게이트.
 
-Requirements: INFRA-01~03, SEC-01~04
+Requirements: A11Y-01~03
 
-Next step: `/gsd-execute-phase 1`
+Current plan: 03-05 (Accessibility E2E + axe-core CI gate) — COMPLETE
+Last session: 2026-05-07 — Completed 03-05-PLAN.md
 
-Plans: 5 plans / 3 waves — planned 2026-05-06
-Context gathered: 2026-05-06 — `.planning/phases/01-security-infra-deploy/01-CONTEXT.md`
+Plans: Phase 3 plan 5 of 5 complete
 
 ## Phase Progress
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | 보안·인프라·배포 | 📋 Ready to Execute |
-| 2 | 랭킹·랜딩·공유 | ⬜ Not Started |
-| 3 | 카드뉴스·법적·운영 | ⬜ Not Started |
+| 1 | 보안·인프라·배포 | ✅ Complete |
+| 2 | 랭킹·랜딩·공유 | ✅ Complete |
+| 3 | 카드뉴스·법적·운영 | 🔄 In Progress (5/5 plans done) |
 | 4 | 커뮤니티 기초 | ⬜ Not Started |
 | 5 | 데이터 확장·운영 안정성 | ⬜ Not Started |
 | 6 | AI·차별화 기술 | ⬜ Not Started |
@@ -49,6 +49,9 @@ Context gathered: 2026-05-06 — `.planning/phases/01-security-infra-deploy/01-C
 | 2026-05-06 | Supabase Auth 유지 (NextAuth 전환 안 함) | Init |
 | 2026-05-06 | 카드뉴스 파이프라인 V1.0 포함 | Init |
 | 2026-05-06 | 비교 모드·주간 다이제스트·DB 백업을 V1.5로 defer | Init |
+| 2026-05-07 | visible h1 in SidePanel (not sr-only) — Playwright toBeVisible() requires non-zero bounding box | 03-05 |
+| 2026-05-07 | global-setup warn-not-throw on Supabase unavailability — enables a11y tests without DB | 03-05 |
+| 2026-05-07 | map page .catch(()=>[]) for Supabase errors — 200 with empty state vs 500 | 03-05 |
 
 ---
 *Initialized: 2026-05-06*
