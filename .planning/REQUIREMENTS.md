@@ -19,8 +19,8 @@
 ### Sharing & Viral
 - [ ] **SHARE-01**: 단지별 동적 OG 이미지 생성 (`@vercel/og`)
 - [ ] **SHARE-02**: 카카오톡·네이버 공유 버튼 + 단지 상세 공유 UX
-- [ ] **SHARE-03**: 카드뉴스 자동 생성 — Recharts SSR + `@vercel/og` 조합
-- [ ] **SHARE-04**: 어드민 카드뉴스 1-click 발행 UI
+- [x] **SHARE-03**: 카드뉴스 자동 생성 — Recharts SSR + `@vercel/og` 조합
+- [x] **SHARE-04**: 어드민 카드뉴스 1-click 발행 UI
 
 ### Legal & Compliance
 - [ ] **LEGAL-01**: 이용약관 페이지 + 가입 시 동의 흐름
