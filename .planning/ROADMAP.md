@@ -225,7 +225,7 @@
 **Wave 1** *(blocked on Wave 0; 05-01/02/03 병렬 실행 가능 — files_modified 무중복)*
 - [x] 05-01-PLAN.md — 재건축 타임라인 (RLS + 데이터 레이어 + RedevelopmentTimeline + 어드민) (DATA-03) ✅ COMPLETE (2026-05-07)
 - [x] 05-02-PLAN.md — 가성비 4분면 차트 (getQuadrantData + ValueQuadrantChart + 단지 상세 연결) (DATA-04) ✅ COMPLETE (2026-05-07)
-- [ ] 05-03-PLAN.md — listing_prices 마이그레이션 + Server Action + 어드민 입력 UI (DATA-05)
+- [x] 05-03-PLAN.md — listing_prices 마이그레이션 + Server Action + 어드민 입력 UI (DATA-05) ✅ COMPLETE (2026-05-07)
 
 **Wave 1 (continued)** *(blocked on Wave 0; 05-04도 05-01/02/03과 병렬 실행 가능 — files_modified 무중복)*
 - [ ] 05-04-PLAN.md — pg_dump 주간 백업 GitHub Actions + danjiondo-backup repo (OPS-01)
