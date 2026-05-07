@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
@@ -12,19 +13,16 @@ function getMonday(date: Date): Date {
   return d
 }
 
-// 8자 알파뉴메릭 랜덤 코드 (혼동 문자 0/O, 1/I 제외)
+// 8자 알파뉴메릭 코드 — crypto.randomBytes로 CSPRNG 사용 (혼동 문자 0/O, 1/I 제외)
 function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  let code = ''
-  for (let i = 0; i < 8; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)]
-  }
-  return code
+  const bytes = randomBytes(8)
+  return Array.from(bytes, b => chars[b % chars.length]).join('')
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const secret = request.headers.get('x-cron-secret')
-  if (!secret || secret !== process.env.CRON_SECRET) {
+  const authHeader = request.headers.get('authorization')
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

@@ -5,8 +5,8 @@ import { buildWeeklyDigest } from '@/lib/notifications/digest'
 export const runtime = 'nodejs'
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const secret = request.headers.get('x-cron-secret')
-  if (!secret || secret !== process.env.CRON_SECRET) {
+  const authHeader = request.headers.get('authorization')
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

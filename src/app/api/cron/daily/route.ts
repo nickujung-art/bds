@@ -1,5 +1,4 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@supabase/supabase-js'
 import { fetchKaptBasicInfo } from '@/services/kapt'
 import {
   fetchPresaleTrades,
@@ -9,13 +8,6 @@ import {
 } from '@/services/molit-presale'
 
 export const runtime = 'nodejs'
-
-function createAdminClientUntyped() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) throw new Error('Supabase admin env vars missing')
-  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
-}
 
 export async function GET(request: Request): Promise<Response> {
   const authHeader = request.headers.get('authorization')
@@ -27,7 +19,8 @@ export async function GET(request: Request): Promise<Response> {
   let totalUpserted = 0
 
   // ── K-apt 부대시설 UPSERT (DATA-01) ──────────────────────────────────
-  const supabase = createSupabaseAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createSupabaseAdminClient() as any
   const { data: complexesWithKaptCode } = await supabase
     .from('complexes')
     .select('id, kapt_code')
@@ -61,7 +54,6 @@ export async function GET(request: Request): Promise<Response> {
   totalUpserted += kaptUpserted
 
   // ── MOLIT 분양권전매 UPSERT (DATA-02) ────────────────────────────────
-  const adminUntyped = createAdminClientUntyped()
   const dealYmd = currentYearMonth()
   let presaleUpserted = 0
 
@@ -69,7 +61,7 @@ export async function GET(request: Request): Promise<Response> {
     try {
       const trades = await fetchPresaleTrades(lawdCd, dealYmd)
       for (const trade of trades) {
-        const { data: listing } = await adminUntyped
+        const { data: listing } = await supabase
           .from('new_listings')
           .upsert(
             {
@@ -88,7 +80,7 @@ export async function GET(request: Request): Promise<Response> {
         const listingId = (listing as { id: string }).id
         const dealDate = `${trade.dealYear}-${trade.dealMonth.padStart(2, '0')}-${trade.dealDay.padStart(2, '0')}`
 
-        const { error } = await adminUntyped
+        const { error } = await supabase
           .from('presale_transactions')
           .upsert(
             {

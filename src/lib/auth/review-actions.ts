@@ -14,16 +14,16 @@ export async function submitReview(
 ): Promise<{ error: string | null }> {
   const { complexId, content, rating } = input
 
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '로그인이 필요합니다.' }
+
   if (content.length < 10 || content.length > 500) {
     return { error: '후기는 10자 이상 500자 이하로 작성해주세요.' }
   }
   if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
     return { error: '평점은 1~5 사이의 정수여야 합니다.' }
   }
-
-  const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '로그인이 필요합니다.' }
 
   const { error } = await supabase.from('complex_reviews').insert({
     complex_id: complexId,
@@ -66,6 +66,18 @@ export async function verifyGpsForReview(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { gps_verified: false, error: '로그인이 필요합니다.' }
 
+  // TOCTOU 방지: complexId 파라미터가 실제 리뷰의 complex_id와 일치하는지 검증
+  const { data: review } = await supabase
+    .from('complex_reviews')
+    .select('complex_id')
+    .eq('id', reviewId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!review || review.complex_id !== complexId) {
+    return { gps_verified: false, error: '잘못된 요청입니다.' }
+  }
+
   // 스푸핑 방지: 클라이언트 좌표를 PostGIS로 서버 검증 (D-07)
   const { data: proximity } = await supabase.rpc('check_gps_proximity', {
     p_complex_id: complexId,
@@ -76,11 +88,12 @@ export async function verifyGpsForReview(
 
   const verified = proximity === true
   if (verified) {
-    await supabase
+    const { error: updateError } = await supabase
       .from('complex_reviews')
       .update({ gps_verified: true })
       .eq('id', reviewId)
-      .eq('user_id', user.id)  // 본인 후기만 업데이트
+      .eq('user_id', user.id)
+    if (updateError) return { gps_verified: false, error: '인증 기록 중 오류가 발생했습니다.' }
     revalidatePath(`/complexes/${complexId}`)
   }
   return { gps_verified: verified, error: null }

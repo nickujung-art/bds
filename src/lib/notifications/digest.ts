@@ -18,9 +18,11 @@ export async function buildWeeklyDigest(
   supabase: SupabaseClient<Database>,
 ): Promise<{ inserted: number }> {
   // 1. 관심 단지가 있는 사용자 전체 조회 (N+1 방지)
+  // limit: 10,000 — digest is a batch job; unbounded load would OOM a serverless fn
   const { data: favorites } = await supabase
     .from('favorites')
     .select('user_id, complex_id')
+    .limit(10000)
 
   if (!favorites?.length) return { inserted: 0 }
 
@@ -36,7 +38,7 @@ export async function buildWeeklyDigest(
   const allComplexIds = [...new Set(favorites.map((f) => f.complex_id))]
   const { data: recentTrades } = await supabase
     .from('transactions')
-    .select('complex_id, price, area_m2, deal_date')
+    .select('complex_id, price, area_m2, deal_date, complexes(name)')
     .in('complex_id', allComplexIds)
     .is('cancel_date', null) // transactions 대원칙
     .is('superseded_by', null) // transactions 대원칙
@@ -69,7 +71,8 @@ export async function buildWeeklyDigest(
       .flatMap((cid) => (tradesByComplex.get(cid) ?? []).slice(0, 1))
       .map((t) => {
         const priceStr = t.price != null ? `${(t.price / 10000).toLocaleString('ko-KR')}억원` : ''
-        return `· ${t.complex_id ?? ''} ${t.area_m2}㎡ ${priceStr}`.trimEnd()
+        const name = (t.complexes as { name?: string } | null)?.name ?? t.complex_id ?? ''
+        return `· ${name} ${t.area_m2}㎡ ${priceStr}`.trimEnd()
       })
 
     const body =

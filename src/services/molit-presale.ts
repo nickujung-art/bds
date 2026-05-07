@@ -1,7 +1,7 @@
 import { z } from 'zod/v4'
 
 const BASE_URL =
-  'http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcSilvTrade'
+  'https://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcSilvTrade'
 
 // LAWD_CD 상수 (창원·김해)
 export const LAWD_CODES = ['38110', '38370'] as const

@@ -60,7 +60,7 @@ export async function fetchComplexList(sggCode: string): Promise<KaptComplex[]> 
 }
 
 // ===== fetchKaptBasicInfo (DATA-01) =====
-const BASIC_INFO_URL = 'http://apis.data.go.kr/1613000/AptBasisInfoServiceV3/getAphusBassInfoV3'
+const BASIC_INFO_URL = 'https://apis.data.go.kr/1613000/AptBasisInfoServiceV3/getAphusBassInfoV3'
 
 const KaptBasicInfoSchema = z.object({
   kaptCode:       z.string(),

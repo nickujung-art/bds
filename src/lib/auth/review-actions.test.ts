@@ -7,6 +7,25 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
+function makeFromMock(reviewComplexId: string | null, updateError: null | { message: string } = null) {
+  return vi.fn().mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: reviewComplexId ? { complex_id: reviewComplexId } : null,
+          }),
+        }),
+      }),
+    }),
+    update: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: updateError }),
+      }),
+    }),
+  })
+}
+
 describe('verifyGpsForReview (COMM-02)', () => {
   it('미로그인 시 gps_verified: false를 반환한다', async () => {
     const { createSupabaseServerClient } = await import('@/lib/supabase/server')
@@ -23,7 +42,7 @@ describe('verifyGpsForReview (COMM-02)', () => {
     vi.mocked(createSupabaseServerClient).mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
       rpc: vi.fn().mockResolvedValue({ data: true }),
-      from: vi.fn().mockReturnValue({ update: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() }),
+      from: makeFromMock('c1'),
     } as never)
     const result = await verifyGpsForReview('r1', 'c1', 35.2, 128.7)
     expect(result.gps_verified).toBe(true)
@@ -34,6 +53,7 @@ describe('verifyGpsForReview (COMM-02)', () => {
     vi.mocked(createSupabaseServerClient).mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
       rpc: vi.fn().mockResolvedValue({ data: false }),
+      from: makeFromMock('c1'),
     } as never)
     const result = await verifyGpsForReview('r1', 'c1', 99.9, 99.9)
     expect(result.gps_verified).toBe(false)
