@@ -217,10 +217,32 @@
 - DATA-05: 매물가 vs 실거래가 갭 라벨
 - OPS-01: DB 백업 자동화 (pg_dump + GitHub private repo 주간)
 
+**Plans:** 5 plans / 3 waves
+
+**Wave 0** *(BLOCKING — autonomous: false, 운영자 직접 실행)*
+- [ ] 05-00-PLAN.md — supabase link + db push (22개 마이그레이션 적용) + molit-backfill-once.yml 생성
+
+**Wave 1** *(blocked on Wave 0; 05-01/02/03 병렬 실행 가능 — files_modified 무중복)*
+- [ ] 05-01-PLAN.md — 재건축 타임라인 (RLS + 데이터 레이어 + RedevelopmentTimeline + 어드민) (DATA-03)
+- [ ] 05-02-PLAN.md — 가성비 4분면 차트 (getQuadrantData + ValueQuadrantChart + 단지 상세 연결) (DATA-04)
+- [ ] 05-03-PLAN.md — listing_prices 마이그레이션 + Server Action + 어드민 입력 UI (DATA-05)
+
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 05-04-PLAN.md — pg_dump 주간 백업 GitHub Actions + danjiondo-backup repo (OPS-01)
+
+**Cross-cutting constraints:**
+- 모든 transactions 쿼리: `cancel_date IS NULL AND superseded_by IS NULL` 필수
+- admin write: `createSupabaseAdminClient()` + requireAdmin() guard 필수
+- ISR 페이지: `export const revalidate = 86400` 유지 (page.tsx)
+- 'use client' 차트 컴포넌트: data는 RSC에서만 fetch, 컴포넌트에 props로 전달
+- AI 슬롭 금지: backdrop-blur, gradient-text, glow, 보라/인디고
+- D-08 준수: 갭 라벨 UI 표시 Phase 6으로 defer (listing_prices 테이블만 생성)
+- SUPABASE_DB_URL GitHub Secrets에만 저장 — log 출력 절대 금지
+
 **Success Criteria:**
 1. 재건축 단계가 있는 단지 상세에 진행 타임라인이 표시된다
 2. 가성비 4분면 차트에서 단지 위치를 확인할 수 있다
-3. 단지 상세에 매물가 대비 실거래가 갭 라벨이 표시된다
+3. 단지 상세에 매물가 대비 실거래가 갭 라벨이 표시된다 (Phase 5: 인프라만, Phase 6: UI)
 4. 매주 pg_dump가 실행되고 GitHub private repo에 백업이 저장된다
 
 **UI hint**: yes
