@@ -15,7 +15,7 @@ const VALID_PHASES = [
 
 const redevelopmentSchema = z.object({
   complexId: z.string().uuid('유효한 단지 ID가 아닙니다'),
-  phase: z.enum(VALID_PHASES, { errorMap: () => ({ message: '유효한 진행 단계가 아닙니다' }) }),
+  phase: z.enum(VALID_PHASES, { message: '유효한 진행 단계가 아닙니다' }),
   notes: z.string().max(500, '비고는 500자 이하로 입력해 주세요').nullable(),
 })
 
@@ -53,7 +53,11 @@ export async function upsertRedevelopmentProject(
   // 2. zod validation (after auth confirmed)
   const parsed = redevelopmentSchema.safeParse({ complexId, phase, notes })
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? '입력값이 유효하지 않습니다' }
+    const firstIssue = parsed.error.issues[0] ?? parsed.error.flatten().fieldErrors
+    const message = typeof firstIssue === 'object' && 'message' in firstIssue
+      ? (firstIssue as { message: string }).message
+      : '입력값이 유효하지 않습니다'
+    return { error: message }
   }
 
   // 3. upsert (complex_id 기준 — 단지당 1개 row)

@@ -6,11 +6,13 @@ import { getComplexById, getComplexTransactionSummary } from '@/lib/data/complex
 import { getActiveAds } from '@/lib/data/ads'
 import { getComplexReviewStats } from '@/lib/data/reviews'
 import { getReviewsWithComments } from '@/lib/data/comments'
+import { getRedevelopmentProject } from '@/lib/data/redevelopment'
 import { DealTypeTabs } from '@/components/complex/DealTypeTabs'
 import { FavoriteButton } from '@/components/complex/FavoriteButton'
 import { ShareButton } from '@/components/complex/ShareButton'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { NeighborhoodOpinion } from '@/components/reviews/NeighborhoodOpinion'
+import { RedevelopmentTimeline } from '@/components/complex/RedevelopmentTimeline'
 
 export const revalidate = 86400
 
@@ -106,7 +108,7 @@ export default async function ComplexDetailPage({ params }: Props) {
   const { id } = await params
   const supabase = createReadonlyClient()
 
-  const [complex, saleData, jeonseData, monthlyData, sidebarAds, reviews, reviewStats, facilityKaptResult] = await Promise.all([
+  const [complex, saleData, jeonseData, monthlyData, sidebarAds, reviews, reviewStats, facilityKaptResult, redevelopmentProject] = await Promise.all([
     getComplexById(id, supabase),
     getComplexTransactionSummary(id, 'sale', supabase),
     getComplexTransactionSummary(id, 'jeonse', supabase),
@@ -121,6 +123,7 @@ export default async function ComplexDetailPage({ params }: Props) {
       .order('data_month', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    getRedevelopmentProject(id, supabase).catch(() => null),
   ])
 
   const facilityKapt = facilityKaptResult?.data ?? null
@@ -504,6 +507,14 @@ export default async function ComplexDetailPage({ params }: Props) {
               </p>
             )}
           </div>
+
+          {/* 재건축 타임라인 — status='in_redevelopment' 단지만 표시 */}
+          {complex.status === 'in_redevelopment' && redevelopmentProject && (
+            <RedevelopmentTimeline
+              phase={redevelopmentProject.phase}
+              notes={redevelopmentProject.notes}
+            />
+          )}
 
           {/* 동네 의견 */}
           <div
