@@ -211,7 +211,7 @@ export default async function HomePage() {
       </header>
 
       {/* Body */}
-      <div style={{ flex: 1, padding: '32px 48px', maxWidth: 1280, margin: '0 auto', width: '100%' }}>
+      <main style={{ flex: 1, padding: '32px 48px', maxWidth: 1280, margin: '0 auto', width: '100%' }}>
         {/* Section title */}
         <h1
           style={{
@@ -440,7 +440,7 @@ export default async function HomePage() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   )
 }

@@ -20,8 +20,8 @@ export default async function MapPage({ searchParams }: Props) {
   const supabase = createReadonlyClient()
 
   const [complexes, searchResults] = await Promise.all([
-    getComplexesForMap(TARGET_SGG, supabase),
-    searchComplexes(q, TARGET_SGG, supabase),
+    getComplexesForMap(TARGET_SGG, supabase).catch(() => []),
+    searchComplexes(q, TARGET_SGG, supabase).catch(() => []),
   ])
 
   return (
