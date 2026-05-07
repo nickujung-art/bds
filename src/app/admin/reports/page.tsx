@@ -1,0 +1,216 @@
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { ReportActions } from '@/components/admin/ReportActions'
+
+export const revalidate = 0
+export const metadata: Metadata = { title: '관리자 · 신고 큐' }
+
+function formatDateTime(s: string) {
+  return new Date(s).toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+interface ReportRow {
+  id: string
+  target_type: 'review' | 'user' | 'ad'
+  target_id: string
+  reason: string
+  status: 'pending' | 'accepted' | 'rejected'
+  created_at: string
+}
+
+const STATUS_LABEL: Record<ReportRow['status'], string> = {
+  pending:  '대기',
+  accepted: '처리 완료',
+  rejected: '기각',
+}
+
+const STATUS_COLOR: Record<ReportRow['status'], string> = {
+  pending:  '#d97706',
+  accepted: '#16a34a',
+  rejected: '#6b7280',
+}
+
+export default async function AdminReportsPage() {
+  // 관리자 권한 확인
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login?next=/admin/reports')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || !['admin', 'superadmin'].includes((profile as { role: string }).role ?? '')) {
+    redirect('/')
+  }
+
+  const adminClient = createSupabaseAdminClient()
+  const { data: reports } = await adminClient
+    .from('reports')
+    .select('id, target_type, target_id, reason, status, created_at')
+    .order('status', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  const rows = (reports ?? []) as ReportRow[]
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg-canvas)', fontFamily: 'var(--font-sans)' }}>
+      <header
+        style={{
+          height: 60,
+          background: '#fff',
+          borderBottom: '1px solid var(--line-default)',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 32px',
+          gap: 24,
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        <Link href="/" className="dj-logo">
+          <span className="mark">단</span>
+          <span>단지온도</span>
+        </Link>
+        <span style={{ font: '600 14px/1 var(--font-sans)', color: 'var(--fg-sec)' }}>
+          관리자 · 신고 큐
+        </span>
+      </header>
+
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 32px' }}>
+        <h1
+          style={{
+            font: '700 22px/1.3 var(--font-sans)',
+            letterSpacing: '-0.02em',
+            margin: '0 0 20px',
+          }}
+        >
+          신고 큐
+        </h1>
+
+        {rows.length === 0 ? (
+          <div
+            className="card"
+            style={{
+              padding: 40,
+              textAlign: 'center',
+              font: '500 14px/1.6 var(--font-sans)',
+              color: 'var(--fg-tertiary)',
+            }}
+          >
+            접수된 신고가 없습니다.
+          </div>
+        ) : (
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr
+                  style={{
+                    borderBottom: '1px solid var(--line-default)',
+                    background: 'var(--bg-surface-2)',
+                  }}
+                >
+                  {['일시', '대상', '대상 ID', '사유', '상태', '액션'].map(h => (
+                    <th
+                      key={h}
+                      scope="col"
+                      style={{
+                        padding: '10px 16px',
+                        font: '600 12px/1 var(--font-sans)',
+                        color: 'var(--fg-sec)',
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr
+                    key={r.id}
+                    style={{
+                      borderBottom: i < rows.length - 1 ? '1px solid var(--line-subtle)' : 'none',
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: '12px 16px',
+                        font: '500 12px/1.4 var(--font-sans)',
+                        color: 'var(--fg-tertiary)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {formatDateTime(r.created_at)}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span className="chip sm">{r.target_type}</span>
+                    </td>
+                    <td
+                      style={{
+                        padding: '12px 16px',
+                        font: '400 11px/1.4 var(--font-mono)',
+                        color: 'var(--fg-tertiary)',
+                        maxWidth: 140,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                      title={r.target_id}
+                    >
+                      {r.target_id}
+                    </td>
+                    <td
+                      style={{
+                        padding: '12px 16px',
+                        font: '500 13px/1.4 var(--font-sans)',
+                        maxWidth: 240,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                      title={r.reason}
+                    >
+                      {r.reason}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          font: '600 11px/1 var(--font-sans)',
+                          color: '#fff',
+                          background: STATUS_COLOR[r.status],
+                        }}
+                      >
+                        {STATUS_LABEL[r.status]}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <ReportActions reportId={r.id} status={r.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
