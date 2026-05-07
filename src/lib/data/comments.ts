@@ -21,13 +21,15 @@ export async function getReviewsWithComments(
   complexId: string,
   supabase: SupabaseClient<Database>,
 ): Promise<ReviewWithComments[]> {
-  const { data } = await supabase
+  // database.ts는 comments 관계를 아직 포함하지 않음 — any 캐스트로 런타임 쿼리 허용
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
     .from('complex_reviews')
     .select('*, comments(id, content, created_at, user_id)')
     .eq('complex_id', complexId)
     .order('created_at', { ascending: false })
     .limit(20)
-  return (data ?? []) as ReviewWithComments[]
+  return ((data ?? []) as unknown) as ReviewWithComments[]
 }
 
 export async function getCommentsByReviewId(
@@ -35,11 +37,12 @@ export async function getCommentsByReviewId(
   supabase: SupabaseClient<Database>,
   limit = 20,
 ): Promise<Comment[]> {
-  const { data } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
     .from('comments')
     .select('*')
     .eq('review_id', reviewId)
     .order('created_at', { ascending: true })
     .limit(limit)
-  return (data ?? []) as Comment[]
+  return ((data ?? []) as unknown) as Comment[]
 }

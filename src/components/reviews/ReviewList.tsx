@@ -1,8 +1,11 @@
-import type { ComplexReview, ReviewStats } from '@/lib/data/reviews'
+import type { ReviewStats } from '@/lib/data/reviews'
+import type { ReviewWithComments } from '@/lib/data/comments'
+import { CommentSection } from './CommentSection'
 
 interface Props {
-  reviews: ComplexReview[]
+  reviews: ReviewWithComments[]
   stats:   ReviewStats
+  currentUserId?: string | null
 }
 
 function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
@@ -46,7 +49,7 @@ export function ReviewStats({ stats }: { stats: ReviewStats }) {
   )
 }
 
-export function ReviewList({ reviews, stats }: Props) {
+export function ReviewList({ reviews, stats, currentUserId }: Props) {
   if (!reviews.length) {
     return (
       <div
@@ -77,10 +80,11 @@ export function ReviewList({ reviews, stats }: Props) {
               <Stars rating={r.rating} size={13} />
               {r.gps_verified && (
                 <span
+                  aria-label="GPS 위치 인증 완료된 후기"
                   style={{
                     font: '500 10px/1 var(--font-sans)',
-                    color: '#16a34a',
-                    background: '#dcfce7',
+                    color: 'var(--fg-positive)',
+                    background: 'var(--bg-positive-tint)',
                     padding: '2px 6px',
                     borderRadius: 4,
                   }}
@@ -107,6 +111,12 @@ export function ReviewList({ reviews, stats }: Props) {
             >
               {r.content}
             </p>
+            <CommentSection
+              reviewId={r.id}
+              complexId={r.complex_id}
+              initialComments={r.comments ?? []}
+              currentUserId={currentUserId}
+            />
           </div>
         ))}
       </div>

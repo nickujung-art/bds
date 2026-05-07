@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { createReadonlyClient } from '@/lib/supabase/readonly'
 import { getComplexById, getComplexTransactionSummary } from '@/lib/data/complex-detail'
 import { getActiveAds } from '@/lib/data/ads'
-import { getComplexReviews, getComplexReviewStats } from '@/lib/data/reviews'
+import { getComplexReviewStats } from '@/lib/data/reviews'
+import { getReviewsWithComments } from '@/lib/data/comments'
 import { DealTypeTabs } from '@/components/complex/DealTypeTabs'
 import { FavoriteButton } from '@/components/complex/FavoriteButton'
 import { AdBanner } from '@/components/ads/AdBanner'
@@ -119,7 +120,7 @@ export default async function ComplexDetailPage({ params }: Props) {
     getComplexTransactionSummary(id, 'jeonse', supabase),
     getComplexTransactionSummary(id, 'monthly', supabase),
     getActiveAds('sidebar', supabase),
-    getComplexReviews(id, supabase),
+    getReviewsWithComments(id, supabase),
     getComplexReviewStats(id, supabase),
   ])
 

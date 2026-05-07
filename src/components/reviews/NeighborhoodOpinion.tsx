@@ -1,26 +1,29 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { ComplexReview, ReviewStats } from '@/lib/data/reviews'
+import type { ReviewStats } from '@/lib/data/reviews'
+import type { ReviewWithComments } from '@/lib/data/comments'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { ReviewList } from './ReviewList'
 import { ReviewForm } from './ReviewForm'
 
 interface Props {
   complexId:      string
-  initialReviews: ComplexReview[]
+  initialReviews: ReviewWithComments[]
   initialStats:   ReviewStats
 }
 
 export function NeighborhoodOpinion({ complexId, initialReviews, initialStats }: Props) {
   const [showForm, setShowForm]       = useState(false)
   const [isLoggedIn, setIsLoggedIn]   = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const loginUrl = `/login?next=/complexes/${complexId}`
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient()
     supabase.auth.getUser().then(({ data }) => {
       setIsLoggedIn(!!data.user)
+      setCurrentUserId(data.user?.id ?? null)
     })
   }, [])
 
@@ -79,7 +82,7 @@ export function NeighborhoodOpinion({ complexId, initialReviews, initialStats }:
         </div>
       )}
 
-      <ReviewList reviews={initialReviews} stats={initialStats} />
+      <ReviewList reviews={initialReviews} stats={initialStats} currentUserId={currentUserId} />
     </div>
   )
 }
