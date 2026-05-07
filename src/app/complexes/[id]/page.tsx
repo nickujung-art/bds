@@ -7,12 +7,14 @@ import { getActiveAds } from '@/lib/data/ads'
 import { getComplexReviewStats } from '@/lib/data/reviews'
 import { getReviewsWithComments } from '@/lib/data/comments'
 import { getRedevelopmentProject } from '@/lib/data/redevelopment'
+import { getQuadrantData } from '@/lib/data/quadrant'
 import { DealTypeTabs } from '@/components/complex/DealTypeTabs'
 import { FavoriteButton } from '@/components/complex/FavoriteButton'
 import { ShareButton } from '@/components/complex/ShareButton'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { NeighborhoodOpinion } from '@/components/reviews/NeighborhoodOpinion'
 import { RedevelopmentTimeline } from '@/components/complex/RedevelopmentTimeline'
+import { ValueQuadrantChart } from '@/components/complex/ValueQuadrantChart'
 
 export const revalidate = 86400
 
@@ -108,8 +110,11 @@ export default async function ComplexDetailPage({ params }: Props) {
   const { id } = await params
   const supabase = createReadonlyClient()
 
-  const [complex, saleData, jeonseData, monthlyData, sidebarAds, reviews, reviewStats, facilityKaptResult, redevelopmentProject] = await Promise.all([
-    getComplexById(id, supabase),
+  // complex를 먼저 단독 fetch — si/gu로 getQuadrantData 호출에 필요
+  const complex = await getComplexById(id, supabase)
+  if (!complex) notFound()
+
+  const [saleData, jeonseData, monthlyData, sidebarAds, reviews, reviewStats, facilityKaptResult, redevelopmentProject, quadrantData] = await Promise.all([
     getComplexTransactionSummary(id, 'sale', supabase),
     getComplexTransactionSummary(id, 'jeonse', supabase),
     getComplexTransactionSummary(id, 'monthly', supabase),
@@ -124,11 +129,13 @@ export default async function ComplexDetailPage({ params }: Props) {
       .limit(1)
       .maybeSingle(),
     getRedevelopmentProject(id, supabase).catch(() => null),
+    complex.si && complex.gu
+      ? getQuadrantData(id, complex.si, complex.gu, supabase).catch(() => null)
+      : Promise.resolve(null),
   ])
 
   const facilityKapt = facilityKaptResult?.data ?? null
 
-  if (!complex) notFound()
 
   const breadcrumb = [complex.si, complex.gu, complex.dong].filter(Boolean)
   const latestSale = saleData.at(-1)
@@ -313,6 +320,17 @@ export default async function ComplexDetailPage({ params }: Props) {
               monthlyData={monthlyData}
             />
           </div>
+
+          {/* 단지 가성비 분석 — ValueQuadrantChart (dynamic import, ssr: false) */}
+          {quadrantData && (
+            <ValueQuadrantChart
+              data={quadrantData.points}
+              medianX={quadrantData.medianX}
+              medianY={quadrantData.medianY}
+              regionLabel={quadrantData.regionLabel}
+              totalCount={quadrantData.totalCount}
+            />
+          )}
 
           {/* Facilities card */}
           <div className="card" style={{ padding: 20 }}>
