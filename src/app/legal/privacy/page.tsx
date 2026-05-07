@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = { title: '개인정보처리방침' }
 
@@ -127,6 +128,7 @@ export default function PrivacyPage() {
           </p>
         </article>
       </main>
+      <Footer />
     </div>
   )
 }

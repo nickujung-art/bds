@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: unknown
 last_updated: "2026-05-07T00:30:13.509Z"
-last_activity: 2026-05-06 — planning complete, verification passed
+last_activity: 2026-05-07 — Phase 3 all 5 plans complete
 progress:
   total_phases: 7
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 15
-  completed_plans: 13
-  percent: 87
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State — 단지온도
@@ -20,18 +20,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-06)
 
 **Core value:** 창원·김해 실수요자가 "이 단지 사도 되는지" 데이터와 이웃 의견으로 30분 안에 결정 짓게 한다.
-**Current focus:** Phase 1 — 보안·인프라·배포
+**Current focus:** Phase 3 complete — ready for Phase 4
 
 ## Current Phase
 
-**Phase 3: 카드뉴스·법적·운영** 🔄 In Progress
+**Phase 3: 카드뉴스·법적·운영** ✅ Complete
 
 Goal: V1.0 정식 출시에 필요한 법적 요건 충족, 운영 어드민 완성, a11y 기준 통과.
 
 Requirements: SHARE-03~04, LEGAL-01~05, ADMIN-01~04, A11Y-01~03
 
-Plans: 5 plans / 4 waves (03-01 ~ 03-05) — Current Plan: 3 of 5
-Last Activity: 2026-05-07 — 03-03 SHARE-03/04 cardnews complete
+Plans: 5/5 complete (03-01 ~ 03-05)
+Last Activity: 2026-05-07 — 03-05 A11Y gate complete (axe-core critical=0, 9 tests GREEN)
+
+Next step: `/gsd-execute-phase 4` (커뮤니티 기초)
 
 ## Phase Progress
 
@@ -39,7 +41,7 @@ Last Activity: 2026-05-07 — 03-03 SHARE-03/04 cardnews complete
 |---|-------|--------|
 | 1 | 보안·인프라·배포 | ✅ Complete |
 | 2 | 랭킹·랜딩·공유 | ✅ Complete |
-| 3 | 카드뉴스·법적·운영 | 🔄 In Progress (3/5 plans done) |
+| 3 | 카드뉴스·법적·운영 | ✅ Complete (5/5 plans) |
 | 4 | 커뮤니티 기초 | ⬜ Not Started |
 | 5 | 데이터 확장·운영 안정성 | ⬜ Not Started |
 | 6 | AI·차별화 기술 | ⬜ Not Started |
@@ -64,6 +66,9 @@ Last Activity: 2026-05-07 — 03-03 SHARE-03/04 cardnews complete
 | 2026-05-06 | 비교 모드·주간 다이제스트·DB 백업을 V1.5로 defer | Init |
 | 2026-05-07 | JSX extracted from route.ts to CardnewsLayout.tsx for Vitest/esbuild compat | 03-03 |
 | 2026-05-07 | cardnews.test.ts mocks @/lib/supabase/server (same pattern as consent-actions) | 03-03 |
+| 2026-05-07 | visible h1 in SidePanel (not sr-only) — Playwright toBeVisible() requires non-zero bounding box | 03-05 |
+| 2026-05-07 | global-setup warn-not-throw on Supabase unavailability — enables a11y tests without DB | 03-05 |
+| 2026-05-07 | map page .catch(()=>[]) for Supabase errors — 200 with empty state vs 500 | 03-05 |
 
 ---
 *Initialized: 2026-05-06*

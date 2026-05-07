@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = { title: '이용약관' }
 
@@ -116,6 +117,7 @@ export default function TermsPage() {
           </p>
         </article>
       </main>
+      <Footer />
     </div>
   )
 }

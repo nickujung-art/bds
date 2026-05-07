@@ -27,6 +27,16 @@ export function SidePanel({ query, complexes }: Props) {
           borderBottom: '1px solid var(--line-default)',
         }}
       >
+        <h1
+          style={{
+            font: '600 13px/1.4 var(--font-sans)',
+            color: 'var(--fg-tertiary)',
+            margin: '0 0 8px',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          단지 검색
+        </h1>
         <Suspense>
           <SearchInput initialValue={query} />
         </Suspense>

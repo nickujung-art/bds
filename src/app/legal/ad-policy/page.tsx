@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = { title: '광고 정책' }
 
@@ -107,6 +108,7 @@ export default function AdPolicyPage() {
           </p>
         </article>
       </main>
+      <Footer />
     </div>
   )
 }
