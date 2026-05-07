@@ -7,7 +7,7 @@ import type { Database } from '@/types/database'
 const ACTIVE_SGG_CODES = ['48121', '48123', '48125', '48127', '48129', '48250'] as const
 const WINDOW_DAYS = 30
 
-export type RankType = Database['public']['Enums']['rank_type']
+export type RankType = 'high_price' | 'volume' | 'price_per_pyeong' | 'interest'
 
 export interface RankingRow {
   id: string
