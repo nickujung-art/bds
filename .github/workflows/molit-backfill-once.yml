@@ -1,0 +1,40 @@
+name: MOLIT Backfill (1회성)
+
+on:
+  workflow_dispatch:
+    inputs:
+      sgg_codes:
+        description: 'SGG 코드 (쉼표 구분, 예: 48121,48123,48125). regions 테이블에서 확인.'
+        required: true
+        default: '48121,48123'
+
+jobs:
+  backfill:
+    name: MOLIT 실거래가 백필
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run MOLIT backfill
+        env:
+          MOLIT_API_KEY: ${{ secrets.MOLIT_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          echo "SGG codes: ${{ inputs.sgg_codes }}"
+          npx tsx scripts/backfill-realprice.ts \
+            --resume \
+            --sgg=${{ inputs.sgg_codes }}
+
+      - name: Backfill complete
+        run: echo "백필 완료 — ingest_runs 테이블에서 결과 확인"
