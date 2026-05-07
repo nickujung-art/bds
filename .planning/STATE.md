@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: in_progress
 last_updated: "2026-05-07T09:00:00.000Z"
-last_activity: 2026-05-07 — Phase 4 Wave 1 complete (04-01 댓글, 04-02 GPS 인증)
+last_activity: 2026-05-07 — Phase 4 Wave 2 complete (04-03 카페링크/SLA, 04-04 K-apt, 04-05 분양)
 progress:
   total_phases: 7
   completed_phases: 3
@@ -20,7 +20,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-06)
 
 **Core value:** 창원·김해 실수요자가 "이 단지 사도 되는지" 데이터와 이웃 의견으로 30분 안에 결정 짓게 한다.
-**Current focus:** Phase 4 executing — Wave 2 (카페 링크, K-apt, 분양 데이터)
+**Current focus:** Phase 4 executing — Wave 3 (카페 코드, 주간 다이제스트, 알림 토픽)
 
 ## Current Phase
 
