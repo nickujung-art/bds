@@ -35,8 +35,8 @@ describe('admin/status COUNT queries', () => {
   it('ingest_runs 최근 10건 정상', async () => {
     const { error, data } = await admin
       .from('ingest_runs')
-      .select('source, status, created_at')
-      .order('created_at', { ascending: false })
+      .select('source_id, status, started_at')
+      .order('started_at', { ascending: false })
       .limit(10)
     expect(error).toBeNull()
     expect(Array.isArray(data)).toBe(true)

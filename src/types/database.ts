@@ -943,57 +943,6 @@ export type Database = {
           },
         ]
       }
-      reports: {
-        Row: {
-          created_at: string
-          id: string
-          reason: string
-          reporter_id: string | null
-          resolved_at: string | null
-          resolved_by: string | null
-          status: Database["public"]["Enums"]["report_status"]
-          target_id: string
-          target_type: Database["public"]["Enums"]["report_target_type"]
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          reason: string
-          reporter_id?: string | null
-          resolved_at?: string | null
-          resolved_by?: string | null
-          status?: Database["public"]["Enums"]["report_status"]
-          target_id: string
-          target_type: Database["public"]["Enums"]["report_target_type"]
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          reason?: string
-          reporter_id?: string | null
-          resolved_at?: string | null
-          resolved_by?: string | null
-          status?: Database["public"]["Enums"]["report_status"]
-          target_id?: string
-          target_type?: Database["public"]["Enums"]["report_target_type"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reports_reporter_id_fkey"
-            columns: ["reporter_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reports_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       redevelopment_projects: {
         Row: {
           complex_id: string | null
@@ -2180,8 +2129,6 @@ export type Database = {
       match_reason: "low_confidence" | "conflict" | "no_match"
       match_status: "pending" | "resolved" | "rejected"
       rank_type: "high_price" | "volume" | "price_per_pyeong" | "interest"
-      report_status: "pending" | "accepted" | "rejected"
-      report_target_type: "review" | "user" | "ad"
       redevelopment_phase:
         | "rumor"
         | "proposed"
