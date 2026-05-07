@@ -1,0 +1,114 @@
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { CardnewsDownloadButton } from '@/components/admin/CardnewsDownloadButton'
+
+export const revalidate = 0
+
+export const metadata = {
+  title: '카드뉴스 생성 — 단지온도 관리자',
+}
+
+export default async function AdminCardnewsPage() {
+  // 관리자 권한 확인
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login?next=/admin/cardnews')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || !['admin', 'superadmin'].includes((profile as { role: string }).role ?? '')) {
+    redirect('/')
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--bg-canvas)',
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
+      <header
+        style={{
+          height: 60,
+          background: '#fff',
+          borderBottom: '1px solid var(--line-default)',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 32px',
+          gap: 24,
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        <Link href="/" className="dj-logo">
+          <span className="mark">단</span>
+          <span>단지온도</span>
+        </Link>
+        <nav aria-label="관리자 메뉴" style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <Link
+            href="/admin/ads"
+            style={{ font: '500 13px/1 var(--font-sans)', color: 'var(--fg-sec)', textDecoration: 'none' }}
+          >
+            광고 관리
+          </Link>
+          <span style={{ font: '600 14px/1 var(--font-sans)', color: 'var(--fg-sec)' }}>
+            카드뉴스
+          </span>
+        </nav>
+      </header>
+
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 32px' }}>
+        <h1
+          style={{
+            font: '700 22px/1.3 var(--font-sans)',
+            letterSpacing: '-0.02em',
+            margin: '0 0 8px',
+          }}
+        >
+          카드뉴스 생성
+        </h1>
+        <p
+          style={{
+            font: '500 14px/1.6 var(--font-sans)',
+            color: 'var(--fg-sec)',
+            margin: '0 0 32px',
+          }}
+        >
+          주간 신고가 TOP 5 카드뉴스를 1080×1080 PNG로 생성합니다. SNS 업로드용.
+        </p>
+
+        <div
+          className="card"
+          style={{ padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}
+        >
+          <div>
+            <div
+              style={{
+                font: '600 14px/1.4 var(--font-sans)',
+                marginBottom: 4,
+              }}
+            >
+              주간 신고가 TOP 5
+            </div>
+            <div
+              style={{
+                font: '500 13px/1.5 var(--font-sans)',
+                color: 'var(--fg-tertiary)',
+              }}
+            >
+              최근 30일 · 창원·김해 실거래가 기준 상위 5개 단지
+            </div>
+          </div>
+          <CardnewsDownloadButton />
+        </div>
+      </div>
+    </div>
+  )
+}
