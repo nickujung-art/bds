@@ -214,6 +214,27 @@ export type Database = {
           },
         ]
       }
+      cafe_join_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          week_start: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          week_start: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       complex_reviews: {
         Row: {
           complex_id:   string
