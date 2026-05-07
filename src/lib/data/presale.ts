@@ -1,5 +1,3 @@
-import type { createClient } from '@supabase/supabase-js'
-
 // 분양 공고 마스터 (Phase 4에서 신규 생성)
 export interface NewListing {
   id: string
@@ -26,10 +24,12 @@ export interface PresaleTransaction {
   created_at: string
 }
 
-type SupabaseAnonClient = ReturnType<typeof createClient>
+// Phase 4 테이블은 database.ts에 아직 미반영 — SupabaseClient의 제네릭에 구애받지 않는 최소 인터페이스 사용
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = { from: (table: string) => any }
 
 export async function getActiveListings(
-  supabase: SupabaseAnonClient,
+  supabase: AnySupabaseClient,
   limit = 20,
 ): Promise<NewListing[]> {
   const { data } = await supabase
@@ -42,7 +42,7 @@ export async function getActiveListings(
 
 export async function getPresaleTransactions(
   listingId: string,
-  supabase: SupabaseAnonClient,
+  supabase: AnySupabaseClient,
 ): Promise<PresaleTransaction[]> {
   const { data } = await supabase
     .from('presale_transactions')

@@ -153,7 +153,7 @@ export default async function HomePage() {
           <Link href="/map" style={{ color: 'var(--fg-sec)', textDecoration: 'none' }}>
             지도
           </Link>
-          <Link href="#" style={{ color: 'var(--fg-sec)', textDecoration: 'none' }}>
+          <Link href="/presale" style={{ color: 'var(--fg-sec)', textDecoration: 'none' }}>
             분양
           </Link>
           <Link href="/favorites" style={{ color: 'var(--fg-sec)', textDecoration: 'none' }}>
@@ -440,6 +440,34 @@ export default async function HomePage() {
             </div>
           )}
         </div>
+
+        {/* 분양 섹션 (D-10) */}
+        <section style={{ marginTop: 48 }}>
+          <h2
+            style={{
+              font: '700 18px/1.3 var(--font-sans)',
+              letterSpacing: '-0.02em',
+              margin: '0 0 16px',
+              color: 'var(--fg-pri)',
+            }}
+          >
+            신축·분양
+          </h2>
+          <Link
+            href="/presale"
+            className="card"
+            style={{ display: 'block', padding: 20, textDecoration: 'none' }}
+          >
+            <div style={{ font: '600 14px/1.4 var(--font-sans)', color: 'var(--fg-pri)' }}>
+              분양 정보 보기 →
+            </div>
+            <div
+              style={{ font: '500 12px/1.4 var(--font-sans)', color: 'var(--fg-sec)', marginTop: 4 }}
+            >
+              창원·김해 신축 분양권 전매 실거래가
+            </div>
+          </Link>
+        </section>
       </div>
     </div>
   )
