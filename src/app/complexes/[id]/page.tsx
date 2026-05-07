@@ -106,7 +106,7 @@ export default async function ComplexDetailPage({ params }: Props) {
   const { id } = await params
   const supabase = createReadonlyClient()
 
-  const [complex, saleData, jeonseData, monthlyData, sidebarAds, reviews, reviewStats] = await Promise.all([
+  const [complex, saleData, jeonseData, monthlyData, sidebarAds, reviews, reviewStats, facilityKaptResult] = await Promise.all([
     getComplexById(id, supabase),
     getComplexTransactionSummary(id, 'sale', supabase),
     getComplexTransactionSummary(id, 'jeonse', supabase),
@@ -114,7 +114,16 @@ export default async function ComplexDetailPage({ params }: Props) {
     getActiveAds('sidebar', supabase),
     getReviewsWithComments(id, supabase),
     getComplexReviewStats(id, supabase),
+    supabase
+      .from('facility_kapt')
+      .select('*')
+      .eq('complex_id', id)
+      .order('data_month', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ])
+
+  const facilityKapt = facilityKaptResult?.data ?? null
 
   if (!complex) notFound()
 
@@ -392,6 +401,108 @@ export default async function ComplexDetailPage({ params }: Props) {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* 시설 탭 (DATA-01) */}
+          <div className="card" style={{ padding: 20 }}>
+            <h3
+              style={{
+                font: '700 15px/1.4 var(--font-sans)',
+                margin: '0 0 12px',
+              }}
+            >
+              시설
+            </h3>
+            <p
+              style={{
+                font: '500 11px/1 var(--font-sans)',
+                color: 'var(--fg-tertiary)',
+                marginBottom: 16,
+              }}
+            >
+              K-apt 공동주택 데이터 기준
+            </p>
+            {facilityKapt ? (
+              <div>
+                {[
+                  {
+                    label: '주차대수',
+                    value: facilityKapt.parking_count != null
+                      ? `세대당 ${facilityKapt.parking_count}대`
+                      : null,
+                  },
+                  {
+                    label: '세대수',
+                    value: complex.household_count != null
+                      ? `${complex.household_count.toLocaleString()}세대`
+                      : null,
+                  },
+                  {
+                    label: '관리비(m²당)',
+                    value: facilityKapt.management_cost_m2 != null
+                      ? `${facilityKapt.management_cost_m2.toLocaleString('ko-KR')}원`
+                      : null,
+                  },
+                  {
+                    label: '난방방식',
+                    value: ((facilityKapt as unknown) as { heat_type?: string | null }).heat_type ?? null,
+                  },
+                  {
+                    label: '관리방식',
+                    value: ((facilityKapt as unknown) as { management_type?: string | null }).management_type ?? null,
+                  },
+                  {
+                    label: '엘리베이터',
+                    value: (() => {
+                      const cnt = ((facilityKapt as unknown) as { elevator_count?: number | null }).elevator_count
+                      return cnt != null ? `${cnt}대` : null
+                    })(),
+                  },
+                ]
+                  .filter(item => item.value !== null)
+                  .map((item, i, arr) => (
+                    <div
+                      key={item.label}
+                      style={{
+                        display:        'flex',
+                        justifyContent: 'space-between',
+                        alignItems:     'center',
+                        padding:        '10px 0',
+                        borderBottom:   i < arr.length - 1 ? '1px solid var(--line-subtle)' : 'none',
+                      }}
+                    >
+                      <span
+                        style={{
+                          font:  '500 13px/1 var(--font-sans)',
+                          color: 'var(--fg-sec)',
+                        }}
+                      >
+                        {item.label}
+                      </span>
+                      <span
+                        style={{
+                          font:  '500 13px/1 var(--font-sans)',
+                          color: 'var(--fg-pri)',
+                        }}
+                      >
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p
+                style={{
+                  font:       '500 13px/1.6 var(--font-sans)',
+                  color:      'var(--fg-tertiary)',
+                  padding:    '32px 0',
+                  textAlign:  'center',
+                  margin:     0,
+                }}
+              >
+                시설 정보가 아직 수집되지 않았습니다.
+              </p>
+            )}
           </div>
 
           {/* 동네 의견 */}
