@@ -1,8 +1,12 @@
-import type { ComplexReview, ReviewStats } from '@/lib/data/reviews'
+import type { ReviewStats } from '@/lib/data/reviews'
+import type { ReviewWithComments } from '@/lib/data/comments'
+import { CommentSection } from './CommentSection'
 
 interface Props {
-  reviews: ComplexReview[]
+  reviews: ReviewWithComments[]
   stats:   ReviewStats
+  currentUserId?: string | null
+  complexName?: string
 }
 
 function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
@@ -28,6 +32,32 @@ function formatDate(s: string) {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 }
 
+function CafeLink({ complexName }: { complexName: string }) {
+  const href = `https://cafe.naver.com/ArticleSearchList.nhn?search.query=${encodeURIComponent(complexName)}`
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`네이버 카페에서 ${complexName} 이웃 글 보기 (새 탭에서 열림)`}
+      style={{
+        display:        'inline-flex',
+        alignItems:     'center',
+        gap:            4,
+        padding:        '8px 0 12px',
+        font:           '500 11px/1 var(--font-sans)',
+        color:          'var(--fg-brand)',
+        textDecoration: 'none',
+        borderBottom:   '1px solid var(--line-subtle)',
+        marginBottom:   12,
+        width:          '100%',
+      }}
+    >
+      네이버 카페에서 {complexName} 이웃 글 보기 ↗
+    </a>
+  )
+}
+
 export function ReviewStats({ stats }: { stats: ReviewStats }) {
   if (!stats.count) return null
   return (
@@ -46,23 +76,27 @@ export function ReviewStats({ stats }: { stats: ReviewStats }) {
   )
 }
 
-export function ReviewList({ reviews, stats }: Props) {
+export function ReviewList({ reviews, stats, currentUserId, complexName }: Props) {
   if (!reviews.length) {
     return (
-      <div
-        style={{
-          padding: '20px 0',
-          font: '500 13px/1.4 var(--font-sans)',
-          color: 'var(--fg-tertiary)',
-          textAlign: 'center',
-        }}
-      >
-        아직 후기가 없습니다. 첫 번째 후기를 남겨보세요.
+      <div>
+        {complexName && <CafeLink complexName={complexName} />}
+        <div
+          style={{
+            padding: '20px 0',
+            font: '500 13px/1.4 var(--font-sans)',
+            color: 'var(--fg-tertiary)',
+            textAlign: 'center',
+          }}
+        >
+          아직 후기가 없습니다. 첫 번째 후기를 남겨보세요.
+        </div>
       </div>
     )
   }
   return (
     <div>
+      {complexName && <CafeLink complexName={complexName} />}
       <ReviewStats stats={stats} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
         {reviews.map((r, i) => (
@@ -77,10 +111,11 @@ export function ReviewList({ reviews, stats }: Props) {
               <Stars rating={r.rating} size={13} />
               {r.gps_verified && (
                 <span
+                  aria-label="GPS 위치 인증 완료된 후기"
                   style={{
                     font: '500 10px/1 var(--font-sans)',
-                    color: '#16a34a',
-                    background: '#dcfce7',
+                    color: 'var(--fg-positive)',
+                    background: 'var(--bg-positive-tint)',
                     padding: '2px 6px',
                     borderRadius: 4,
                   }}
@@ -107,6 +142,12 @@ export function ReviewList({ reviews, stats }: Props) {
             >
               {r.content}
             </p>
+            <CommentSection
+              reviewId={r.id}
+              complexId={r.complex_id}
+              initialComments={r.comments ?? []}
+              currentUserId={currentUserId}
+            />
           </div>
         ))}
       </div>
