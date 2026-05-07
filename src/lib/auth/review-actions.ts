@@ -55,3 +55,33 @@ export async function deleteReview(
   revalidatePath(`/complexes/${complexId}`)
   return { error: null }
 }
+
+export async function verifyGpsForReview(
+  reviewId:  string,
+  complexId: string,
+  lat:       number,
+  lng:       number,
+): Promise<{ gps_verified: boolean; error: string | null }> {
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { gps_verified: false, error: '로그인이 필요합니다.' }
+
+  // 스푸핑 방지: 클라이언트 좌표를 PostGIS로 서버 검증 (D-07)
+  const { data: proximity } = await supabase.rpc('check_gps_proximity', {
+    p_complex_id: complexId,
+    p_lat:        lat,
+    p_lng:        lng,
+    p_distance_m: 100,
+  })
+
+  const verified = proximity === true
+  if (verified) {
+    await supabase
+      .from('complex_reviews')
+      .update({ gps_verified: true })
+      .eq('id', reviewId)
+      .eq('user_id', user.id)  // 본인 후기만 업데이트
+    revalidatePath(`/complexes/${complexId}`)
+  }
+  return { gps_verified: verified, error: null }
+}
