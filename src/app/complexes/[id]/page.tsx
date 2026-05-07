@@ -5,10 +5,12 @@ import { createReadonlyClient } from '@/lib/supabase/readonly'
 import { getComplexById, getComplexTransactionSummary } from '@/lib/data/complex-detail'
 import { getActiveAds } from '@/lib/data/ads'
 import { getComplexReviews, getComplexReviewStats } from '@/lib/data/reviews'
+import { getQuadrantData } from '@/lib/data/quadrant'
 import { DealTypeTabs } from '@/components/complex/DealTypeTabs'
 import { FavoriteButton } from '@/components/complex/FavoriteButton'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { NeighborhoodOpinion } from '@/components/reviews/NeighborhoodOpinion'
+import { ValueQuadrantChart } from '@/components/complex/ValueQuadrantChart'
 
 export const revalidate = 86400
 
@@ -113,17 +115,21 @@ export default async function ComplexDetailPage({ params }: Props) {
   const { id } = await params
   const supabase = createReadonlyClient()
 
-  const [complex, saleData, jeonseData, monthlyData, sidebarAds, reviews, reviewStats] = await Promise.all([
-    getComplexById(id, supabase),
+  // complex를 먼저 단독 fetch — si/gu로 getQuadrantData 호출에 필요
+  const complex = await getComplexById(id, supabase)
+  if (!complex) notFound()
+
+  const [saleData, jeonseData, monthlyData, sidebarAds, reviews, reviewStats, quadrantData] = await Promise.all([
     getComplexTransactionSummary(id, 'sale', supabase),
     getComplexTransactionSummary(id, 'jeonse', supabase),
     getComplexTransactionSummary(id, 'monthly', supabase),
     getActiveAds('sidebar', supabase),
     getComplexReviews(id, supabase),
     getComplexReviewStats(id, supabase),
+    complex.si && complex.gu
+      ? getQuadrantData(id, complex.si, complex.gu, supabase).catch(() => null)
+      : Promise.resolve(null),
   ])
-
-  if (!complex) notFound()
 
   const breadcrumb = [complex.si, complex.gu, complex.dong].filter(Boolean)
   const latestSale = saleData.at(-1)
@@ -310,6 +316,17 @@ export default async function ComplexDetailPage({ params }: Props) {
               monthlyData={monthlyData}
             />
           </div>
+
+          {/* 단지 가성비 분석 — ValueQuadrantChart (dynamic import, ssr: false) */}
+          {quadrantData && (
+            <ValueQuadrantChart
+              data={quadrantData.points}
+              medianX={quadrantData.medianX}
+              medianY={quadrantData.medianY}
+              regionLabel={quadrantData.regionLabel}
+              totalCount={quadrantData.totalCount}
+            />
+          )}
 
           {/* Facilities card */}
           <div className="card" style={{ padding: 20 }}>
