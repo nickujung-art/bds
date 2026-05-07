@@ -516,6 +516,7 @@ export default async function ComplexDetailPage({ params }: Props) {
           >
             <NeighborhoodOpinion
               complexId={id}
+              complexName={complex.canonical_name}
               initialReviews={reviews}
               initialStats={reviewStats}
             />

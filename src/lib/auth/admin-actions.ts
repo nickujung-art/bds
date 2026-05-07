@@ -32,12 +32,14 @@ export async function suspendMember(memberId: string): Promise<{ error: string |
   const { error, admin } = await requireAdmin()
   if (error || !admin) return { error: error! }
 
-  const { error: dbErr } = await admin
+  // profiles.suspended_at은 Phase 3 마이그레이션 추가 컬럼 — database.ts 재생성 전까지 any 캐스트
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: dbErr } = await (admin as any)
     .from('profiles')
     .update({ suspended_at: new Date().toISOString() })
     .eq('id', memberId)
 
-  if (dbErr) return { error: dbErr.message }
+  if (dbErr) return { error: (dbErr as { message: string }).message }
   revalidatePath('/admin/members')
   return { error: null }
 }
@@ -46,12 +48,13 @@ export async function reactivateMember(memberId: string): Promise<{ error: strin
   const { error, admin } = await requireAdmin()
   if (error || !admin) return { error: error! }
 
-  const { error: dbErr } = await admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: dbErr } = await (admin as any)
     .from('profiles')
     .update({ suspended_at: null })
     .eq('id', memberId)
 
-  if (dbErr) return { error: dbErr.message }
+  if (dbErr) return { error: (dbErr as { message: string }).message }
   revalidatePath('/admin/members')
   return { error: null }
 }
@@ -67,7 +70,9 @@ export async function resolveReport(
   const { error, admin, userId } = await requireAdmin()
   if (error || !admin || !userId) return { error: error! }
 
-  const { error: dbErr } = await admin
+  // reports 테이블은 Phase 3 마이그레이션으로 추가됨 — database.ts 재생성 전까지 any 캐스트
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: dbErr } = await (admin as any)
     .from('reports')
     .update({
       status: action,
@@ -76,7 +81,7 @@ export async function resolveReport(
     })
     .eq('id', reportId)
 
-  if (dbErr) return { error: dbErr.message }
+  if (dbErr) return { error: (dbErr as { message: string }).message }
   revalidatePath('/admin/reports')
   return { error: null }
 }

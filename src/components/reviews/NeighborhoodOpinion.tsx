@@ -9,11 +9,12 @@ import { ReviewForm } from './ReviewForm'
 
 interface Props {
   complexId:      string
+  complexName?:   string
   initialReviews: ReviewWithComments[]
   initialStats:   ReviewStats
 }
 
-export function NeighborhoodOpinion({ complexId, initialReviews, initialStats }: Props) {
+export function NeighborhoodOpinion({ complexId, complexName, initialReviews, initialStats }: Props) {
   const [showForm, setShowForm]       = useState(false)
   const [isLoggedIn, setIsLoggedIn]   = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -82,7 +83,12 @@ export function NeighborhoodOpinion({ complexId, initialReviews, initialStats }:
         </div>
       )}
 
-      <ReviewList reviews={initialReviews} stats={initialStats} currentUserId={currentUserId} />
+      <ReviewList
+        reviews={initialReviews}
+        stats={initialStats}
+        currentUserId={currentUserId}
+        complexName={complexName}
+      />
     </div>
   )
 }

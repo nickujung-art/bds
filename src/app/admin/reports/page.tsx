@@ -20,11 +20,27 @@ function formatDateTime(s: string) {
 
 interface ReportRow {
   id: string
-  target_type: 'review' | 'user' | 'ad'
+  target_type: 'review' | 'user' | 'ad' | 'comment'
   target_id: string
   reason: string
   status: 'pending' | 'accepted' | 'rejected'
   created_at: string
+}
+
+function getSlaState(createdAt: string): 'ok' | 'warning' | 'overdue' {
+  const hours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60)
+  if (hours > 24) return 'overdue'
+  if (hours > 16) return 'warning'
+  return 'ok'
+}
+
+const SLA_STYLE: Record<
+  ReturnType<typeof getSlaState>,
+  { bg: string; color: string; label: (h: number) => string }
+> = {
+  ok:      { bg: 'var(--bg-surface-2)',       color: 'var(--fg-sec)',      label: (h) => `${Math.round(h)}h 전` },
+  warning: { bg: 'var(--bg-cautionary-tint)', color: '#d97706',            label: (h) => `${Math.round(h)}h — 임박` },
+  overdue: { bg: 'var(--bg-negative-tint)',   color: 'var(--fg-negative)', label: (h) => `${Math.round(h)}h — 초과` },
 }
 
 const STATUS_LABEL: Record<ReportRow['status'], string> = {
@@ -56,13 +72,15 @@ export default async function AdminReportsPage() {
   }
 
   const adminClient = createSupabaseAdminClient()
-  const { data: reports } = await adminClient
+  // reports 테이블은 Phase 3 마이그레이션으로 추가됨 — database.ts 재생성 전까지 any 캐스트
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: reports } = await (adminClient as any)
     .from('reports')
     .select('id, target_type, target_id, reason, status, created_at')
     .order('status', { ascending: true })
     .order('created_at', { ascending: false })
 
-  const rows = (reports ?? []) as ReportRow[]
+  const rows = ((reports ?? []) as unknown) as ReportRow[]
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-canvas)', fontFamily: 'var(--font-sans)' }}>
@@ -122,7 +140,7 @@ export default async function AdminReportsPage() {
                     background: 'var(--bg-surface-2)',
                   }}
                 >
-                  {['일시', '대상', '대상 ID', '사유', '상태', '액션'].map(h => (
+                  {['일시', 'SLA', '대상', '대상 ID', '사유', '상태', '액션'].map(h => (
                     <th
                       key={h}
                       scope="col"
@@ -156,6 +174,30 @@ export default async function AdminReportsPage() {
                       }}
                     >
                       {formatDateTime(r.created_at)}
+                    </td>
+                    <td style={{ padding: '12px 16px', whiteSpace: 'nowrap', minWidth: 80 }}>
+                      {r.status === 'pending' ? (() => {
+                        const hours = (Date.now() - new Date(r.created_at).getTime()) / (1000 * 60 * 60)
+                        const state = getSlaState(r.created_at)
+                        const slaStyle = SLA_STYLE[state]
+                        return (
+                          <span
+                            aria-label={`신고 접수 후 ${Math.round(hours)}시간 경과 — ${state === 'ok' ? '정상' : state === 'warning' ? '임박' : '초과'}`}
+                            style={{
+                              display: 'inline-block',
+                              padding: '3px 8px',
+                              borderRadius: 4,
+                              font: '500 11px/1 var(--font-sans)',
+                              background: slaStyle.bg,
+                              color: slaStyle.color,
+                            }}
+                          >
+                            {slaStyle.label(hours)}
+                          </span>
+                        )
+                      })() : (
+                        <span style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)' }}>—</span>
+                      )}
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <span className="chip sm">{r.target_type}</span>
