@@ -8,6 +8,12 @@ export default defineConfig({
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['src/__tests__/setup.env.ts'],
+    server: {
+      deps: {
+        // server-only throws in non-Next.js environments; treat it as a no-op in tests
+        inline: ['server-only'],
+      },
+    },
     include: ['src/**/*.test.{ts,tsx}', 'src/**/*.spec.{ts,tsx}'],
     coverage: {
       provider: 'v8',
@@ -30,6 +36,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'server-only': path.resolve(__dirname, './src/__tests__/__mocks__/server-only.ts'),
     },
   },
 })

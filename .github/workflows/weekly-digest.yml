@@ -1,0 +1,28 @@
+name: Weekly Digest
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # 매주 월요일 09:00 KST (UTC 00:00)
+  workflow_dispatch: {}
+
+jobs:
+  send-digest:
+    name: Build & enqueue weekly digest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Trigger digest worker
+        run: |
+          STATUS=$(curl -sSf -o /tmp/digest_response.json -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/worker/digest")
+
+          echo "HTTP status: $STATUS"
+          cat /tmp/digest_response.json
+
+          if [ "$STATUS" != "200" ]; then
+            echo "Digest worker returned $STATUS"
+            exit 1
+          fi
