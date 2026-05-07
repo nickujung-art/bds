@@ -1,21 +1,42 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { submitReview } from '@/lib/auth/review-actions'
+import { submitReview, verifyGpsForReview } from '@/lib/auth/review-actions'
 
 interface Props {
-  complexId: string
+  complexId:  string
+  reviewId?:  string
   onSuccess?: () => void
 }
 
 const LABELS = ['', '별로예요', '그저 그래요', '보통이에요', '좋아요', '최고예요']
 
-export function ReviewForm({ complexId, onSuccess }: Props) {
+export function ReviewForm({ complexId, reviewId, onSuccess }: Props) {
   const [rating, setRating]     = useState(0)
   const [hovered, setHovered]   = useState(0)
   const [content, setContent]   = useState('')
   const [error, setError]       = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const [gpsState, setGpsState] = useState<'idle' | 'loading' | 'verified' | 'failed' | 'denied'>('idle')
+
+  async function handleGpsVerify() {
+    if (!navigator.geolocation) {
+      setGpsState('denied')
+      return
+    }
+    setGpsState('loading')
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude
+        const lng = pos.coords.longitude
+        // Server Action에서 PostGIS 검증 — 클라이언트가 verified 플래그 직접 설정 금지
+        const result = await verifyGpsForReview(reviewId ?? '', complexId, lat, lng)
+        setGpsState(result.gps_verified ? 'verified' : 'failed')
+      },
+      () => setGpsState('denied'),
+      { timeout: 10000, maximumAge: 30000 },
+    )
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -79,6 +100,51 @@ export function ReviewForm({ complexId, onSuccess }: Props) {
         className="input"
         style={{ resize: 'vertical', font: '500 13px/1.55 var(--font-sans)', padding: '8px 10px' }}
       />
+      {/* GPS 인증 버튼 (선택사항) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 44 }}>
+        <button
+          type="button"
+          onClick={handleGpsVerify}
+          disabled={gpsState === 'loading' || gpsState === 'verified'}
+          aria-label="현재 위치로 GPS 인증 (선택사항)"
+          style={{
+            height: 36,
+            padding: '0 14px',
+            borderRadius: 'var(--radius-md)',
+            font: '500 13px/1 var(--font-sans)',
+            cursor: gpsState === 'loading' || gpsState === 'verified' ? 'default' : 'pointer',
+            background: gpsState === 'verified'
+              ? 'var(--bg-positive-tint)'
+              : gpsState === 'failed'
+              ? 'var(--bg-cautionary-tint)'
+              : gpsState === 'denied'
+              ? 'var(--bg-negative-tint)'
+              : 'var(--dj-orange-tint)',
+            color: gpsState === 'verified'
+              ? 'var(--fg-positive)'
+              : gpsState === 'failed'
+              ? '#d97706'
+              : gpsState === 'denied'
+              ? 'var(--fg-negative)'
+              : 'var(--dj-orange)',
+            border: gpsState === 'verified'
+              ? '1px solid rgba(22,163,74,.3)'
+              : gpsState === 'failed'
+              ? '1px solid rgba(217,119,6,.3)'
+              : gpsState === 'denied'
+              ? '1px solid rgba(220,38,38,.3)'
+              : '1px solid rgba(234,88,12,.3)',
+          }}
+        >
+          {gpsState === 'loading'  ? '위치 확인 중…' :
+           gpsState === 'verified' ? '인증 완료 ✓' :
+           gpsState === 'failed'   ? '단지 반경 밖입니다' :
+           gpsState === 'denied'   ? '위치 권한이 거부됨' :
+                                     '현재 위치로 인증'}
+        </button>
+        <span style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)' }}>(선택)</span>
+      </div>
+
       <div
         style={{
           display: 'flex',

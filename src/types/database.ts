@@ -2065,6 +2065,15 @@ export type Database = {
         Args: { geom: unknown; move: number; wrap: number }
         Returns: unknown
       }
+      check_gps_proximity: {
+        Args: {
+          p_complex_id: string
+          p_lat:        number
+          p_lng:        number
+          p_distance_m: number
+        }
+        Returns: boolean
+      }
       unlockrows: { Args: { "": string }; Returns: number }
       updategeometrysrid: {
         Args: {
