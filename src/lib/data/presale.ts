@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import type { createClient } from '@supabase/supabase-js'
 
 // 분양 공고 마스터 (Phase 4에서 신규 생성)
 export interface NewListing {

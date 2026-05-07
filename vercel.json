@@ -3,6 +3,10 @@
     {
       "path": "/api/ingest/molit-trade",
       "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/cron/daily",
+      "schedule": "0 19 * * *"
     }
   ]
 }
