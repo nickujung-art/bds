@@ -1,30 +1,38 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@supabase/supabase-js'
 import { fetchKaptBasicInfo } from '@/services/kapt'
+import {
+  fetchPresaleTrades,
+  parseAmount,
+  currentYearMonth,
+  LAWD_CODES,
+} from '@/services/molit-presale'
 
 export const runtime = 'nodejs'
 
-/**
- * 일배치 cron 엔드포인트 (매일 04:00 KST, Vercel Cron)
- * - K-apt 부대시설 UPSERT (DATA-01)
- * - 향후 04-05에서 MOLIT 분양 UPSERT (DATA-02) 추가 예정
- */
+function createAdminClientUntyped() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) throw new Error('Supabase admin env vars missing')
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
+}
+
 export async function GET(request: Request): Promise<Response> {
-  // CRON_SECRET 검증 (모든 /api/cron/* 필수)
   const authHeader = request.headers.get('authorization')
   if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  const supabase = createSupabaseAdminClient()
   const errors: string[] = []
   let totalUpserted = 0
 
   // ── K-apt 부대시설 UPSERT (DATA-01) ──────────────────────────────────
+  const supabase = createSupabaseAdminClient()
   const { data: complexesWithKaptCode } = await supabase
     .from('complexes')
     .select('id, kapt_code')
     .not('kapt_code', 'is', null)
-    .limit(50)  // 일배치당 50개 제한 (K-apt API 한도 보호)
+    .limit(50)
 
   let kaptUpserted = 0
   for (const complex of complexesWithKaptCode ?? []) {
@@ -32,9 +40,6 @@ export async function GET(request: Request): Promise<Response> {
     try {
       const info = await fetchKaptBasicInfo(complex.kapt_code)
       if (!info) continue
-
-      // facility_kapt has Phase 4 Wave 0 columns (heat_type, management_type, total_area)
-      // not yet reflected in generated Supabase types — cast through unknown
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const facilityKaptTable = supabase.from('facility_kapt') as any
       const { error } = await facilityKaptTable.upsert(
@@ -48,20 +53,61 @@ export async function GET(request: Request): Promise<Response> {
         },
         { onConflict: 'complex_id' },
       ) as { error: { message: string } | null }
-
       if (!error) kaptUpserted++
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      errors.push(`kapt=${complex.kapt_code}: ${msg}`)
+      errors.push(`kapt=${complex.kapt_code}: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
-
   totalUpserted += kaptUpserted
 
-  return Response.json({
-    ok:            errors.length === 0,
-    totalUpserted,
-    kaptUpserted,
-    errors,
-  })
+  // ── MOLIT 분양권전매 UPSERT (DATA-02) ────────────────────────────────
+  const adminUntyped = createAdminClientUntyped()
+  const dealYmd = currentYearMonth()
+  let presaleUpserted = 0
+
+  for (const lawdCd of LAWD_CODES) {
+    try {
+      const trades = await fetchPresaleTrades(lawdCd, dealYmd)
+      for (const trade of trades) {
+        const { data: listing } = await adminUntyped
+          .from('new_listings')
+          .upsert(
+            {
+              name: trade.aptNm,
+              region: trade.umdNm,
+              price_min: parseAmount(trade.dealAmount),
+              price_max: parseAmount(trade.dealAmount),
+              fetched_at: new Date().toISOString(),
+            },
+            { onConflict: 'name,region' },
+          )
+          .select('id')
+          .single()
+
+        if (!listing) continue
+        const listingId = (listing as { id: string }).id
+        const dealDate = `${trade.dealYear}-${trade.dealMonth.padStart(2, '0')}-${trade.dealDay.padStart(2, '0')}`
+
+        const { error } = await adminUntyped
+          .from('presale_transactions')
+          .upsert(
+            {
+              listing_id:  listingId,
+              area:        trade.excluUseAr ?? null,
+              floor:       trade.floor ?? null,
+              price:       parseAmount(trade.dealAmount),
+              deal_date:   dealDate,
+              cancel_date: trade.cdealType === 'Y' ? dealDate : null,
+            },
+            { onConflict: 'listing_id,deal_date,area,floor', ignoreDuplicates: true },
+          )
+        if (!error) presaleUpserted++
+      }
+    } catch (err) {
+      errors.push(`presale lawdCd=${lawdCd}: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
+  totalUpserted += presaleUpserted
+
+  return Response.json({ ok: errors.length === 0, totalUpserted, kaptUpserted, presaleUpserted, errors })
 }
