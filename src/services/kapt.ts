@@ -58,3 +58,39 @@ export async function fetchComplexList(sggCode: string): Promise<KaptComplex[]> 
 
   return results
 }
+
+// ===== fetchKaptBasicInfo (DATA-01) =====
+const BASIC_INFO_URL = 'http://apis.data.go.kr/1613000/AptBasisInfoServiceV3/getAphusBassInfoV3'
+
+const KaptBasicInfoSchema = z.object({
+  kaptCode:       z.string(),
+  kaptName:       z.string(),
+  kaptdaCnt:      z.coerce.number().optional(),   // 세대수
+  kaptDongCnt:    z.coerce.number().optional(),   // 동수
+  heatType:       z.string().optional(),          // 난방방식
+  managementType: z.string().optional(),          // 관리방식
+  totalArea:      z.coerce.number().optional(),   // 연면적
+})
+
+export type KaptBasicInfo = z.infer<typeof KaptBasicInfoSchema>
+
+export async function fetchKaptBasicInfo(kaptCode: string): Promise<KaptBasicInfo | null> {
+  const apiKey = process.env.KAPT_API_KEY
+  if (!apiKey) throw new Error('KAPT_API_KEY is not set')
+
+  const url = new URL(BASIC_INFO_URL)
+  url.searchParams.set('ServiceKey', apiKey)
+  url.searchParams.set('kaptCode', kaptCode)
+  url.searchParams.set('_type', 'json')
+
+  const res = await fetch(url.toString(), {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) throw new Error(`K-apt BasicInfo API ${res.status}`)
+
+  const json: unknown = await res.json()
+  const item = (json as { response?: { body?: { item?: unknown } } })?.response?.body?.item
+  const parsed = KaptBasicInfoSchema.safeParse(item)
+  return parsed.success ? parsed.data : null
+}
