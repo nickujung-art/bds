@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-07T08:00:00Z"
-last_activity: 2026-05-07 — Phase 5 05-00 COMPLETE (22 migrations APPLIED + molit-backfill-once.yml committed)
+last_updated: "2026-05-07T09:00:00Z"
+last_activity: 2026-05-07 — Phase 5 05-01/02 COMPLETE (RedevelopmentTimeline, ValueQuadrantChart)
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 24
-  completed_plans: 19
-  percent: 79
+  completed_plans: 21
+  percent: 88
 ---
 
 # Project State — 단지온도
