@@ -10,7 +10,7 @@ requires:
 
 provides:
   - ".github/workflows/molit-backfill-once.yml — workflow_dispatch 수동 트리거 백필 워크플로우"
-  - "프로덕션 Supabase DB 마이그레이션 적용 체크포인트 (운영자 수동 실행 필요)"
+  - "프로덕션 Supabase(auoravdadyzvuoxunogh) DB 마이그레이션 22개 전부 APPLIED 완료"
 
 affects:
   - 05-01-DATA-03
@@ -49,25 +49,29 @@ completed: 2026-05-07
 
 # Phase 5 Plan 00: Wave 0 — 프로덕션 DB 초기화 + MOLIT 백필 워크플로우 Summary
 
-**GitHub Actions workflow_dispatch 전용 MOLIT 10년치 백필 워크플로우 생성 + 프로덕션 Supabase 마이그레이션 적용 체크포인트**
+**프로덕션 Supabase(auoravdadyzvuoxunogh)에 22개 마이그레이션 APPLIED 완료 + --resume/--sgg 지원 MOLIT 백필 GitHub Actions 워크플로우 생성**
 
 ## Performance
 
-- **Duration:** 10 min
+- **Duration:** operator-driven (Task 1 운영자 CLI 실행 포함)
 - **Started:** 2026-05-07T07:26:00Z
-- **Completed:** 2026-05-07T07:36:28Z
-- **Tasks:** 2/3 (Task 1 운영자 수동 실행 대기, Task 2 완료, Task 3 검증 대기)
+- **Completed:** 2026-05-07
+- **Tasks:** 3/3 완료 (Task 1: human-action ✓, Task 2: auto ✓, Task 3: human-verify ✓)
 - **Files modified:** 1
 
 ## Accomplishments
 
+- 프로덕션 Supabase(auoravdadyzvuoxunogh)에 22개 마이그레이션 전부 APPLIED — complexes, transactions, redevelopment_projects 등 모든 테이블 생성 확인
 - `.github/workflows/molit-backfill-once.yml` 생성 — sgg_codes 입력 기반 MOLIT 백필 수동 트리거 워크플로우
 - `--resume` 플래그로 ingest_runs 테이블 기반 중단 후 재개 가능 구조
 - timeout-minutes: 300 설정으로 MOLIT API 일 10,000회 한도 내 창원+김해 전 지역 수집 지원
+- Wave 1 (05-01~05-04) 블로킹 해제 — DB 테이블 존재 전제 조건 충족
 
 ## Task Commits
 
-1. **Task 2: molit-backfill-once.yml 생성** - `373d747` (feat)
+1. **Task 1: supabase db push** - 운영자 로컬 CLI 실행 (22개 마이그레이션 APPLIED 확인)
+2. **Task 2: molit-backfill-once.yml 생성** - `373d747` (feat(05-00))
+3. **Task 3: Wave 0 완료 확인** - `f45651e` (docs(05-00): complete Wave 0 plan)
 
 **Plan metadata:** 별도 docs 커밋 예정
 
@@ -93,24 +97,9 @@ None.
 
 ## User Setup Required
 
-**Task 1 — 프로덕션 Supabase 마이그레이션 적용 (운영자 수동 실행 필요):**
+**Task 1 — 완료:** 프로덕션 Supabase 마이그레이션 22개 APPLIED (운영자 2026-05-07 실행 확인)
 
-```bash
-# Step 1: 프로젝트 연결 (이미 링크되어 있으면 skip)
-npx supabase link --project-ref auoravdadyzvuoxunogh
-
-# Step 2: Dry-run 확인
-npx supabase db push --linked --dry-run
-
-# Step 3: 실제 마이그레이션 적용
-npx supabase db push --linked
-
-# Step 4: 검증
-npx supabase migration list --linked | grep -c APPLIED
-# → 22 이상이어야 함
-```
-
-**Task 3 — MOLIT 백필 실행 (Wave 1과 병행 가능):**
+**MOLIT 백필 실행 (Wave 1과 병행 가능):**
 
 1. GitHub → Actions → "MOLIT Backfill (1회성)" → Run workflow
 2. Day 1: sgg_codes = `48121,48123,48125` (창원 의창·성산·마산합포)
@@ -125,9 +114,10 @@ npx supabase migration list --linked | grep -c APPLIED
 
 ## Next Phase Readiness
 
-- **Wave 1 시작 조건:** Task 1 (db push) 완료 후 Wave 1 실행 가능
+- **Wave 1 즉시 실행 가능:** Task 1 (db push) 완료 — 프로덕션 DB에 모든 테이블 존재 확인
 - `.github/workflows/molit-backfill-once.yml` 커밋 완료 — GitHub Actions에서 즉시 트리거 가능
 - MOLIT 백필은 Wave 1과 병행 실행 가능 (ingest_runs 테이블로 중복 방지)
+- 05-01 (재건축 타임라인), 05-02 (가성비 4분면), 05-03 (listing_prices), 05-04 (pg_dump 백업) 모두 블로킹 해제
 
 ---
 *Phase: 05-data-expansion-ops*
@@ -135,5 +125,7 @@ npx supabase migration list --linked | grep -c APPLIED
 
 ## Self-Check: PASSED
 
-- `.github/workflows/molit-backfill-once.yml` — FOUND
-- Commit `373d747` — FOUND
+- `.github/workflows/molit-backfill-once.yml` — FOUND (commit 373d747)
+- Commit `373d747` (feat(05-00)) — FOUND
+- Commit `f45651e` (docs(05-00)) — FOUND
+- 프로덕션 DB 22개 마이그레이션 APPLIED — 운영자 확인 완료 (2026-05-07)

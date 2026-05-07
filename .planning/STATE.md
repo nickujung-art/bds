@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-07T07:36:28Z"
-last_activity: 2026-05-07 — Phase 5 05-00 Task 2 complete (molit-backfill-once.yml), Task 1 awaiting operator
+last_updated: "2026-05-07T08:00:00Z"
+last_activity: 2026-05-07 — Phase 5 05-00 COMPLETE (22 migrations APPLIED + molit-backfill-once.yml committed)
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 24
-  completed_plans: 18
-  percent: 75
+  completed_plans: 19
+  percent: 79
 ---
 
 # Project State — 단지온도
@@ -40,9 +40,9 @@ Goal: 단지 데이터 깊이 확장 (재건축·가성비·갭) + 운영 백업
 
 Requirements: DATA-03~05, OPS-01
 
-Plans: 5 plans (05-00 ~ 05-04) — 1/5 in progress
-Current: 05-00 (Task 2 완료, Task 1 운영자 수동 실행 대기 → BLOCKING)
-Next step: Task 1 완료 후 Wave 1 (05-01~05-04) 실행
+Plans: 5 plans (05-00 ~ 05-04) — 1/5 complete
+Current: 05-00 ✅ COMPLETE (22 migrations APPLIED + molit-backfill-once.yml committed)
+Next step: Wave 1 (05-01~05-04) 실행 — 블로킹 해제됨
 
 ## Phase Progress
 
@@ -52,7 +52,7 @@ Next step: Task 1 완료 후 Wave 1 (05-01~05-04) 실행
 | 2 | 랭킹·랜딩·공유 | ✅ Complete |
 | 3 | 카드뉴스·법적·운영 | ✅ Complete (5/5 plans) |
 | 4 | 커뮤니티 기초 | ✅ Complete |
-| 5 | 데이터 확장·운영 안정성 | 📋 Planned (5 plans) |
+| 5 | 데이터 확장·운영 안정성 | 🔄 In Progress (1/5 complete) |
 | 6 | AI·차별화 기술 | ⬜ Not Started |
 | 7 | 커뮤니티 심화·자동화 | ⬜ Not Started |
 
@@ -80,6 +80,7 @@ Next step: Task 1 완료 후 Wave 1 (05-01~05-04) 실행
 | 2026-05-07 | map page .catch(()=>[]) for Supabase errors — 200 with empty state vs 500 | 03-05 |
 | 2026-05-07 | MOLIT 백필 workflow_dispatch 전용 (schedule 없음) — 1회성이므로 자동 실행 불필요 | 05-00 |
 | 2026-05-07 | timeout-minutes: 300 — API 한도(일 10,000회)로 창원+김해 전체 3일 분할 실행 최대 5시간 | 05-00 |
+| 2026-05-07 | MOLIT 백필 실행은 Wave 1과 병행하여 별도로 진행 — 05-00 COMPLETE, Wave 1 블로킹 해제 | 05-00 |
 
 ---
 *Initialized: 2026-05-06*
