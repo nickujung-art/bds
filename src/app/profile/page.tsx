@@ -6,6 +6,8 @@ import { hasPushSubscription, getFavoritesCount, getReviewsCount } from '@/lib/d
 import { signOut } from '@/lib/auth/actions'
 import { deleteAccount } from '@/lib/auth/consent-actions'
 import { PushToggle } from '@/components/profile/PushToggle'
+import { TopicToggle } from '@/components/profile/TopicToggle'
+import { getNotificationTopics } from '@/lib/data/topics'
 
 export const revalidate = 0
 
@@ -36,10 +38,11 @@ export default async function ProfilePage() {
     .eq('id', user.id)
     .single()
 
-  const [favCount, reviewCount, isPushSubscribed] = await Promise.all([
+  const [favCount, reviewCount, isPushSubscribed, topics] = await Promise.all([
     getFavoritesCount(user.id, supabase),
     getReviewsCount(user.id, supabase),
     hasPushSubscription(user.id, supabase),
+    getNotificationTopics(user.id, supabase),
   ])
 
   const isAdmin = profile && ['admin', 'superadmin'].includes((profile as { role: string }).role)
@@ -201,6 +204,7 @@ export default async function ProfilePage() {
             알림 설정
           </h3>
           <PushToggle initialSubscribed={isPushSubscribed} vapidPublicKey={vapidKey} />
+          <TopicToggle initialTopics={topics} />
         </div>
 
         {/* Admin link */}

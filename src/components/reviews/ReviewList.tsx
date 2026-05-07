@@ -76,11 +76,7 @@ export function ReviewStats({ stats }: { stats: ReviewStats }) {
   )
 }
 
-<<<<<<< HEAD
-export function ReviewList({ reviews, stats, currentUserId }: Props) {
-=======
 export function ReviewList({ reviews, stats, currentUserId, complexName }: Props) {
->>>>>>> worktree-agent-a62015586efa231f2
   if (!reviews.length) {
     return (
       <div>
