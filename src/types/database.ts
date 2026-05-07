@@ -214,6 +214,27 @@ export type Database = {
           },
         ]
       }
+      cafe_join_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          week_start: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          week_start: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       complex_reviews: {
         Row: {
           complex_id:   string
@@ -916,6 +937,57 @@ export type Database = {
           {
             foreignKeyName: "push_subscriptions_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["report_target_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_resolved_by_fkey"
+            columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -2121,6 +2193,8 @@ export type Database = {
         | "construction"
         | "completed"
         | "cancelled"
+      report_status: "pending" | "accepted" | "rejected"
+      report_target_type: "review" | "user" | "ad" | "comment"
     }
     CompositeTypes: {
       geometry_dump: {

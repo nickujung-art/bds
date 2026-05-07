@@ -1,0 +1,28 @@
+name: Cafe Code Weekly
+
+on:
+  schedule:
+    - cron: '5 0 * * 1'  # 매주 월요일 09:05 KST (UTC 00:05)
+  workflow_dispatch: {}
+
+jobs:
+  generate-code:
+    name: Generate weekly cafe join code
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Generate cafe join code
+        run: |
+          STATUS=$(curl -sSf -o /tmp/cafe_code_response.json -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/worker/cafe-code")
+
+          echo "HTTP status: $STATUS"
+          cat /tmp/cafe_code_response.json
+
+          if [ "$STATUS" != "200" ]; then
+            echo "Cafe code worker returned $STATUS"
+            exit 1
+          fi

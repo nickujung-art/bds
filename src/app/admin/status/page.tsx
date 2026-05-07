@@ -22,6 +22,15 @@ function formatDateTime(s: string) {
   })
 }
 
+// 이번 주 월요일 날짜 반환 (YYYY-MM-DD, 로컬 시간 기준)
+function getMonday(date: Date): string {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  d.setDate(diff)
+  return d.toISOString().slice(0, 10)
+}
+
 export default async function AdminStatusPage() {
   // 관리자 권한 확인
   const supabase = await createSupabaseServerClient()
@@ -39,6 +48,7 @@ export default async function AdminStatusPage() {
   }
 
   const adminClient = createSupabaseAdminClient()
+  const weekStart = getMonday(new Date())
 
   const [
     memberRes,
@@ -49,6 +59,7 @@ export default async function AdminStatusPage() {
     pendingReportRes,
     pendingAdRes,
     noConsentRes,
+    cafeCodeRes,
   ] = await Promise.all([
     adminClient.from('profiles').select('*', { count: 'exact', head: true }),
     adminClient.from('complexes').select('*', { count: 'exact', head: true }),
@@ -78,9 +89,15 @@ export default async function AdminStatusPage() {
       .from('profiles')
       .select('*', { count: 'exact', head: true })
       .is('terms_agreed_at', null),
+    adminClient
+      .from('cafe_join_codes')
+      .select('code, week_start, created_at')
+      .eq('week_start', weekStart)
+      .single(),
   ])
 
   const runs = (runsRes.data ?? []) as unknown as RunRow[]
+  const cafeCode = cafeCodeRes.data
 
   const dbStats = [
     { label: '회원 수', value: memberRes.count ?? 0 },
@@ -142,6 +159,45 @@ export default async function AdminStatusPage() {
         >
           시스템 상태
         </h1>
+
+        {/* 카페 가입 코드 섹션 */}
+        <section aria-labelledby="cafe-code-heading" style={{ marginBottom: 24 }}>
+          <h2
+            id="cafe-code-heading"
+            style={{ font: '700 14px/1.4 var(--font-sans)', margin: '0 0 12px' }}
+          >
+            이번 주 카페 가입 코드
+          </h2>
+          <div className="card" style={{ padding: 20 }}>
+            {cafeCode ? (
+              <div>
+                <div
+                  className="tnum"
+                  style={{
+                    font:          '700 28px/1 var(--font-mono, monospace)',
+                    color:         'var(--dj-orange)',
+                    letterSpacing: '0.1em',
+                    marginBottom:  8,
+                  }}
+                >
+                  {cafeCode.code}
+                </div>
+                <div style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)' }}>
+                  {weekStart} 주 발행 · {new Date(cafeCode.created_at).toLocaleDateString('ko-KR')} 생성
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p style={{ font: '500 13px/1.4 var(--font-sans)', color: 'var(--fg-tertiary)', margin: '0 0 12px' }}>
+                  이번 주 코드가 아직 생성되지 않았습니다.
+                </p>
+                <p style={{ font: '500 11px/1.4 var(--font-sans)', color: 'var(--fg-tertiary)', margin: 0 }}>
+                  매주 월요일 09:05 KST에 자동 생성됩니다.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
 
         <section aria-labelledby="db-heading" style={{ marginBottom: 24 }}>
           <h2
