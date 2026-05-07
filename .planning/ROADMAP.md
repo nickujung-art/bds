@@ -9,7 +9,7 @@
 | 1 | 보안·인프라·배포 | V1.0 | 프로덕션 배포 가능 상태 + 보안 기반 확립 | INFRA-01~03, SEC-01~04 | ✅ Complete |
 | 2 | 랭킹·랜딩·공유 | V1.0 | 핵심 UX 완성 — 사용자가 처음 봐야 할 화면 | RANK-01~03, SHARE-01~02 | ✅ Complete |
 | 3 | 카드뉴스·법적·운영 | V1.0 | V1.0 정식 출시 가능 상태 | SHARE-03~04, LEGAL-01~05, ADMIN-01~04, A11Y-01~03 | 📋 Planned |
-| 4 | 커뮤니티 기초 | V1.5 | 참여·소통 기능 + 데이터 확장 | COMM-01~05, DATA-01~02, NOTIF-01~02 | ⬜ Not Started |
+| 4 | 커뮤니티 기초 | V1.5 | 참여·소통 기능 + 데이터 확장 | COMM-01~05, DATA-01~02, NOTIF-01~02 | 📋 Planned |
 | 5 | 데이터 확장·운영 | V1.5 | V1.5 완성 — 데이터 깊이 + 운영 안정성 | DATA-03~05, OPS-01 | ⬜ Not Started |
 | 6 | AI·차별화 기술 | V2.0 | 기술 차별화 — AI 봇 + 고도화 분석 | DIFF-03, DATA-06~07, AD-01~02, AUTH-01 | ⬜ Not Started |
 | 7 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
@@ -168,6 +168,31 @@
 - DATA-02: 신축 분양 정보 + 분양권 거래 분리 UI
 - NOTIF-01: 주간 다이제스트 이메일
 - NOTIF-02: 알림 토픽 채널 구독
+
+**Plans:** 9 plans / 4 waves
+
+**Wave 0** *(독립 실행 — BLOCKING)*
+- [ ] 04-00-PLAN.md — DB 마이그레이션 (enum + 5 테이블 + RLS + PostGIS RPC) + supabase db push + RED 테스트 스캐폴드
+
+**Wave 1** *(blocked on Wave 0; 04-01/02/03 병렬 실행 가능)*
+- [ ] 04-01-PLAN.md — 후기 댓글 시스템 (COMM-01)
+- [ ] 04-02-PLAN.md — GPS L1 인증 배지 활성화 (COMM-02)
+- [ ] 04-03-PLAN.md — 카페 외부 링크 + 신고 SLA 배지 (COMM-03, COMM-04)
+
+**Wave 2** *(blocked on Wave 0; Wave 1과 병렬 실행 가능)*
+- [ ] 04-04-PLAN.md — K-apt 부대시설 + 단지 상세 시설 탭 (DATA-01)
+- [ ] 04-05-PLAN.md — MOLIT 신축 분양 정보 + presale UI (DATA-02)
+
+**Wave 3** *(blocked on Wave 1·2)*
+- [ ] 04-06-PLAN.md — 주간 카페 가입 코드 + admin/status 표시 (COMM-05)
+- [ ] 04-07-PLAN.md — 주간 다이제스트 이메일 + GitHub Actions cron (NOTIF-01)
+- [ ] 04-08-PLAN.md — 알림 토픽 구독 + 프로필 UI (NOTIF-02)
+
+**Cross-cutting constraints:**
+- 모든 transactions 쿼리: `cancel_date IS NULL AND superseded_by IS NULL` (presale_transactions 포함)
+- cron/worker endpoint: `x-cron-secret` 헤더 검증 필수
+- ISR 페이지: `createReadonlyClient()` + `export const revalidate = N` (cookies() 금지)
+- AI 슬롭 금지: backdrop-blur, gradient-text, glow, 보라/인디고, gradient orb
 
 **Success Criteria:**
 1. 후기에 댓글을 달 수 있고, 댓글 신고 시 신고 큐에 쌓인다
