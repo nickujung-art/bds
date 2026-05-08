@@ -11,6 +11,17 @@ vi.mock('@anthropic-ai/sdk', () => ({
   })),
 }))
 
+// Supabase server client mock (cookies() 없이 인증 통과)
+vi.mock('@/lib/supabase/server', () => ({
+  createSupabaseServerClient: vi.fn().mockResolvedValue({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: 'test-user-id' } },
+      }),
+    },
+  }),
+}))
+
 // Supabase admin client mock
 vi.mock('@/lib/supabase/admin', () => ({
   createSupabaseAdminClient: vi.fn().mockReturnValue({
