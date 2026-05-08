@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createHash } from 'crypto'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { adEventRatelimit } from '@/lib/ratelimit'
+import { adEventRatelimit, adClickDailyLimit } from '@/lib/ratelimit'
 
 export const runtime = 'nodejs'
+
+const ALLOWED_EVENT_TYPES = ['impression', 'click', 'conversion'] as const
 
 export async function POST(request: Request): Promise<NextResponse> {
   // 1. IP 추출 (D-07)
@@ -25,7 +27,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     )
   }
 
-  // 3. Body 파싱 + 검증 (기존 로직 유지)
+  // 3. Body 파싱 + 검증
   let body: unknown
   try {
     body = await request.json()
@@ -37,20 +39,32 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!b || typeof b.campaign_id !== 'string' || !b.campaign_id) {
     return NextResponse.json({ error: 'campaign_id required' }, { status: 400 })
   }
-  if (!['impression', 'click'].includes(b.event_type as string)) {
+
+  const eventType = b.event_type as string
+  if (!(ALLOWED_EVENT_TYPES as readonly string[]).includes(eventType)) {
     return NextResponse.json({ error: 'invalid event_type' }, { status: 400 })
   }
 
-  // 4. IP hash 생성 — PII 비저장 (D-07)
+  // 4. IP hash 생성 — PII 비저장 (D-07, T-06-01-01)
   const secret = process.env.RATE_LIMIT_SECRET ?? ''
   const ip_hash = createHash('sha256').update(`${ip}:${secret}`).digest('hex')
 
-  // 5. admin client로 INSERT (SEC-02 — createSupabaseAdminClient() 단일 경유)
+  // 5. click 이벤트에서만 일별 anomaly 감지 (D-03, T-06-01-01)
+  let is_anomaly = false
+  if (eventType === 'click') {
+    const dailyResult = await adClickDailyLimit.limit(ip_hash)
+    if (!dailyResult.success) {
+      is_anomaly = true
+    }
+  }
+
+  // 6. admin client로 INSERT (SEC-02 — createSupabaseAdminClient() 단일 경유)
   const supabase = createSupabaseAdminClient()
   await supabase.from('ad_events').insert({
     campaign_id: b.campaign_id,
-    event_type: b.event_type as string,
+    event_type: eventType,
     ip_hash,
+    is_anomaly,
   })
 
   return NextResponse.json({ ok: true }, { status: 201 })
