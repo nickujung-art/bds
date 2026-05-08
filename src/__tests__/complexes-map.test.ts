@@ -5,7 +5,7 @@
  * - clusterComplexes: 순수 함수, 줌레벨별 클러스터 반환
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { URL_, AKEY, admin } from './helpers/db'
+import { URL_, AKEY, SKEY, admin } from './helpers/db'
 
 vi.mock('server-only', () => ({}))
 
@@ -19,6 +19,7 @@ let withCoordId: string
 let noCoordId: string
 
 beforeAll(async () => {
+  if (!SKEY) return
   const { data: a } = await admin.from('complexes').insert({
     canonical_name: '지도테스트좌표있음', name_normalized: '지도테스트좌표있음',
     sgg_code: '48121', status: 'active',
@@ -35,13 +36,14 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (!SKEY) return
   await admin.from('complexes').delete().in('id', [withCoordId, noCoordId])
 })
 
 // ── getComplexesForMap ──────────────────────────────────────
 import { getComplexesForMap } from '@/lib/data/complexes-map'
 
-describe('getComplexesForMap', () => {
+describe.skipIf(!SKEY)('getComplexesForMap', () => {
   it('좌표 있는 단지만 반환', async () => {
     const items = await getComplexesForMap(['48121'], admin)
     const ids = items.map((c) => c.id)

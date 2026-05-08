@@ -81,6 +81,7 @@ let complexBId: string
 let complexCId: string
 
 beforeAll(async () => {
+  if (!SKEY) return
   // 테스트 단지 삽입
   const { data: a, error: eA } = await admin
     .from('complexes')
@@ -108,6 +109,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (!SKEY) return
   await admin.from('complex_aliases').delete().in('complex_id', [complexAId, complexBId, complexCId])
   await admin.from('complex_match_queue').delete().like('source', `${TEST_PREFIX}%`)
   await admin.from('complexes').delete().like('kapt_code', `${TEST_PREFIX}%`)
@@ -116,7 +118,7 @@ afterAll(async () => {
 // ─────────────────────────────────────────────
 // Axis 1: 도로명주소 + 건축연도
 // ─────────────────────────────────────────────
-describe('matchByAddress (axis 1)', () => {
+describe.skipIf(!SKEY)('matchByAddress (axis 1)', () => {
   it('exact road_address + built_year → complexAId, confidence 1.0', async () => {
     const result = await matchByAddress(
       {
@@ -148,7 +150,7 @@ describe('matchByAddress (axis 1)', () => {
 // ─────────────────────────────────────────────
 // Axis 2: 좌표 + trigram
 // ─────────────────────────────────────────────
-describe('matchByCoordinate (axis 2)', () => {
+describe.skipIf(!SKEY)('matchByCoordinate (axis 2)', () => {
   it('좌표 200m 이내 + 이름 유사 → complexA 반환, confidence = trigram score', async () => {
     const result = await matchByCoordinate(
       {
@@ -201,7 +203,7 @@ describe('matchByCoordinate (axis 2)', () => {
 // ─────────────────────────────────────────────
 // Axis 3: sgg_code + trigram
 // ─────────────────────────────────────────────
-describe('matchByAdminCode (axis 3)', () => {
+describe.skipIf(!SKEY)('matchByAdminCode (axis 3)', () => {
   it('sgg_code 일치 + 이름 유사 → complexA 반환, confidence ≤ 0.85', async () => {
     const result = await matchByAdminCode(
       {
@@ -236,7 +238,7 @@ describe('matchByAdminCode (axis 3)', () => {
 // ─────────────────────────────────────────────
 // matchComplex 통합 (ADR-039 임계)
 // ─────────────────────────────────────────────
-describe('matchComplex (end-to-end)', () => {
+describe.skipIf(!SKEY)('matchComplex (end-to-end)', () => {
   const MATCH_SOURCE = `${TEST_PREFIX}source`
 
   afterEach(async () => {

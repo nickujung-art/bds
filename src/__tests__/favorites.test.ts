@@ -18,6 +18,15 @@ vi.mock('next/navigation', () => ({
     throw new Error(`REDIRECT:${url}`)
   }),
 }))
+vi.mock('@/lib/supabase/server', () => ({
+  createSupabaseServerClient: vi.fn().mockResolvedValue({
+    auth: {
+      getUser:        vi.fn().mockResolvedValue({ data: { user: null } }),
+      signOut:        vi.fn().mockResolvedValue({ error: null }),
+      signInWithOtp:  vi.fn().mockResolvedValue({ data: {}, error: null }),
+    },
+  }),
+}))
 
 beforeAll(() => {
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', URL_)
@@ -30,6 +39,7 @@ let testComplexId: string
 let testUserId: string
 
 beforeAll(async () => {
+  if (!SKEY) return
   const { data: complex, error: cErr } = await admin
     .from('complexes')
     .insert({
@@ -54,6 +64,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (!SKEY) return
   if (testUserId)   await admin.from('favorites').delete().eq('user_id', testUserId)
   if (testComplexId) await admin.from('complexes').delete().eq('id', testComplexId)
   if (testUserId)   await admin.auth.admin.deleteUser(testUserId)
@@ -62,7 +73,7 @@ afterAll(async () => {
 // ── getFavorites ───────────────────────────────────────────────
 import { getFavorites, isFavorited } from '@/lib/data/favorites'
 
-describe('getFavorites', () => {
+describe.skipIf(!SKEY)('getFavorites', () => {
   it('관심단지 없으면 빈 배열 반환', async () => {
     const result = await getFavorites(testUserId, admin)
     expect(result).toEqual([])
@@ -89,7 +100,7 @@ describe('getFavorites', () => {
   })
 })
 
-describe('isFavorited', () => {
+describe.skipIf(!SKEY)('isFavorited', () => {
   it('관심 단지 → true', async () => {
     const result = await isFavorited(testUserId, testComplexId, admin)
     expect(result).toBe(true)

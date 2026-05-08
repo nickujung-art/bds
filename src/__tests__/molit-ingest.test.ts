@@ -104,7 +104,7 @@ describe('withRetry', () => {
 })
 
 // ── upsertTransaction (integration) ───────────────────────
-describe('upsertTransaction', () => {
+describe.skipIf(!SKEY)('upsertTransaction', () => {
   const TEST_KEY = `INTG_${Date.now()}`
   const row = {
     deal_type:       'sale' as const,
@@ -118,6 +118,7 @@ describe('upsertTransaction', () => {
   }
 
   afterAll(async () => {
+    if (!SKEY) return
     await admin.from('transactions').delete().eq('dedupe_key', TEST_KEY)
   })
 
@@ -145,7 +146,7 @@ describe('upsertTransaction', () => {
 })
 
 // ── ingestMonth (mock API + real DB) ─────────────────────
-describe('ingestMonth', () => {
+describe.skipIf(!SKEY)('ingestMonth', () => {
   const mockSaleItems = [
     { aptNm: '임시래미안아파트', aptSeq: '48121-T01', dealAmount: '30,000',
       dealYear: 2022, dealMonth: 11, dealDay: 5,
@@ -161,6 +162,7 @@ describe('ingestMonth', () => {
   ]
 
   afterAll(async () => {
+    if (!SKEY) return
     await admin.from('ingest_runs')
       .delete()
       .eq('source_id', 'molit_trade')

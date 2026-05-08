@@ -18,6 +18,15 @@ vi.mock('next/headers', () => ({
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((url: string) => { throw new Error(`REDIRECT:${url}`) }),
 }))
+vi.mock('@/lib/supabase/server', () => ({
+  createSupabaseServerClient: vi.fn().mockResolvedValue({
+    auth: {
+      getUser:        vi.fn().mockResolvedValue({ data: { user: null } }),
+      signOut:        vi.fn().mockResolvedValue({ error: null }),
+      signInWithOtp:  vi.fn().mockResolvedValue({ data: {}, error: null }),
+    },
+  }),
+}))
 
 beforeAll(() => {
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', URL_)

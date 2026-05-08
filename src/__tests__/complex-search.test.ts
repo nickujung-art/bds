@@ -4,7 +4,7 @@
  * - searchComplexes: trigram 검색, 빈 쿼리, sgg_code 필터
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { URL_, AKEY, admin } from './helpers/db'
+import { URL_, AKEY, SKEY, admin } from './helpers/db'
 
 vi.mock('server-only', () => ({}))
 
@@ -17,6 +17,7 @@ beforeAll(() => {
 const inserted: string[] = []
 
 beforeAll(async () => {
+  if (!SKEY) return
   const fixtures = [
     { canonical_name: '래미안창원아파트', name_normalized: '래미안창원아파트', sgg_code: '48121', status: 'active' as const },
     { canonical_name: '래미안김해아파트', name_normalized: '래미안김해아파트', sgg_code: '48250', status: 'active' as const },
@@ -29,13 +30,14 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (!SKEY) return
   await admin.from('complexes').delete().in('id', inserted)
 })
 
 // ── searchComplexes ─────────────────────────────────────────
 import { searchComplexes } from '@/lib/data/complex-search'
 
-describe('searchComplexes', () => {
+describe.skipIf(!SKEY)('searchComplexes', () => {
   it('빈 쿼리 → 빈 배열 (검색 안 함)', async () => {
     const result = await searchComplexes('', ['48121', '48250'], admin)
     expect(result).toEqual([])

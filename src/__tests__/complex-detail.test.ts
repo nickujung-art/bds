@@ -29,6 +29,7 @@ const TEST_COMPLEX = {
 }
 
 beforeAll(async () => {
+  if (!SKEY) return
   const { data, error } = await admin
     .from('complexes')
     .insert(TEST_COMPLEX)
@@ -75,6 +76,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (!SKEY) return
   await admin.from('transactions').delete()
     .like('dedupe_key', `TEST_DETAIL_${testComplexId}%`)
   await admin.from('complexes').delete().eq('id', testComplexId)
@@ -83,7 +85,7 @@ afterAll(async () => {
 // ── getComplexById ──────────────────────────────────────────
 import { getComplexById, getComplexTransactionSummary } from '@/lib/data/complex-detail'
 
-describe('getComplexById', () => {
+describe.skipIf(!SKEY)('getComplexById', () => {
   it('존재하는 ID → 단지 정보 반환', async () => {
     const complex = await getComplexById(testComplexId, admin)
     expect(complex).not.toBeNull()
@@ -100,7 +102,7 @@ describe('getComplexById', () => {
 })
 
 // ── getComplexTransactionSummary ────────────────────────────
-describe('getComplexTransactionSummary', () => {
+describe.skipIf(!SKEY)('getComplexTransactionSummary', () => {
   it('매매 집계 → 월별 평균가 배열, cancel_date 행 제외', async () => {
     const summary = await getComplexTransactionSummary(testComplexId, 'sale', admin)
     // 유효 매매: 2023-01(2건), 2023-06(1건) → 2개 월

@@ -28,6 +28,7 @@ const TEST_COMPLEXES = Array.from({ length: 10 }, (_, i) => ({
 }))
 
 afterAll(async () => {
+  if (!SKEY) return
   await admin.from('complexes').delete().like('kapt_code', `${TEST_PREFIX}%`)
 })
 
@@ -55,7 +56,7 @@ describe('nameNormalize (unit)', () => {
   })
 })
 
-describe('seedComplex 멱등성 (integration)', () => {
+describe.skipIf(!SKEY)('seedComplex 멱등성 (integration)', () => {
   it('10건을 2회 upsert → 레코드 수 변화 없음', async () => {
     for (const c of TEST_COMPLEXES) await seedComplex(c, admin)
     const { count: count1 } = await admin
