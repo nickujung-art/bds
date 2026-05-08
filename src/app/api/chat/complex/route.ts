@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
@@ -19,6 +20,13 @@ async function embedQuery(text: string): Promise<number[]> {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  // 인증 확인 — 미로그인 사용자의 Voyage AI + Claude API 무제한 소모 방지
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   let body: unknown
   try {
     body = await request.json()
@@ -48,8 +56,8 @@ export async function POST(request: Request): Promise<Response> {
   // pgvector 유사도 검색
   // match_complex_embeddings는 migration 06-00-03에서 추가된 RPC.
   // DB 타입 재생성 전까지 unknown cast 사용.
-  const supabase = createSupabaseAdminClient()
-  const { data: chunks } = await (supabase as unknown as {
+  const adminClient = createSupabaseAdminClient()
+  const { data: chunks } = await (adminClient as unknown as {
     rpc: (
       fn: string,
       args: { query_embedding: number[]; target_complex_id: string; match_count: number },
