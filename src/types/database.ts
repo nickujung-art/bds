@@ -97,6 +97,7 @@ export type Database = {
           event_type: string
           id: string
           ip_hash: string | null
+          is_anomaly: boolean
           user_id: string | null
         }
         Insert: {
@@ -105,6 +106,7 @@ export type Database = {
           event_type: string
           id?: string
           ip_hash?: string | null
+          is_anomaly?: boolean
           user_id?: string | null
         }
         Update: {
@@ -113,6 +115,7 @@ export type Database = {
           event_type?: string
           id?: string
           ip_hash?: string | null
+          is_anomaly?: boolean
           user_id?: string | null
         }
         Relationships: [

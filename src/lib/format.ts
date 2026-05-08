@@ -9,6 +9,22 @@ export function formatPrice(price: number): string {
   return `${price.toLocaleString()}만`
 }
 
+/**
+ * 갭 라벨 차액 포맷 — 만원 단위 정수 입력
+ * 1억 이상: "N억 M만원" (M=0이면 "N억")
+ * 1억 미만: "N만원"
+ */
+export function formatGap(gapWan: number): string {
+  const abs = Math.abs(gapWan)
+  if (abs >= 10000) {
+    const uk = Math.floor(abs / 10000)
+    const man = abs % 10000
+    if (man > 0) return `${uk}억 ${man}만원`
+    return `${uk}억`
+  }
+  return `${abs}만원`
+}
+
 export function formatPyeong(area_m2: number): string {
   return `${Math.round(area_m2 / 3.3058)}평`
 }
