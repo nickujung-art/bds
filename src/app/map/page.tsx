@@ -26,6 +26,7 @@ export default async function MapPage({ searchParams }: Props) {
 
   return (
     <main className="flex h-screen flex-col">
+      <h1 className="sr-only">단지온도 지도 — 창원·김해 아파트 실거래가</h1>
       <header
         style={{
           height: 60,
