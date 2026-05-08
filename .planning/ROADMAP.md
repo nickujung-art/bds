@@ -137,7 +137,7 @@
 - [x] 03-03-PLAN.md — 카드뉴스 Route Handler + /admin/cardnews UI (SHARE-03, SHARE-04)
 - [ ] 03-04-PLAN.md — admin-actions.ts + 회원/신고/시스템 상태 페이지 (ADMIN-01, ADMIN-02 회귀, ADMIN-03, ADMIN-04)
 
-**Wave 3** *(blocked on Wave 1·2)*
+**Wave 2** *(blocked on Wave 1)*
 - [ ] 03-05-PLAN.md — accessibility E2E GREEN + CI 게이트 (A11Y-01/02/03)
 
 **Success Criteria:**
@@ -183,7 +183,7 @@
 - [ ] 04-04-PLAN.md — K-apt 부대시설 + 단지 상세 시설 탭 (DATA-01)
 - [ ] 04-05-PLAN.md — MOLIT 신축 분양 정보 + presale UI (DATA-02)
 
-**Wave 3** *(blocked on Wave 1·2)*
+**Wave 2** *(blocked on Wave 1)*
 - [ ] 04-06-PLAN.md — 주간 카페 가입 코드 + admin/status 표시 (COMM-05)
 - [ ] 04-07-PLAN.md — 주간 다이제스트 이메일 + GitHub Actions cron (NOTIF-01)
 - [ ] 04-08-PLAN.md — 알림 토픽 구독 + 프로필 UI (NOTIF-02)
@@ -258,10 +258,34 @@
 **Requirements:**
 - DIFF-03: Claude API + RAG 단지 상담 봇 (환각률 ≤ 5%)
 - DATA-06: SGIS 인구·세대 통계 분기 적재
-- DATA-07: 재개발 행정 데이터 자동 적재 (출처 확보 시)
+- DATA-07: 재개발 행정 데이터 자동 적재 (출처 확보 시) — Phase 7로 defer
 - AD-01: 광고 통계 고도화 (전환·ROI·이상 트래픽)
 - AD-02: 광고주 카피 AI 어시스트 + 표시광고법 감지
 - AUTH-01: GPS L2+L3 인증 (다회+시간패턴 / 우편·관리비)
+
+**Plans:** 5 plans / 4 waves (Wave 0→1→2→3)
+
+**Wave 0** *(BLOCKING — autonomous: false, 마이그레이션 적용 + 패키지 설치)*
+- [ ] 06-00-PLAN.md — DB 마이그레이션 4개 + @anthropic-ai/sdk 설치 + 환경변수 등록 (DIFF-03, DATA-06, AD-01, AUTH-01)
+
+**Wave 1** *(blocked on Wave 0; 06-01/02 병렬 실행 가능 — files_modified 무중복)*
+- [ ] 06-01-PLAN.md — Ratelimit 확장 + AD-01 이벤트 고도화 + SGIS 어댑터 + 갭 라벨 쿼리 (AD-01, DATA-06, DATA-05)
+- [ ] 06-02-PLAN.md — RAG 채팅 API + AD-02 카피 검토 API + 임베딩/SGIS 배치 스크립트 (DIFF-03, DATA-06, AD-02)
+
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 06-03-PLAN.md — 프론트엔드 UI — 갭 라벨 + 지역 통계 탭 + AI 상담 패널 + 어드민 ROI + 카피 검토 (DATA-05, DATA-06, DIFF-03, AD-01, AD-02)
+
+**Wave 3** *(blocked on Wave 0·2)*
+- [ ] 06-04-PLAN.md — GPS L2+L3 인증 + 어드민 승인 UI + E2E 테스트 (AUTH-01)
+
+**Cross-cutting constraints:**
+- 모든 transactions 쿼리: `cancel_date IS NULL AND superseded_by IS NULL` 필수
+- admin write: `createSupabaseAdminClient()` + admin role check 필수
+- ISR 페이지: `export const revalidate = 86400` 유지 (complexes/[id]/page.tsx)
+- Anthropic SDK: claude-haiku-4-5-20251001 사용 (AD-02, DIFF-03 채팅)
+- 임베딩: Voyage AI voyage-4-lite 1024dim (Anthropic 임베딩 미지원)
+- AI 슬롭 금지: backdrop-blur, gradient-text, glow, 보라/인디고, "Powered by AI" 배지
+- SGIS adm_cd 코드: ASSUMED — 첫 실행 전 stage API로 검증 필수
 
 **Success Criteria:**
 1. 단지 상담 봇이 단지 데이터 기반으로 답변하고, human eval 100건 기준 환각률 ≤ 5%
