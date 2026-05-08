@@ -1,6 +1,9 @@
 -- Phase 6 DIFF-03: pgvector RAG 임베딩 (voyage-4-lite 1024 dim)
 create extension if not exists vector with schema extensions;
 
+-- operator classes (vector_cosine_ops) live in the extensions schema
+set search_path to extensions, public;
+
 create table public.complex_embeddings (
   id          uuid primary key default gen_random_uuid(),
   complex_id  uuid not null references public.complexes(id) on delete cascade,
@@ -14,7 +17,7 @@ create table public.complex_embeddings (
 
 create index complex_embeddings_hnsw_idx
   on public.complex_embeddings
-  using hnsw (embedding extensions.vector_cosine_ops);
+  using hnsw (embedding vector_cosine_ops);
 
 alter table public.complex_embeddings enable row level security;
 
@@ -37,6 +40,7 @@ returns table (
   similarity float
 )
 language sql stable
+set search_path = extensions, public
 as $$
   select
     chunk_type,
