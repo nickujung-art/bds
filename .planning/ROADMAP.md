@@ -10,7 +10,7 @@
 | 2 | 랭킹·랜딩·공유 | V1.0 | 핵심 UX 완성 — 사용자가 처음 봐야 할 화면 | RANK-01~03, SHARE-01~02 | ✅ Complete |
 | 3 | 카드뉴스·법적·운영 | V1.0 | V1.0 정식 출시 가능 상태 | SHARE-03~04, LEGAL-01~05, ADMIN-01~04, A11Y-01~03 | ✅ Complete |
 | 4 | 커뮤니티 기초 | V1.5 | 참여·소통 기능 + 데이터 확장 | COMM-01~05, DATA-01~02, NOTIF-01~02 | ✅ Complete |
-| 5 | 데이터 확장·운영 | V1.5 | V1.5 완성 — 데이터 깊이 + 운영 안정성 | DATA-03~05, OPS-01 | 🔄 In Progress (1/5 complete) |
+| 5 | 데이터 확장·운영 | V1.5 | V1.5 완성 — 데이터 깊이 + 운영 안정성 | DATA-03~05, OPS-01 | ✅ Complete |
 | 6 | AI·차별화 기술 | V2.0 | 기술 차별화 — AI 봇 + 고도화 분석 | DIFF-03, DATA-06~07, AD-01~02, AUTH-01 | ⬜ Not Started |
 | 7 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
 
@@ -228,7 +228,7 @@
 - [x] 05-03-PLAN.md — listing_prices 마이그레이션 + Server Action + 어드민 입력 UI (DATA-05) ✅ COMPLETE (2026-05-07)
 
 **Wave 1 (continued)** *(blocked on Wave 0; 05-04도 05-01/02/03과 병렬 실행 가능 — files_modified 무중복)*
-- [ ] 05-04-PLAN.md — pg_dump 주간 백업 GitHub Actions + danjiondo-backup repo (OPS-01)
+- [x] 05-04-PLAN.md — pg_dump 주간 백업 GitHub Actions + danjiondo-backup repo (OPS-01) ✅ COMPLETE (2026-05-08)
 
 **Cross-cutting constraints:**
 - 모든 transactions 쿼리: `cancel_date IS NULL AND superseded_by IS NULL` 필수

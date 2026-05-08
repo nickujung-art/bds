@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-07T10:00:00Z"
-last_activity: 2026-05-07 — Phase 5 05-03 COMPLETE (listing_prices migration + admin UI)
+last_updated: "2026-05-08T00:00:00Z"
+last_activity: 2026-05-08 — Phase 5 COMPLETE (05-04 pg_dump backup + E2E fix)
 progress:
   total_phases: 7
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 24
-  completed_plans: 22
-  percent: 92
+  completed_plans: 24
+  percent: 100
 ---
 
 # Project State — 단지온도
@@ -24,25 +24,23 @@ See: .planning/PROJECT.md (updated 2026-05-06)
 
 ## Current Phase
 
-**Phase 4: 커뮤니티 기초** ✅ Complete
-
-Goal: 후기·댓글·외부 연결 등 커뮤니티 참여 기능 + 데이터 깊이 확장 (V1.5)
-
-Requirements: COMM-01~05, DATA-01~02, NOTIF-01~02
-
-Plans: 9/9 complete (04-00 ~ 04-08) — verified + security fixes 2026-05-07
-
----
-
-**Phase 5: 데이터 확장·운영 안정성** 🔄 In Progress
+**Phase 5: 데이터 확장·운영 안정성** ✅ Complete
 
 Goal: 단지 데이터 깊이 확장 (재건축·가성비·갭) + 운영 백업 자동화로 V1.5 완성
 
 Requirements: DATA-03~05, OPS-01
 
-Plans: 5 plans (05-00 ~ 05-04) — 1/5 complete
-Current: 05-00 ✅ COMPLETE (22 migrations APPLIED + molit-backfill-once.yml committed)
-Next step: Wave 1 (05-01~05-04) 실행 — 블로킹 해제됨
+Plans: 5/5 complete (05-00 ~ 05-04) — verified 2026-05-08
+
+---
+
+**Phase 6: AI·차별화 기술** ⬜ Not Started
+
+Goal: Claude API RAG 봇 + SGIS 통계 + 광고 고도화 + GPS L2/L3 인증
+
+Requirements: DIFF-03, DATA-06~07, AD-01~02, AUTH-01
+
+Next step: /gsd-discuss-phase 6
 
 ## Phase Progress
 
@@ -52,7 +50,7 @@ Next step: Wave 1 (05-01~05-04) 실행 — 블로킹 해제됨
 | 2 | 랭킹·랜딩·공유 | ✅ Complete |
 | 3 | 카드뉴스·법적·운영 | ✅ Complete (5/5 plans) |
 | 4 | 커뮤니티 기초 | ✅ Complete |
-| 5 | 데이터 확장·운영 안정성 | 🔄 In Progress (1/5 complete) |
+| 5 | 데이터 확장·운영 안정성 | ✅ Complete |
 | 6 | AI·차별화 기술 | ⬜ Not Started |
 | 7 | 커뮤니티 심화·자동화 | ⬜ Not Started |
 
