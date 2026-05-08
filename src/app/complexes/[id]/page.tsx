@@ -8,13 +8,16 @@ import { getComplexReviewStats } from '@/lib/data/reviews'
 import { getReviewsWithComments } from '@/lib/data/comments'
 import { getRedevelopmentProject } from '@/lib/data/redevelopment'
 import { getQuadrantData } from '@/lib/data/quadrant'
+import { getGapLabelData } from '@/lib/data/gap-label'
 import { DealTypeTabs } from '@/components/complex/DealTypeTabs'
 import { FavoriteButton } from '@/components/complex/FavoriteButton'
 import { ShareButton } from '@/components/complex/ShareButton'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { NeighborhoodOpinion } from '@/components/reviews/NeighborhoodOpinion'
 import { RedevelopmentTimeline } from '@/components/complex/RedevelopmentTimeline'
-import { ValueQuadrantChart } from '@/components/complex/ValueQuadrantChart'
+import { GapLabel } from '@/components/complex/GapLabel'
+import { AnalysisSection } from '@/components/complex/AnalysisSection'
+import { AiChatPanel } from '@/components/complex/AiChatPanel'
 
 export const revalidate = 86400
 
@@ -114,7 +117,19 @@ export default async function ComplexDetailPage({ params }: Props) {
   const complex = await getComplexById(id, supabase)
   if (!complex) notFound()
 
-  const [saleData, jeonseData, monthlyData, sidebarAds, reviews, reviewStats, facilityKaptResult, redevelopmentProject, quadrantData] = await Promise.all([
+  const [
+    saleData,
+    jeonseData,
+    monthlyData,
+    sidebarAds,
+    reviews,
+    reviewStats,
+    facilityKaptResult,
+    redevelopmentProject,
+    quadrantData,
+    gapLabelData,
+    districtStats,
+  ] = await Promise.all([
     getComplexTransactionSummary(id, 'sale', supabase),
     getComplexTransactionSummary(id, 'jeonse', supabase),
     getComplexTransactionSummary(id, 'monthly', supabase),
@@ -132,10 +147,40 @@ export default async function ComplexDetailPage({ params }: Props) {
     complex.si && complex.gu
       ? getQuadrantData(id, complex.si, complex.gu, supabase).catch(() => null)
       : Promise.resolve(null),
+    // 갭 라벨 (오류 시 null로 fallback)
+    getGapLabelData(id, supabase).catch(() => ({
+      listingPricePerPy: null,
+      avgTransactionPricePerPy: null,
+    })),
+    // 지역 통계 (si+gu로 조회, 없으면 null)
+    complex.si && complex.gu
+      ? (async () => {
+          try {
+            const r = await supabase
+              .from('district_stats')
+              .select('adm_nm, population, households, data_year, data_quarter')
+              .eq('si', complex.si!)
+              .eq('gu', complex.gu!)
+              .order('data_year', { ascending: false })
+              .order('data_quarter', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+            return r.data
+          } catch {
+            return null
+          }
+        })()
+      : Promise.resolve(null),
   ])
 
   const facilityKapt = facilityKaptResult?.data ?? null
 
+  // 갭 라벨 계산: 매물가 평당가 - 실거래 평균 평당가 (만원 단위)
+  const gap =
+    gapLabelData.listingPricePerPy !== null &&
+    gapLabelData.avgTransactionPricePerPy !== null
+      ? gapLabelData.listingPricePerPy - gapLabelData.avgTransactionPricePerPy
+      : null
 
   const breadcrumb = [complex.si, complex.gu, complex.dong].filter(Boolean)
   const latestSale = saleData.at(-1)
@@ -305,15 +350,25 @@ export default async function ComplexDetailPage({ params }: Props) {
 
           {/* Chart card */}
           <div className="card" style={{ padding: 24 }}>
-            <h3
+            <div
               style={{
-                font: '700 18px/1.4 var(--font-sans)',
-                letterSpacing: '-0.005em',
-                margin: '0 0 16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '16px',
               }}
             >
-              실거래가 추이
-            </h3>
+              <h3
+                style={{
+                  font: '700 18px/1.4 var(--font-sans)',
+                  letterSpacing: '-0.005em',
+                  margin: 0,
+                }}
+              >
+                실거래가 추이
+              </h3>
+              <GapLabel gap={gap} />
+            </div>
             <DealTypeTabs
               saleData={saleData}
               jeonseData={jeonseData}
@@ -321,16 +376,12 @@ export default async function ComplexDetailPage({ params }: Props) {
             />
           </div>
 
-          {/* 단지 가성비 분석 — ValueQuadrantChart (dynamic import, ssr: false) */}
-          {quadrantData && (
-            <ValueQuadrantChart
-              data={quadrantData.points}
-              medianX={quadrantData.medianX}
-              medianY={quadrantData.medianY}
-              regionLabel={quadrantData.regionLabel}
-              totalCount={quadrantData.totalCount}
-            />
-          )}
+          {/* 단지 분석 탭 — 가성비 분석 + 지역 통계 */}
+          <AnalysisSection
+            quadrantData={quadrantData}
+            districtStats={districtStats}
+            districtName={complex.gu ?? complex.si ?? ''}
+          />
 
           {/* Facilities card */}
           <div className="card" style={{ padding: 20 }}>
@@ -630,6 +681,9 @@ export default async function ComplexDetailPage({ params }: Props) {
           ))}
         </div>
       </div>
+
+      {/* AI 상담 패널 — position:fixed, stacking context 밖에 렌더 */}
+      <AiChatPanel complexId={id} complexName={complex.canonical_name} />
     </div>
   )
 }

@@ -861,6 +861,48 @@ export type Database = {
           },
         ]
       }
+      district_stats: {
+        Row: {
+          id: string
+          adm_cd: string
+          adm_nm: string | null
+          si: string | null
+          gu: string | null
+          population: number | null
+          households: number | null
+          data_year: number
+          data_quarter: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          adm_cd: string
+          adm_nm?: string | null
+          si?: string | null
+          gu?: string | null
+          population?: number | null
+          households?: number | null
+          data_year: number
+          data_quarter: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          adm_cd?: string
+          adm_nm?: string | null
+          si?: string | null
+          gu?: string | null
+          population?: number | null
+          households?: number | null
+          data_year?: number
+          data_quarter?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       new_listings: {
         Row: {
           complex_id: string | null
