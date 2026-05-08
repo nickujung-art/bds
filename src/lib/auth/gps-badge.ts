@@ -2,6 +2,10 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'application/pdf']
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'pdf']
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+
 interface GpsVisitResult {
   success: boolean
   newBadgeLevel: number
@@ -147,7 +151,19 @@ export async function uploadL3Document(
   const file = formData.get('file') as File | null
   if (!file || !(file instanceof File)) return { success: false, error: 'No file' }
 
-  const ext = file.name.split('.').pop() ?? 'bin'
+  // 서버측 MIME 타입 검증 (클라이언트 검증은 우회 가능)
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    return { success: false, error: '허용되지 않는 파일 형식입니다. JPG, PNG, PDF만 가능합니다.' }
+  }
+
+  // 파일 크기 검증
+  if (file.size > MAX_FILE_SIZE) {
+    return { success: false, error: '파일 크기는 10MB 이하여야 합니다.' }
+  }
+
+  // 안전한 확장자 추출 — 점이 없는 파일명에서 전체 이름이 경로에 삽입되는 것을 방지
+  const rawExt = (file.name.split('.').pop() ?? '').toLowerCase()
+  const ext = ALLOWED_EXTENSIONS.includes(rawExt) ? rawExt : 'bin'
   const filePath = `${user.id}/${complexId}/${docType}-${Date.now()}.${ext}`
 
   const adminClient = createSupabaseAdminClient()
