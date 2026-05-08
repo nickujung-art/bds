@@ -25,7 +25,7 @@ test.describe('검색 기능', () => {
     await page.waitForLoadState('domcontentloaded')
     // 검색 폼 action="/map" → /map?q=창원
     expect(page.url()).toContain('/map')
-    expect(page.url()).toContain('창원')
+    expect(decodeURIComponent(page.url())).toContain('창원')
     await expect(page.locator('text=Internal Server Error')).not.toBeVisible()
     await expect(page.locator('main').first()).toBeVisible()
   })
