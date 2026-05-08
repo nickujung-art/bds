@@ -10,6 +10,11 @@ vi.mock('next/headers', () => ({
   cookies: vi.fn(() => ({ getAll: () => [], set: vi.fn() })),
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('@/lib/supabase/server', () => ({
+  createSupabaseServerClient: vi.fn().mockResolvedValue({
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
+  }),
+}))
 
 beforeAll(() => {
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', URL_)

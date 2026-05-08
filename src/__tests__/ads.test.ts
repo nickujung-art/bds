@@ -14,6 +14,11 @@ vi.mock('next/headers', () => ({
   cookies: vi.fn(() => ({ getAll: () => [], set: vi.fn() })),
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('@/lib/supabase/server', () => ({
+  createSupabaseServerClient: vi.fn().mockResolvedValue({
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
+  }),
+}))
 
 beforeAll(() => {
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', URL_)
@@ -47,10 +52,11 @@ afterAll(async () => {
   }
 })
 
-// ── getActiveAds ─────────────────────────────────────────────────
+// ── getActiveAds (통합 — 로컬 Supabase 필요) ────────────────────
 import { getActiveAds } from '@/lib/data/ads'
 
-describe('getActiveAds', () => {
+// CI에 로컬 Supabase가 없을 때 스킵 (SKEY 없으면 DB 연결 불가)
+describe.skipIf(!SKEY)('getActiveAds', () => {
   it('approved + 활성 기간 → 반환', async () => {
     const { data } = await admin.from('ad_campaigns').insert(makeAd()).select('id').single()
     insertedIds.push((data as { id: string }).id)
