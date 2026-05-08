@@ -1089,12 +1089,106 @@ export type Database = {
           },
         ]
       }
+      gps_verification_requests: {
+        Row: {
+          complex_id: string
+          created_at: string
+          doc_type: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          complex_id: string
+          created_at?: string
+          doc_type: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          complex_id?: string
+          created_at?: string
+          doc_type?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_verification_requests_complex_id_fkey"
+            columns: ["complex_id"]
+            isOneToOne: false
+            referencedRelation: "complexes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_verification_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_visits: {
+        Row: {
+          complex_id: string
+          id: string
+          lat: number | null
+          lng: number | null
+          user_id: string
+          verified_at: string
+        }
+        Insert: {
+          complex_id: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          user_id: string
+          verified_at?: string
+        }
+        Update: {
+          complex_id?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          user_id?: string
+          verified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_visits_complex_id_fkey"
+            columns: ["complex_id"]
+            isOneToOne: false
+            referencedRelation: "complexes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_visits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           cafe_nickname: string | null
           created_at: string
           deleted_at: string | null
+          gps_badge_level: number
           id: string
           nickname: string | null
           role: string
@@ -1108,6 +1202,7 @@ export type Database = {
           cafe_nickname?: string | null
           created_at?: string
           deleted_at?: string | null
+          gps_badge_level?: number
           id: string
           nickname?: string | null
           role?: string
@@ -1121,6 +1216,7 @@ export type Database = {
           cafe_nickname?: string | null
           created_at?: string
           deleted_at?: string | null
+          gps_badge_level?: number
           id?: string
           nickname?: string | null
           role?: string
