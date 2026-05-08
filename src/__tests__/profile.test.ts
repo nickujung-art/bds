@@ -30,6 +30,7 @@ const TEST_SUB = {
 }
 
 beforeAll(async () => {
+  if (!SKEY) return
   const { data: userRes, error: uErr } = await admin.auth.admin.createUser({
     email:         `profile_test_${Date.now()}@test.local`,
     password:      'test1234!',
@@ -40,6 +41,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (!SKEY) return
   if (testUserId) {
     await admin.from('push_subscriptions').delete().eq('user_id', testUserId)
     await admin.auth.admin.deleteUser(testUserId)
@@ -49,14 +51,14 @@ afterAll(async () => {
 // ── registerPushSubscription — 비로그인 가드 ─────────────────────
 import { registerPushSubscription, unregisterPushSubscription } from '@/lib/auth/push-actions'
 
-describe('registerPushSubscription (no auth)', () => {
+describe.skipIf(!SKEY)('registerPushSubscription (no auth)', () => {
   it('비로그인 → error 반환', async () => {
     const result = await registerPushSubscription(TEST_SUB)
     expect(result.error).toBeTruthy()
   })
 })
 
-describe('unregisterPushSubscription (no auth)', () => {
+describe.skipIf(!SKEY)('unregisterPushSubscription (no auth)', () => {
   it('비로그인 → error 반환', async () => {
     const result = await unregisterPushSubscription(TEST_SUB.endpoint)
     expect(result.error).toBeTruthy()
@@ -66,7 +68,7 @@ describe('unregisterPushSubscription (no auth)', () => {
 // ── hasPushSubscription (data layer) ─────────────────────────────
 import { hasPushSubscription } from '@/lib/data/profile'
 
-describe('hasPushSubscription', () => {
+describe.skipIf(!SKEY)('hasPushSubscription', () => {
   it('구독 없음 → false', async () => {
     const result = await hasPushSubscription(testUserId, admin)
     expect(result).toBe(false)
@@ -97,7 +99,7 @@ describe('hasPushSubscription', () => {
 // ── getFavoritesCount ─────────────────────────────────────────────
 import { getFavoritesCount } from '@/lib/data/profile'
 
-describe('getFavoritesCount', () => {
+describe.skipIf(!SKEY)('getFavoritesCount', () => {
   it('관심단지 없는 유저 → 0', async () => {
     const count = await getFavoritesCount(testUserId, admin)
     expect(count).toBe(0)

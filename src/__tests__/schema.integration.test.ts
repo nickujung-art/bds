@@ -4,14 +4,15 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { URL_, AKEY, admin } from './helpers/db'
+import { URL_, SKEY, AKEY, admin } from './helpers/db'
 
-const anon = createClient(URL_, AKEY)
+const anon = createClient(URL_, AKEY || 'placeholder-for-ci')
 
 const TEST_COMPLEX_ID = '00000000-0000-0000-0000-000000000001'
 const TEST_DEDUPE_KEY = 'test_dedupe_key_schema_test'
 
 beforeAll(async () => {
+  if (!SKEY) return
   // 테스트용 단지 삽입 (service_role)
   await admin.from('complexes').upsert({
     id: TEST_COMPLEX_ID,
@@ -23,11 +24,12 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (!SKEY) return
   await admin.from('transactions').delete().eq('dedupe_key', TEST_DEDUPE_KEY)
   await admin.from('complexes').delete().eq('id', TEST_COMPLEX_ID)
 })
 
-describe('RLS: favorites 비인증 SELECT', () => {
+describe.skipIf(!SKEY)('RLS: favorites 비인증 SELECT', () => {
   it('비인증 사용자가 favorites에 SELECT 시도 → 0건 반환', async () => {
     const { data, error } = await anon.from('favorites').select('*')
     expect(error).toBeNull()
@@ -35,7 +37,7 @@ describe('RLS: favorites 비인증 SELECT', () => {
   })
 })
 
-describe('dedupe_key UNIQUE 제약', () => {
+describe.skipIf(!SKEY)('dedupe_key UNIQUE 제약', () => {
   it('동일 dedupe_key 두 번 insert → 두 번째는 UNIQUE 오류', async () => {
     const row = {
       complex_id: TEST_COMPLEX_ID,
@@ -55,7 +57,7 @@ describe('dedupe_key UNIQUE 제약', () => {
   })
 })
 
-describe('complexes.status enum 유효성', () => {
+describe.skipIf(!SKEY)('complexes.status enum 유효성', () => {
   it('유효한 status 6개 값 → insert 성공', async () => {
     const validStatuses = [
       'pre_sale', 'under_construction', 'recently_built',

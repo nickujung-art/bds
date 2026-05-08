@@ -25,6 +25,7 @@ let testComplexId: string
 let testUserId: string
 
 beforeAll(async () => {
+  if (!SKEY) return
   const { data: complex, error: cErr } = await admin
     .from('complexes')
     .insert({
@@ -49,6 +50,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (!SKEY) return
   if (testComplexId) await admin.from('complex_reviews').delete().eq('complex_id', testComplexId)
   if (testComplexId) await admin.from('complexes').delete().eq('id', testComplexId)
   if (testUserId)   await admin.auth.admin.deleteUser(testUserId)
@@ -57,7 +59,7 @@ afterAll(async () => {
 // ── getComplexReviews ─────────────────────────────────────────────
 import { getComplexReviews, getComplexReviewStats } from '@/lib/data/reviews'
 
-describe('getComplexReviews', () => {
+describe.skipIf(!SKEY)('getComplexReviews', () => {
   it('후기 없음 → 빈 배열', async () => {
     const result = await getComplexReviews(testComplexId, admin)
     expect(result).toEqual([])
@@ -93,7 +95,7 @@ describe('getComplexReviews', () => {
   })
 })
 
-describe('getComplexReviewStats', () => {
+describe.skipIf(!SKEY)('getComplexReviewStats', () => {
   it('후기 있음 → count=2, avg_rating=4.5', async () => {
     const stats = await getComplexReviewStats(testComplexId, admin)
     expect(stats.count).toBe(2)
@@ -104,7 +106,7 @@ describe('getComplexReviewStats', () => {
 // ── submitReview — 비로그인 가드 ─────────────────────────────────
 import { submitReview } from '@/lib/auth/review-actions'
 
-describe('submitReview (no auth)', () => {
+describe.skipIf(!SKEY)('submitReview (no auth)', () => {
   it('비로그인 → error 반환', async () => {
     const result = await submitReview({
       complexId: testComplexId,
@@ -116,7 +118,7 @@ describe('submitReview (no auth)', () => {
 })
 
 // ── content 유효성 검사 (data layer) ─────────────────────────────
-describe('content 길이 제약', () => {
+describe.skipIf(!SKEY)('content 길이 제약', () => {
   it('10자 미만 → DB에서 거부', async () => {
     const { error } = await admin.from('complex_reviews').insert({
       complex_id: testComplexId,

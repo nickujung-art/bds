@@ -47,6 +47,7 @@ let testComplexId: string
 let testUserId:    string
 
 beforeAll(async () => {
+  if (!SKEY) return
   const { data: complex, error: cErr } = await admin
     .from('complexes')
     .insert({
@@ -78,6 +79,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (!SKEY) return
   if (testUserId) {
     await admin.from('notifications').delete().eq('user_id', testUserId)
     await admin.from('favorites').delete().eq('user_id', testUserId)
@@ -90,7 +92,7 @@ afterAll(async () => {
 // ── generatePriceAlerts ──────────────────────────────────────
 import { generatePriceAlerts } from '@/lib/notifications/generate-alerts'
 
-describe('generatePriceAlerts', () => {
+describe.skipIf(!SKEY)('generatePriceAlerts', () => {
   it('최근 거래 없음 → 알림 0건 생성', async () => {
     const count = await generatePriceAlerts(admin)
     expect(count).toBe(0)
@@ -140,7 +142,7 @@ describe('generatePriceAlerts', () => {
 // ── deliverPendingNotifications ──────────────────────────────
 import { deliverPendingNotifications } from '@/lib/notifications/deliver'
 
-describe('deliverPendingNotifications', () => {
+describe.skipIf(!SKEY)('deliverPendingNotifications', () => {
   it('pending 알림 → sent로 전환, delivered_at 설정', async () => {
     const { sent, failed } = await deliverPendingNotifications(admin)
     expect(sent).toBeGreaterThanOrEqual(1)
@@ -162,7 +164,7 @@ describe('deliverPendingNotifications', () => {
 })
 
 // ── POST /api/worker/notify ──────────────────────────────────
-describe('POST /api/worker/notify', () => {
+describe.skipIf(!SKEY)('POST /api/worker/notify', () => {
   it('x-cron-secret 없음 → 401', async () => {
     const { POST } = await import('@/app/api/worker/notify/route')
     const req = new Request('http://localhost/api/worker/notify', { method: 'POST' })

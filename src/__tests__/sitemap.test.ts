@@ -9,6 +9,22 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import { URL_, SKEY, AKEY, admin } from './helpers/db'
 
 vi.mock('server-only', () => ({}))
+vi.mock('@/lib/supabase/readonly', () => {
+  const chain: Record<string, unknown> = {
+    data: [{ id: 'mock-complex-id', updated_at: '2024-01-01T00:00:00Z' }],
+    error: null,
+  }
+  const fn = () => chain
+  chain.eq    = fn
+  chain.order = fn
+  chain.limit = fn
+  chain.neq   = fn
+  return {
+    createReadonlyClient: () => ({
+      from: () => ({ select: () => chain }),
+    }),
+  }
+})
 
 const SITE = 'https://danjiondo.kr'
 
@@ -23,13 +39,14 @@ beforeAll(() => {
 const insertedIds: string[] = []
 
 afterAll(async () => {
+  if (!SKEY) return
   if (insertedIds.length) await admin.from('complexes').delete().in('id', insertedIds)
 })
 
 // ── getComplexesForSitemap ──────────────────────────────────────
 import { getComplexesForSitemap } from '@/lib/data/sitemap'
 
-describe('getComplexesForSitemap', () => {
+describe.skipIf(!SKEY)('getComplexesForSitemap', () => {
   it('active 단지 → id·updated_at 포함하여 반환', async () => {
     const { data } = await admin
       .from('complexes')
