@@ -5,7 +5,7 @@
  * - sgg_code: 국토부 LAWD_CD + 행안부 admCd 형식 검증
  */
 import { describe, it, expect } from 'vitest'
-import { admin } from './helpers/db'
+import { SKEY, admin } from './helpers/db'
 
 // 경상남도(48) 창원·김해 시군구코드 (국토부 LAWD_CD 기준)
 const TARGET_SGG_CODES = ['48121', '48123', '48125', '48127', '48129', '48250'] as const
@@ -36,7 +36,7 @@ describe('step3: sgg_code 형식 (unit)', () => {
   })
 })
 
-describe('step3: DB 시드 (integration)', () => {
+describe.skipIf(!SKEY)('step3: DB 시드 (integration)', () => {
   it('data_sources: 6건 이상 존재', async () => {
     const { count, error } = await admin
       .from('data_sources')

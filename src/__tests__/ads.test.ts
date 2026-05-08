@@ -19,6 +19,16 @@ vi.mock('@/lib/supabase/server', () => ({
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
   }),
 }))
+vi.mock('@/lib/ratelimit', () => ({
+  adEventRatelimit: { limit: vi.fn().mockResolvedValue({ success: true, reset: 0 }) },
+}))
+vi.mock('@/lib/supabase/admin', () => ({
+  createSupabaseAdminClient: vi.fn(() => ({
+    from: vi.fn(() => ({
+      insert: vi.fn(() => Promise.resolve({ error: null })),
+    })),
+  })),
+}))
 
 beforeAll(() => {
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', URL_)

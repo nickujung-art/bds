@@ -3,13 +3,13 @@
  * RED state: page not yet implemented; tests verify query schema once columns/tables exist
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { admin } from './helpers/db'
+import { SKEY, admin } from './helpers/db'
 
 beforeAll(() => {
   // 마이그레이션이 적용되어야 통과 (Task 4 supabase db push 의존)
 })
 
-describe('admin/status COUNT queries', () => {
+describe.skipIf(!SKEY)('admin/status COUNT queries', () => {
   it('profiles 카운트 쿼리 정상', async () => {
     const { error, count } = await admin
       .from('profiles')
