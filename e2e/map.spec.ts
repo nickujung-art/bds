@@ -54,7 +54,7 @@ test.describe('지도 페이지', () => {
     const searchInput = page.locator('input[name="q"]').first()
     if (await searchInput.isVisible({ timeout: 3000 }).catch(() => false)) {
       await searchInput.fill('창원')
-      await page.keyboard.press('Enter')
+      await searchInput.press('Enter')
       await page.waitForLoadState('domcontentloaded')
       // 검색 폼 action="/map" → /map?q=창원 으로 이동
       expect(page.url()).toContain('/map')
