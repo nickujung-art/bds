@@ -150,7 +150,7 @@ describe('POST /api/admin/ad-copy-review', () => {
     })
 
     // Anthropic mock 재설정: violations 포함 응답
-    const Anthropic = (await import('@anthropic-ai/sdk')).default as Mock
+    const Anthropic = ((await import('@anthropic-ai/sdk')).default as unknown) as Mock
     Anthropic.mockImplementationOnce(() => ({
       messages: {
         create: vi.fn().mockResolvedValue({
@@ -195,7 +195,7 @@ describe('POST /api/admin/ad-copy-review', () => {
     })
 
     // Anthropic mock: throw error
-    const Anthropic = (await import('@anthropic-ai/sdk')).default as Mock
+    const Anthropic = ((await import('@anthropic-ai/sdk')).default as unknown) as Mock
     Anthropic.mockImplementationOnce(() => ({
       messages: {
         create: vi.fn().mockRejectedValue(new Error('API timeout')),
@@ -235,7 +235,7 @@ describe('POST /api/admin/ad-copy-review', () => {
       }),
     })
 
-    const Anthropic = (await import('@anthropic-ai/sdk')).default as Mock
+    const Anthropic = ((await import('@anthropic-ai/sdk')).default as unknown) as Mock
     Anthropic.mockImplementationOnce(() => ({
       messages: {
         create: vi.fn().mockResolvedValue({

@@ -46,14 +46,21 @@ export async function POST(request: Request): Promise<Response> {
   const queryEmbedding = await embedQuery(lastUserMsg)
 
   // pgvector 유사도 검색
+  // match_complex_embeddings는 migration 06-00-03에서 추가된 RPC.
+  // DB 타입 재생성 전까지 unknown cast 사용.
   const supabase = createSupabaseAdminClient()
-  const { data: chunks } = await supabase.rpc('match_complex_embeddings', {
+  const { data: chunks } = await (supabase as unknown as {
+    rpc: (
+      fn: string,
+      args: { query_embedding: number[]; target_complex_id: string; match_count: number },
+    ) => Promise<{ data: Array<{ chunk_type: string; content: string; similarity: number }> | null }>
+  }).rpc('match_complex_embeddings', {
     query_embedding: queryEmbedding,
     target_complex_id: complexId,
     match_count: 3,
   })
 
-  const context = ((chunks ?? []) as Array<{ content: string }>)
+  const context = (chunks ?? [])
     .map(c => c.content)
     .join('\n\n')
 
