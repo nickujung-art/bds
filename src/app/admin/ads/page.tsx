@@ -5,6 +5,8 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/types/database'
 import { getAllAdCampaigns } from '@/lib/data/ads'
 import { AdminCampaignActions } from '@/components/ads/AdminCampaignActions'
+import { AdRoiTable } from '@/components/admin/AdRoiTable'
+import { getAdRoiStats } from '@/lib/data/ads'
 
 export const revalidate = 0
 
@@ -50,7 +52,10 @@ export default async function AdminAdsPage() {
 
   // 서비스 롤로 전체 캠페인 조회 (RLS 우회)
   const adminClient = createSupabaseAdminClient()
-  const campaigns = await getAllAdCampaigns(adminClient)
+  const [campaigns, roiStats] = await Promise.all([
+    getAllAdCampaigns(adminClient),
+    getAdRoiStats(adminClient),
+  ])
 
   return (
     <div
@@ -93,6 +98,9 @@ export default async function AdminAdsPage() {
         >
           광고 캠페인 관리
         </h1>
+
+        {/* ROI 집계 테이블 (캠페인이 있을 때만 표시) */}
+        {campaigns.length > 0 && <AdRoiTable rows={roiStats} />}
 
         {campaigns.length === 0 ? (
           <div

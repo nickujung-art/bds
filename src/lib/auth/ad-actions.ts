@@ -53,3 +53,52 @@ export async function rejectAdCampaign(id: string): Promise<{ error: string | nu
 export async function pauseAdCampaign(id: string): Promise<{ error: string | null }> {
   return updateStatus(id, 'paused')
 }
+
+export async function createAdCampaign(
+  formData: FormData,
+): Promise<{ error: string | null }> {
+  const { error, admin } = await requireAdmin()
+  if (error || !admin) return { error: error! }
+
+  const title = formData.get('title')
+  const advertiserName = formData.get('advertiser_name')
+  const placement = formData.get('placement')
+  const imageUrl = formData.get('image_url')
+  const linkUrl = formData.get('link_url')
+  const startsAt = formData.get('starts_at')
+  const endsAt = formData.get('ends_at')
+
+  if (
+    typeof title !== 'string' ||
+    typeof advertiserName !== 'string' ||
+    typeof placement !== 'string' ||
+    typeof imageUrl !== 'string' ||
+    typeof linkUrl !== 'string' ||
+    typeof startsAt !== 'string' ||
+    typeof endsAt !== 'string' ||
+    !title.trim() ||
+    !advertiserName.trim() ||
+    !placement.trim() ||
+    !imageUrl.trim() ||
+    !linkUrl.trim() ||
+    !startsAt.trim() ||
+    !endsAt.trim()
+  ) {
+    return { error: '필수 항목을 모두 입력하세요.' }
+  }
+
+  const { error: dbErr } = await admin.from('ad_campaigns').insert({
+    title: title.trim(),
+    advertiser_name: advertiserName.trim(),
+    placement: placement.trim(),
+    image_url: imageUrl.trim(),
+    link_url: linkUrl.trim(),
+    starts_at: startsAt.trim(),
+    ends_at: endsAt.trim(),
+    status: 'pending',
+  })
+
+  if (dbErr) return { error: dbErr.message }
+  revalidatePath('/admin/ads')
+  return { error: null }
+}
