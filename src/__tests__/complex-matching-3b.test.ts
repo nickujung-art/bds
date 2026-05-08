@@ -42,7 +42,7 @@ const COMPLEX_A = {
   lng:              128.6816,
   household_count:  500,
   built_year:       2010,
-  status:           'active',
+  status:           'active' as const,
   data_completeness: { transactions: false, school: false, kapt: false, poi: false },
 }
 
@@ -57,7 +57,7 @@ const COMPLEX_B = {
   lng:              128.6820,
   household_count:  300,
   built_year:       2015,
-  status:           'active',
+  status:           'active' as const,
   data_completeness: { transactions: false, school: false, kapt: false, poi: false },
 }
 
@@ -72,7 +72,7 @@ const COMPLEX_C = {
   lng:              128.6900,
   household_count:  800,
   built_year:       2020,
-  status:           'active',
+  status:           'active' as const,
   data_completeness: { transactions: false, school: false, kapt: false, poi: false },
 }
 

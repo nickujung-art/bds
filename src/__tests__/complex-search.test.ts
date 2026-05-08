@@ -18,9 +18,9 @@ const inserted: string[] = []
 
 beforeAll(async () => {
   const fixtures = [
-    { canonical_name: '래미안창원아파트', name_normalized: '래미안창원아파트', sgg_code: '48121', status: 'active' },
-    { canonical_name: '래미안김해아파트', name_normalized: '래미안김해아파트', sgg_code: '48250', status: 'active' },
-    { canonical_name: '자이성산아파트',   name_normalized: '자이성산아파트',   sgg_code: '48123', status: 'active' },
+    { canonical_name: '래미안창원아파트', name_normalized: '래미안창원아파트', sgg_code: '48121', status: 'active' as const },
+    { canonical_name: '래미안김해아파트', name_normalized: '래미안김해아파트', sgg_code: '48250', status: 'active' as const },
+    { canonical_name: '자이성산아파트',   name_normalized: '자이성산아파트',   sgg_code: '48123', status: 'active' as const },
   ]
   for (const f of fixtures) {
     const { data } = await admin.from('complexes').insert(f).select('id').single()

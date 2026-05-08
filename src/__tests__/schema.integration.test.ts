@@ -86,7 +86,8 @@ describe('complexes.status enum 유효성', () => {
       canonical_name: '테스트',
       name_normalized: '테스트',
       sgg_code: '48121',
-      status: 'invalid_status',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      status: 'invalid_status' as any,
     })
     expect(error).not.toBeNull()
   })

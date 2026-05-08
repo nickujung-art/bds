@@ -1,0 +1,82 @@
+name: DB Backup
+
+on:
+  schedule:
+    - cron: '0 19 * * 6'   # 토요일 19:00 UTC = 일요일 04:00 KST
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    name: pg_dump → danjiondo-backup repo
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Install postgresql-client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+
+      - name: Run pg_dump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -e
+          FILENAME="backup-$(date +%Y-%m-%d).sql.gz"
+          pg_dump "$SUPABASE_DB_URL" | gzip > "/tmp/$FILENAME"
+          echo "FILENAME=$FILENAME" >> "$GITHUB_ENV"
+          echo "pg_dump complete: $FILENAME"
+
+      - name: Verify dump file integrity
+        run: |
+          set -e
+          DUMP_SIZE=$(wc -c < "/tmp/$FILENAME")
+          echo "Dump file size: $DUMP_SIZE bytes"
+          if [ "$DUMP_SIZE" -lt 1000 ]; then
+            echo "ERROR: dump file suspiciously small ($DUMP_SIZE bytes) — pg_dump may have failed" >&2
+            exit 1
+          fi
+          echo "Dump integrity OK: $DUMP_SIZE bytes"
+
+      - name: Clone backup repo
+        env:
+          BACKUP_PAT: ${{ secrets.BACKUP_PAT }}
+        run: |
+          set -e
+          git clone \
+            "https://x-access-token:${BACKUP_PAT}@github.com/nickujung-art/danjiondo-backup.git" \
+            /tmp/backup-repo
+
+      - name: Commit backup file
+        run: |
+          set -e
+          cp "/tmp/$FILENAME" /tmp/backup-repo/
+          cd /tmp/backup-repo
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add "$FILENAME"
+          git commit -m "backup: $FILENAME"
+          git push
+
+      - name: Cleanup backups older than 90 days
+        run: |
+          set -e
+          cd /tmp/backup-repo
+          CUTOFF=$(date -d '90 days ago' +%Y-%m-%d)
+          REMOVED=0
+          for f in backup-*.sql.gz; do
+            [ -f "$f" ] || continue
+            FILEDATE="${f#backup-}"
+            FILEDATE="${FILEDATE%.sql.gz}"
+            if [[ "$FILEDATE" < "$CUTOFF" ]]; then
+              git rm "$f"
+              REMOVED=$((REMOVED + 1))
+            fi
+          done
+          if [ "$REMOVED" -gt 0 ]; then
+            git commit -m "cleanup: remove $REMOVED backup(s) older than 90 days"
+            git push
+            echo "Removed $REMOVED old backup(s)"
+          else
+            echo "No old backups to remove"
+          fi

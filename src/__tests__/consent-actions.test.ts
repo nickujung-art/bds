@@ -71,7 +71,7 @@ function mockUnauthenticated() {
       getUser: vi.fn(() => Promise.resolve({ data: { user: null } })),
       signOut: vi.fn(() => Promise.resolve({ error: null })),
     },
-  } as Awaited<ReturnType<typeof createSupabaseServerClient>>)
+  } as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>)
 }
 
 // 로그인 mock 헬퍼
@@ -81,7 +81,7 @@ function mockAuthenticated(userId = 'user-123') {
       getUser: vi.fn(() => Promise.resolve({ data: { user: { id: userId } } })),
       signOut: vi.fn(() => Promise.resolve({ error: null })),
     },
-  } as Awaited<ReturnType<typeof createSupabaseServerClient>>)
+  } as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>)
 }
 
 // ── agreeToTerms ────────────────────────────────────────────────

@@ -6,6 +6,7 @@
  * - POST /api/ads/events: 유효성 검사 → 400, 정상 → 201
  */
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
+import type { Database } from '@/types/database'
 import { URL_, SKEY, AKEY, admin } from './helpers/db'
 
 vi.mock('server-only', () => ({}))
