@@ -62,17 +62,25 @@ export async function fetchComplexList(sggCode: string): Promise<KaptComplex[]> 
 // ===== fetchKaptBasicInfo (DATA-01) =====
 const BASIC_INFO_URL = 'https://apis.data.go.kr/1613000/AptBasisInfoServiceV3/getAphusBassInfoV3'
 
-const KaptBasicInfoSchema = z.object({
+export const kaptBasicInfoSchema = z.object({
   kaptCode:       z.string(),
   kaptName:       z.string(),
   kaptdaCnt:      z.coerce.number().optional(),   // 세대수
   kaptDongCnt:    z.coerce.number().optional(),   // 동수
-  heatType:       z.string().optional(),          // 난방방식
+  heatType:       z.string().optional(),          // 난방방식 (V1 필드명)
   managementType: z.string().optional(),          // 관리방식
   totalArea:      z.coerce.number().optional(),   // 연면적
+  // DATA-08: 추가 필드 (KAPT API V3 응답 확장)
+  kaptUsedate:    z.string().optional(),          // 사용승인일 YYYYMMDD (준공연도 원천)
+  doroJuso:       z.string().optional(),          // 도로명주소
+  codeHeatNm:     z.string().optional(),          // 난방방식 명칭 (heatType 폴백용)
+  kaptAddr:       z.string().optional(),          // 법정동주소
 })
 
-export type KaptBasicInfo = z.infer<typeof KaptBasicInfoSchema>
+/** @deprecated KaptBasicInfoSchema → kaptBasicInfoSchema 로 변경됨. 내부용으로 유지. */
+const KaptBasicInfoSchema = kaptBasicInfoSchema
+
+export type KaptBasicInfo = z.infer<typeof kaptBasicInfoSchema>
 
 export async function fetchKaptBasicInfo(kaptCode: string): Promise<KaptBasicInfo | null> {
   const apiKey = process.env.KAPT_API_KEY
