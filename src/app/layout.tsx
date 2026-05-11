@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
-import Script from 'next/script'
 import { Footer } from '@/components/layout/Footer'
 import './globals.css'
 
@@ -41,10 +40,6 @@ export default function RootLayout({
   return (
     <html lang="ko" className={pretendard.variable}>
       <body className="font-sans antialiased">
-        <Script
-          src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_JS_KEY}&libraries=services`}
-          strategy="beforeInteractive"
-        />
         {children}
         <Footer />
       </body>

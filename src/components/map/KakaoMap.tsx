@@ -1,6 +1,6 @@
 'use client'
 
-import { Map } from 'react-kakao-maps-sdk'
+import { Map, useKakaoLoader } from 'react-kakao-maps-sdk'
 import { useCallback, useState } from 'react'
 import { clusterComplexes, type ComplexMapItem, type ClusterFeature } from '@/lib/data/complexes-map'
 import { ComplexMarker } from './ComplexMarker'
@@ -17,6 +17,10 @@ const DEFAULT_CENTER = { lat: 35.2278, lng: 128.6817 }
 const DEFAULT_LEVEL  = 8
 
 export function KakaoMap({ complexes, initialCenter = DEFAULT_CENTER, initialLevel = DEFAULT_LEVEL }: Props) {
+  const [loading, error] = useKakaoLoader({
+    appkey: process.env.NEXT_PUBLIC_KAKAO_JS_KEY!,
+    libraries: ['services'],
+  })
   const [clusters, setClusters] = useState<ClusterFeature[]>([])
 
   const handleIdle = useCallback(
@@ -36,6 +40,8 @@ export function KakaoMap({ complexes, initialCenter = DEFAULT_CENTER, initialLev
     },
     [complexes],
   )
+
+  if (loading || error) return null
 
   return (
     <Map
