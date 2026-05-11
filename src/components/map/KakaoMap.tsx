@@ -29,7 +29,8 @@ export function KakaoMap({ complexes, initialCenter = DEFAULT_CENTER, initialLev
       const sw = bounds.getSouthWest()
       const ne = bounds.getNorthEast()
       // kakao level: 1=가장 확대, 14=가장 축소 → supercluster zoom 역변환
-      const zoom = Math.max(0, Math.min(14 - map.getLevel(), 17))
+      // 카카오 level 1 → zoom 19, level 14 → zoom 6 (maxZoom 16 초과 시 개별 핀 표시)
+      const zoom = Math.max(0, 20 - map.getLevel())
       setClusters(
         clusterComplexes(
           complexes,
