@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' *.kakao.com *.daumcdn.net",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' blob: data: *.kakao.com *.daumcdn.net",
-              "connect-src 'self' *.supabase.co *.posthog.com *.sentry.io api.voyageai.com api.anthropic.com",
+              "connect-src 'self' *.supabase.co *.posthog.com *.sentry.io api.voyageai.com api.anthropic.com *.kakao.com *.daumcdn.net",
               "frame-src 'none'",
               "object-src 'none'",
             ].join('; '),
