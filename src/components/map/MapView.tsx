@@ -33,11 +33,6 @@ export function MapView({ complexes }: Props) {
   return (
     <div className="relative h-full w-full">
       <KakaoMap complexes={complexes} />
-      {complexes.length === 0 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs px-3 py-2 rounded shadow z-10 pointer-events-none">
-          단지 데이터 없음 (서버에서 0개 반환) — Vercel 환경변수 확인 필요
-        </div>
-      )}
     </div>
   )
 }

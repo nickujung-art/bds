@@ -34,13 +34,15 @@ Plans: 5/5 complete (05-00 ~ 05-04) — verified 2026-05-08
 
 ---
 
-**Phase 6: AI·차별화 기술** ⬜ Not Started
+**Phase 6: AI·차별화 기술** 📋 Planned
 
 Goal: Claude API RAG 봇 + SGIS 통계 + 광고 고도화 + GPS L2/L3 인증
 
 Requirements: DIFF-03, DATA-06~07, AD-01~02, AUTH-01
 
-Next step: /gsd-discuss-phase 6
+Plans: 5 plans ready (06-00 ~ 06-04) — planned 2026-05-08
+
+Next step: /gsd-execute-phase 6 (start with Wave 0: 06-00-PLAN.md)
 
 ## Phase Progress
 
@@ -51,7 +53,7 @@ Next step: /gsd-discuss-phase 6
 | 3 | 카드뉴스·법적·운영 | ✅ Complete (5/5 plans) |
 | 4 | 커뮤니티 기초 | ✅ Complete |
 | 5 | 데이터 확장·운영 안정성 | ✅ Complete |
-| 6 | AI·차별화 기술 | ⬜ Not Started |
+| 6 | AI·차별화 기술 | 📋 Planned |
 | 7 | 커뮤니티 심화·자동화 | ⬜ Not Started |
 
 ## Key Context for Agents

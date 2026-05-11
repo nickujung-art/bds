@@ -11,7 +11,7 @@
 | 3 | 카드뉴스·법적·운영 | V1.0 | V1.0 정식 출시 가능 상태 | SHARE-03~04, LEGAL-01~05, ADMIN-01~04, A11Y-01~03 | ✅ Complete |
 | 4 | 커뮤니티 기초 | V1.5 | 참여·소통 기능 + 데이터 확장 | COMM-01~05, DATA-01~02, NOTIF-01~02 | ✅ Complete |
 | 5 | 데이터 확장·운영 | V1.5 | V1.5 완성 — 데이터 깊이 + 운영 안정성 | DATA-03~05, OPS-01 | ✅ Complete |
-| 6 | AI·차별화 기술 | V2.0 | 기술 차별화 — AI 봇 + 고도화 분석 | DIFF-03, DATA-06~07, AD-01~02, AUTH-01 | ⬜ Not Started |
+| 6 | AI·차별화 기술 | V2.0 | 기술 차별화 — AI 봇 + 고도화 분석 | DIFF-03, DATA-06~07, AD-01~02, AUTH-01 | 📋 Planned (5 plans) |
 | 7 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
 
 ---
@@ -266,17 +266,17 @@
 **Plans:** 5 plans / 4 waves (Wave 0→1→2→3)
 
 **Wave 0** *(BLOCKING — autonomous: false, 마이그레이션 적용 + 패키지 설치)*
-- [ ] 06-00-PLAN.md — DB 마이그레이션 4개 + @anthropic-ai/sdk 설치 + 환경변수 등록 (DIFF-03, DATA-06, AD-01, AUTH-01)
+- [ ] 06-00-PLAN.md — DB 마이그레이션 4개 + @anthropic-ai/sdk 설치 + 환경변수 등록 (DIFF-03, DATA-06, AD-01, AUTH-01) `planned 2026-05-08`
 
 **Wave 1** *(blocked on Wave 0; 06-01/02 병렬 실행 가능 — files_modified 무중복)*
-- [ ] 06-01-PLAN.md — Ratelimit 확장 + AD-01 이벤트 고도화 + SGIS 어댑터 + 갭 라벨 쿼리 (AD-01, DATA-06, DATA-05)
-- [ ] 06-02-PLAN.md — RAG 채팅 API + AD-02 카피 검토 API + 임베딩/SGIS 배치 스크립트 (DIFF-03, DATA-06, AD-02)
+- [ ] 06-01-PLAN.md — Ratelimit 확장 + AD-01 이벤트 고도화 + SGIS 어댑터 + 갭 라벨 쿼리 (AD-01, DATA-06, DATA-05) `planned 2026-05-08`
+- [ ] 06-02-PLAN.md — RAG 채팅 API + AD-02 카피 검토 API + 임베딩/SGIS 배치 스크립트 (DIFF-03, DATA-06, AD-02) `planned 2026-05-08`
 
 **Wave 2** *(blocked on Wave 1)*
-- [ ] 06-03-PLAN.md — 프론트엔드 UI — 갭 라벨 + 지역 통계 탭 + AI 상담 패널 + 어드민 ROI + 카피 검토 (DATA-05, DATA-06, DIFF-03, AD-01, AD-02)
+- [ ] 06-03-PLAN.md — 프론트엔드 UI — 갭 라벨 + 지역 통계 탭(AnalysisSection) + AI 상담 패널 + 어드민 ROI + 카피 검토 폼 (DATA-05, DATA-06, DIFF-03, AD-01, AD-02) `planned 2026-05-08`
 
 **Wave 3** *(blocked on Wave 0·2)*
-- [ ] 06-04-PLAN.md — GPS L2+L3 인증 + 어드민 승인 UI + E2E 테스트 (AUTH-01)
+- [ ] 06-04-PLAN.md — GPS L2+L3 인증 + 어드민 승인 UI + E2E 테스트 (AUTH-01) `planned 2026-05-08`
 
 **Cross-cutting constraints:**
 - 모든 transactions 쿼리: `cancel_date IS NULL AND superseded_by IS NULL` 필수
