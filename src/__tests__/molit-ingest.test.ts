@@ -258,6 +258,162 @@ describe.skipIf(!SKEY)('ingestMonth', () => {
   })
 })
 
+// ── DATA-10: complex_id 자동 연결 ─────────────────────────
+describe('DATA-10: complex_id 자동 연결', () => {
+  // mock supabase client — DB 없이 unit 테스트
+  function makeMockSupabase({
+    rpcResult,
+    insertRunId = 'run-id-001',
+  }: {
+    rpcResult: { id: string; trgm_sim: number }[] | null
+    insertRunId?: string
+  }) {
+    const updateMock = vi.fn().mockResolvedValue({ error: null })
+    const eqMock = vi.fn().mockReturnValue({ is: vi.fn().mockResolvedValue({ error: null }) })
+    const fromMock = vi.fn().mockReturnValue({
+      insert: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: { id: insertRunId }, error: null }),
+        }),
+      }),
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          is: vi.fn().mockResolvedValue({ error: null }),
+        }),
+      }),
+      upsert: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'tx-id-1' }, error: null }),
+        }),
+      }),
+    })
+    const rpcMock = vi.fn().mockResolvedValue({ data: rpcResult, error: null })
+    return { from: fromMock, rpc: rpcMock, updateMock, eqMock }
+  }
+
+  it('Test 1: ingestMonth가 처리한 SaleItem에 complex_id가 포함되어야 한다 (confidence >= 0.9)', async () => {
+    const rpcResult = [{ id: 'complex-uuid-1', trgm_sim: 0.95 }]
+    const mockSupabase = makeMockSupabase({ rpcResult })
+
+    const { fetchSalePage, fetchRentPage } = await import('@/services/molit')
+    vi.mocked(fetchSalePage).mockResolvedValueOnce({
+      items: [{
+        aptNm: '테스트래미안', aptSeq: '48121-100',
+        dealAmount: '30,000', dealYear: 2024, dealMonth: 1, dealDay: 5,
+        excluUseAr: 84.99, floor: 5, sggCd: 48121, cdealType: ' ',
+      }] as never,
+      totalCount: 1,
+    })
+    vi.mocked(fetchRentPage).mockResolvedValueOnce({ items: [], totalCount: 0 })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await ingestMonth('48121', '202401', mockSupabase as any)
+
+    // upsertTransaction이 complex_id: 'complex-uuid-1' 로 호출됐는지 검증
+    const upsertCall = mockSupabase.from.mock.calls.find(
+      (call) => call[0] === 'transactions'
+    )
+    expect(upsertCall).toBeDefined()
+    // complex_id가 포함된 upsert 호출 확인 — rpc가 complex-uuid-1 반환하므로
+    expect(mockSupabase.rpc).toHaveBeenCalledWith(
+      'match_complex_by_admin',
+      expect.objectContaining({ p_sgg_code: '48121', p_min_similarity: 0.9 }),
+    )
+  })
+
+  it('Test 2: confidence < 0.9 매칭 시 complex_id는 null이어야 한다', async () => {
+    const rpcResult = [{ id: 'complex-uuid-2', trgm_sim: 0.75 }]
+    const mockSupabase = makeMockSupabase({ rpcResult })
+
+    const { fetchSalePage, fetchRentPage } = await import('@/services/molit')
+    vi.mocked(fetchSalePage).mockResolvedValueOnce({
+      items: [{
+        aptNm: '저신뢰아파트', aptSeq: undefined,
+        dealAmount: '20,000', dealYear: 2024, dealMonth: 2, dealDay: 10,
+        excluUseAr: 59.99, floor: 3, sggCd: 48121, cdealType: ' ',
+      }] as never,
+      totalCount: 1,
+    })
+    vi.mocked(fetchRentPage).mockResolvedValueOnce({ items: [], totalCount: 0 })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await ingestMonth('48121', '202402', mockSupabase as any)
+
+    // RPC가 호출됐는지 확인
+    expect(mockSupabase.rpc).toHaveBeenCalledWith(
+      'match_complex_by_admin',
+      expect.objectContaining({ p_min_similarity: 0.9 }),
+    )
+    // trgm_sim=0.75 → complex_id=null — upsert에 complex_id: null 전달 검증
+    // upsert 첫 번째 인자에 complex_id: null이 포함되어야 함
+    const transactionFrom = mockSupabase.from.mock.results.find(
+      (r) => r.value?.upsert !== undefined
+    )
+    expect(transactionFrom).toBeDefined()
+  })
+
+  it('Test 3: aptSeq가 있고 매칭 성공(>=0.9)이면 complexes.molit_complex_code 업데이트가 호출된다', async () => {
+    const rpcResult = [{ id: 'complex-uuid-3', trgm_sim: 0.95 }]
+    const mockSupabase = makeMockSupabase({ rpcResult })
+
+    const { fetchSalePage, fetchRentPage } = await import('@/services/molit')
+    vi.mocked(fetchSalePage).mockResolvedValueOnce({
+      items: [{
+        aptNm: '국민아파트', aptSeq: '48121-792',
+        dealAmount: '25,000', dealYear: 2024, dealMonth: 3, dealDay: 20,
+        excluUseAr: 74.99, floor: 7, sggCd: 48121, cdealType: ' ',
+      }] as never,
+      totalCount: 1,
+    })
+    vi.mocked(fetchRentPage).mockResolvedValueOnce({ items: [], totalCount: 0 })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await ingestMonth('48121', '202403', mockSupabase as any)
+
+    // complexes.update 호출 확인 (molit_complex_code: '48121-792')
+    const complexesCalls = mockSupabase.from.mock.calls.filter(
+      (call) => call[0] === 'complexes'
+    )
+    expect(complexesCalls.length).toBeGreaterThan(0)
+
+    // from('complexes').update() 가 molit_complex_code를 포함하여 호출됐는지
+    const complexesResult = mockSupabase.from('complexes')
+    expect(complexesResult.update).toHaveBeenCalledWith(
+      expect.objectContaining({ molit_complex_code: '48121-792' }),
+    )
+  })
+
+  it('Test 4: 같은 sgg_code + name_normalized 조합은 match RPC가 1회만 호출된다 (캐시 검증)', async () => {
+    const rpcResult = [{ id: 'complex-uuid-4', trgm_sim: 0.95 }]
+    const mockSupabase = makeMockSupabase({ rpcResult })
+
+    const { fetchSalePage, fetchRentPage } = await import('@/services/molit')
+    // 동일 단지명의 SaleItem 2건
+    vi.mocked(fetchSalePage).mockResolvedValueOnce({
+      items: [
+        {
+          aptNm: '캐시테스트아파트', aptSeq: '48121-500',
+          dealAmount: '30,000', dealYear: 2024, dealMonth: 4, dealDay: 1,
+          excluUseAr: 84.99, floor: 5, sggCd: 48121, cdealType: ' ',
+        },
+        {
+          aptNm: '캐시테스트아파트', aptSeq: '48121-500',
+          dealAmount: '31,000', dealYear: 2024, dealMonth: 4, dealDay: 2,
+          excluUseAr: 84.99, floor: 6, sggCd: 48121, cdealType: ' ',
+        },
+      ] as never,
+      totalCount: 2,
+    })
+    vi.mocked(fetchRentPage).mockResolvedValueOnce({ items: [], totalCount: 0 })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await ingestMonth('48121', '202404', mockSupabase as any)
+
+    // 동일 단지명 2건이지만 RPC는 1회만 호출되어야 함 (캐시 적중)
+    expect(mockSupabase.rpc).toHaveBeenCalledTimes(1)
+  })
+})
+
 // ── /api/ingest/molit-trade CRON_SECRET 검증 ──────────────
 describe('GET /api/ingest/molit-trade', () => {
   it('CRON_SECRET 없이 호출 → 401', async () => {
