@@ -643,3 +643,43 @@ await supabase
 
 **Research date:** 2026-05-11
 **Valid until:** 2026-06-11 (stable Korean government API; may be affected if data.go.kr updates field names)
+
+---
+
+## Open Questions (RESOLVED)
+
+**Q1: DATA-09 performance — TypeScript script vs SQL migration?**
+
+**Resolution: TypeScript batch script approach accepted.**
+
+- 186K individual RPC calls in 500-item batches (~374 iterations) is accepted risk within the GitHub Actions 120-minute timeout.
+- Estimated runtime: 374 batches × ~5s per batch (500 RPC calls + bulk UPDATE) = ~30 minutes. Well within 120-min timeout.
+- The TypeScript approach is required because `nameNormalize()` applies the alias JSON dictionary which cannot be replicated in pure SQL without duplicating the normalization logic.
+- **Idempotency guarantee:** The script uses `WHERE complex_id IS NULL` guard, so if a run times out at 80% completion, re-running picks up exactly where it left off with no duplicates.
+- **80% match rate:** Not guaranteed in a single run. If not achieved, the script is idempotent and can be re-run after populating `name-aliases.json` with additional aliases from the `no_match` queue.
+- Assumption A4 risk accepted: if 120 minutes is insufficient, increase `timeout-minutes` to 180 in the workflow.
+
+**Q2: DATA-08 dong population — does fetchComplexList return as3 for all sgg_codes?**
+
+**Resolution: Proceed with Option A (buildDongMap at script start); treat partial coverage as acceptable.**
+
+- `KaptComplexSchema` declares `as3` as optional, so partial population is expected.
+- The script logs the percentage of complexes with `as3` populated on first run (A3 assumption logged).
+- Complexes with no `as3` from the API will have `dong = null`; this is acceptable as partial success — the critical fields are `si`, `gu`, `household_count`, and `built_year`.
+
+**Q3: Alias JSON population scope — run with or without aliases first?**
+
+**Resolution: Populate a minimal alias set (>10 entries) before first DATA-09 run.**
+
+- `name-aliases.json` will be populated in 07-02 Task 1 with common Korean apartment brand variants (e편한세상, 힐스테잇, etc.) before running `link-transactions.ts`.
+- After the first run, inspect `no_match` queue entries for additional alias patterns and add a second pass if match rate < 80%.
+- The alias JSON is small enough to populate manually before execution — no automated alias discovery needed.
+
+**Q4: Should DATA-10 lookup be synchronous per transaction or cached?**
+
+**Resolution: Use cache Map pattern (Pitfall 5 strategy).**
+
+- `lookupComplexIdCached()` defined inside `ingestMonth` scope with a `Map<string, string | null>` cache.
+- Cache key: `"${sggCode}:${nameNormalized}"`.
+- Effectively reduces RPC calls to the number of unique complex names per ingest batch (typically 20-100 per month per sgg_code), not one per transaction.
+- Acceptable latency impact: negligible with cache in place.

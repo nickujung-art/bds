@@ -311,13 +311,11 @@
 - DATA-09: transactions.complex_id 일괄 연결 (sgg_code + 이름 매칭 → 불확실 건은 unmatched 로그)
 - DATA-10: ingestMonth 수정 — aptSeq → molit_complex_code 저장 + complex_id 자동 lookup
 
-**Plans:** 3 plans / 2 waves
+**Plans:** 3 plans / 1 wave
 
-**Wave 1** *(독립 실행 가능 — 07-01/02 병렬 실행)*
+**Wave 1** *(모두 독립 실행 가능 — 병렬 실행)*
 - [ ] 07-01-PLAN.md — KaptBasicInfoSchema 확장 + kapt-enrich.ts 스크립트 + GitHub Actions (DATA-08)
 - [ ] 07-02-PLAN.md — name-aliases.json 작성 + link-transactions.ts 스크립트 + GitHub Actions (DATA-09)
-
-**Wave 2** *(blocked on Wave 1)*
 - [ ] 07-03-PLAN.md — ingestMonth 수정 (complex_id 자동 연결 + molit_complex_code 저장) + 테스트 (DATA-10)
 
 **Cross-cutting constraints:**

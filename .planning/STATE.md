@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-08T00:00:00Z"
-last_activity: 2026-05-08 — Phase 5 COMPLETE (05-04 pg_dump backup + E2E fix)
+last_updated: "2026-05-11T00:00:00Z"
+last_activity: 2026-05-11 — Phase 7 PLANNED (3 plans, 1 wave — data pipeline fix)
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 5
-  total_plans: 24
+  total_plans: 27
   completed_plans: 24
-  percent: 100
+  percent: 63
 ---
 
 # Project State — 단지온도
@@ -44,6 +44,18 @@ Plans: 5 plans ready (06-00 ~ 06-04) — planned 2026-05-08
 
 Next step: /gsd-execute-phase 6 (start with Wave 0: 06-00-PLAN.md)
 
+---
+
+**Phase 7: 데이터 파이프라인 수리** 📋 Planned
+
+Goal: KAPT 단지정보 적재 + transactions↔complexes 연결 + ingestMonth 수정 — 서비스 데이터 기반 완성
+
+Requirements: DATA-08~10
+
+Plans: 3 plans ready (07-01 ~ 07-03, all Wave 1 parallel) — planned 2026-05-11
+
+Next step: /gsd-execute-phase 7
+
 ## Phase Progress
 
 | # | Phase | Status |
@@ -54,7 +66,8 @@ Next step: /gsd-execute-phase 6 (start with Wave 0: 06-00-PLAN.md)
 | 4 | 커뮤니티 기초 | ✅ Complete |
 | 5 | 데이터 확장·운영 안정성 | ✅ Complete |
 | 6 | AI·차별화 기술 | 📋 Planned |
-| 7 | 커뮤니티 심화·자동화 | ⬜ Not Started |
+| 7 | 데이터 파이프라인 수리 | 📋 Planned (3 plans) |
+| 8 | 커뮤니티 심화·자동화 | ⬜ Not Started |
 
 ## Key Context for Agents
 
