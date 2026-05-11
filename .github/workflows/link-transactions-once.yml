@@ -1,0 +1,37 @@
+name: transactions complex_id 연결 (1회성)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  link:
+    name: transactions↔complexes 일괄 연결
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Run link-transactions
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/link-transactions.ts
+
+      - name: Upload unmatched log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unmatched-log
+          path: .planning/phases/07-data-pipeline/unmatched-log.jsonl
+          if-no-files-found: warn
+
+      - name: 완료
+        run: echo "연결 완료 — transactions 테이블에서 complex_id 비율 확인"

@@ -1,0 +1,257 @@
+/**
+ * transactions.complex_id 일괄 연결 스크립트 (DATA-09)
+ *
+ * 실행: npx tsx scripts/link-transactions.ts
+ * 환경변수: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ *
+ * 중요: 단지명 단독 매칭 절대 금지 (CLAUDE.md)
+ * 항상 sgg_code + pg_trgm 복합 매칭 — matchByAdminCode() wrapper 사용
+ * supabase.rpc('match_complex_by_admin') 직접 호출 금지 — ADMIN_CONFIDENCE_CAP 우회 방지
+ */
+import { loadEnvConfig } from '@next/env'
+import { createClient } from '@supabase/supabase-js'
+import * as fs from 'fs'
+import * as path from 'path'
+
+import { nameNormalize } from '../src/lib/data/name-normalize'
+import { matchByAdminCode } from '../src/lib/data/complex-matching'
+
+loadEnvConfig(process.cwd())
+
+// ── 임계값 ──────────────────────────────────────────────────────
+const AUTO_THRESHOLD = 0.9       // complex_id 자동 설정 (matchByAdminCode.confidence >= 0.9)
+const QUEUE_LOW_CONFIDENCE = 0.5 // complex_match_queue low_confidence 적재 (0.5~0.9)
+// ADMIN_CONFIDENCE_CAP = 0.85 는 matchByAdminCode 내부에서 적용됨 — 별도 Math.min 불필요
+
+// ── 배치 크기 ────────────────────────────────────────────────────
+const BATCH_SIZE = 500
+
+// ── 경로 설정 ────────────────────────────────────────────────────
+const LOG_PATH = path.join(
+  process.cwd(),
+  '.planning/phases/07-data-pipeline/unmatched-log.jsonl',
+)
+
+// ── Supabase 클라이언트 (service role) ──────────────────────────
+function createSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url) {
+    console.error('NEXT_PUBLIC_SUPABASE_URL 환경변수가 없습니다.')
+    process.exit(1)
+  }
+  if (!key) {
+    console.error('SUPABASE_SERVICE_ROLE_KEY 환경변수가 없습니다.')
+    process.exit(1)
+  }
+
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+}
+
+type SupabaseClientType = ReturnType<typeof createSupabaseClient>
+
+// ── 중복 방지 가드 (Pitfall 3) ──────────────────────────────────
+// complex_match_queue에 동일 transaction_id가 이미 존재하면 true 반환
+async function isAlreadyQueued(
+  txId: string,
+  supabase: SupabaseClientType,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from('complex_match_queue')
+    .select('source')
+    .eq('source', 'link-transactions')
+    .contains('raw_payload', { tx_id: txId })
+    .limit(1)
+  return (data?.length ?? 0) > 0
+}
+
+// ── complex_match_queue 적재 ────────────────────────────────────
+async function enqueueUnmatched(
+  tx: { id: string; sgg_code: string; raw_complex_name: string },
+  reason: 'low_confidence' | 'no_match',
+  candidateIds: string[],
+  supabase: SupabaseClientType,
+): Promise<void> {
+  const { error } = await supabase.from('complex_match_queue').insert({
+    source: 'link-transactions',
+    raw_payload: {
+      tx_id: tx.id,
+      sgg_code: tx.sgg_code,
+      raw_complex_name: tx.raw_complex_name,
+    },
+    candidate_ids: candidateIds.length > 0 ? candidateIds : null,
+    reason,
+    status: 'pending',
+  })
+  if (error) {
+    console.warn(`[WARN] complex_match_queue insert 실패 (tx=${tx.id}): ${error.message}`)
+  }
+}
+
+// ── unmatched-log.jsonl 기록 ────────────────────────────────────
+function appendUnmatchedLog(entry: {
+  tx_id: string
+  sgg_code: string
+  raw_complex_name: string
+  reason: string
+}): void {
+  try {
+    const logDir = path.dirname(LOG_PATH)
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true })
+    }
+    fs.appendFileSync(LOG_PATH, JSON.stringify(entry) + '\n', 'utf-8')
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.warn(`[WARN] unmatched-log 기록 실패: ${msg}`)
+  }
+}
+
+// ── 진행 출력 ───────────────────────────────────────────────────
+function printProgress(
+  batchNum: number,
+  totalBatches: number,
+  linked: number,
+  queued: number,
+  unmatched: number,
+): void {
+  process.stdout.write(
+    `\r[배치 ${batchNum}/${totalBatches}] 연결: ${linked}, 저신뢰 큐: ${queued}, 미매칭: ${unmatched}`,
+  )
+}
+
+// ── 메인 로직 ───────────────────────────────────────────────────
+async function main(): Promise<void> {
+  const supabase = createSupabaseClient()
+
+  console.log('== transactions.complex_id 일괄 연결 시작 (DATA-09) ==')
+  console.log(`임계값: AUTO_THRESHOLD=${AUTO_THRESHOLD}, QUEUE_LOW_CONFIDENCE=${QUEUE_LOW_CONFIDENCE}`)
+  console.log(`배치 크기: ${BATCH_SIZE}`)
+  console.log(`미매칭 로그: ${LOG_PATH}`)
+  console.log()
+
+  // 1. 총 COUNT 조회 (WHERE complex_id IS NULL)
+  const { count, error: countError } = await supabase
+    .from('transactions')
+    .select('id', { count: 'exact', head: true })
+    .is('complex_id', null)
+
+  if (countError) {
+    console.error(`COUNT 조회 실패: ${countError.message}`)
+    process.exit(1)
+  }
+
+  const total = count ?? 0
+  console.log(`처리 대상: ${total.toLocaleString()}건 (complex_id IS NULL)`)
+
+  if (total === 0) {
+    console.log('처리할 건이 없습니다. 이미 모두 연결되었거나 데이터가 없습니다.')
+    return
+  }
+
+  const totalBatches = Math.ceil(total / BATCH_SIZE)
+  let totalLinked = 0
+  let totalQueuedLow = 0
+  let totalUnmatched = 0
+
+  // 2. 배치 페이지네이션 처리
+  for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
+    const offset = (batchNum - 1) * BATCH_SIZE
+
+    const { data: rows, error: fetchError } = await supabase
+      .from('transactions')
+      .select('id, sgg_code, raw_complex_name')
+      .is('complex_id', null)
+      .range(offset, offset + BATCH_SIZE - 1)
+
+    if (fetchError) {
+      console.error(`\n배치 ${batchNum} 조회 실패: ${fetchError.message}`)
+      continue
+    }
+
+    if (!rows || rows.length === 0) break
+
+    const linkedPairs: Array<{ id: string; complexId: string }> = []
+
+    // 3. 각 행에 대해 matchByAdminCode 호출
+    for (const tx of rows as Array<{ id: string; sgg_code: string; raw_complex_name: string }>) {
+      const nameNormalized = nameNormalize(tx.raw_complex_name)
+
+      // CLAUDE.md 필수: sgg_code + pg_trgm 복합 매칭 — 이름 단독 매칭 절대 금지
+      const matchResult = await matchByAdminCode(
+        { sggCode: tx.sgg_code, nameNormalized },
+        supabase,
+      )
+
+      if (matchResult && matchResult.confidence >= AUTO_THRESHOLD) {
+        // confidence >= 0.9 → 자동 연결
+        linkedPairs.push({ id: tx.id, complexId: matchResult.complexId })
+      } else if (matchResult && matchResult.confidence >= QUEUE_LOW_CONFIDENCE) {
+        // confidence 0.5~0.9 → low_confidence 큐 적재 (중복 방지)
+        const already = await isAlreadyQueued(tx.id, supabase)
+        if (!already) {
+          await enqueueUnmatched(tx, 'low_confidence', [matchResult.complexId], supabase)
+        }
+        totalQueuedLow++
+      } else {
+        // null 또는 confidence < 0.5 → no_match 큐 적재 (중복 방지) + 로그
+        const already = await isAlreadyQueued(tx.id, supabase)
+        if (!already) {
+          const candidates = matchResult ? [matchResult.complexId] : []
+          await enqueueUnmatched(tx, 'no_match', candidates, supabase)
+        }
+        appendUnmatchedLog({
+          tx_id: tx.id,
+          sgg_code: tx.sgg_code,
+          raw_complex_name: tx.raw_complex_name,
+          reason: 'no_match',
+        })
+        totalUnmatched++
+      }
+    }
+
+    // 4. 배치별 bulk UPDATE (WHERE complex_id IS NULL — 이미 연결된 행 덮어쓰기 방지)
+    if (linkedPairs.length > 0) {
+      for (const pair of linkedPairs) {
+        const { error: updateError } = await supabase
+          .from('transactions')
+          .update({ complex_id: pair.complexId })
+          .eq('id', pair.id)
+          .is('complex_id', null) // 재실행 안전 가드 (T-07-02-01 mitigate)
+        if (updateError) {
+          console.warn(`\n[WARN] UPDATE 실패 (tx=${pair.id}): ${updateError.message}`)
+        }
+      }
+      totalLinked += linkedPairs.length
+    }
+
+    printProgress(batchNum, totalBatches, totalLinked, totalQueuedLow, totalUnmatched)
+  }
+
+  // 5. 최종 요약
+  console.log('\n')
+  console.log('== 연결 완료 요약 ==')
+  console.log(`총 처리 대상: ${total.toLocaleString()}건`)
+  console.log(`자동 연결 (confidence >= 0.9): ${totalLinked.toLocaleString()}건`)
+  console.log(`저신뢰 큐 (0.5~0.9): ${totalQueuedLow.toLocaleString()}건`)
+  console.log(`미매칭 (< 0.5 or null): ${totalUnmatched.toLocaleString()}건`)
+
+  const matchRate = total > 0 ? ((totalLinked / total) * 100).toFixed(1) : '0.0'
+  console.log(`자동 연결율: ${matchRate}%`)
+
+  if (parseFloat(matchRate) >= 80) {
+    console.log('✓ 목표 달성: 80% 이상 자동 연결 완료')
+  } else {
+    console.log('△ 목표 미달: 80% 미만. unmatched-log.jsonl 확인 후 name-aliases.json 보완 및 재실행 권장')
+  }
+
+  console.log(`미매칭 로그: ${LOG_PATH}`)
+}
+
+main().catch((err: unknown) => {
+  console.error('스크립트 실행 실패:', err)
+  process.exit(1)
+})
