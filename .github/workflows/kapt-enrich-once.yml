@@ -1,0 +1,30 @@
+name: KAPT 단지 정보 적재 (1회성)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  enrich:
+    name: KAPT 단지 상세정보 적재
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Run KAPT enrich
+        env:
+          KAPT_API_KEY: ${{ secrets.KAPT_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/kapt-enrich.ts
+
+      - name: 완료
+        run: echo "KAPT 적재 완료 — complexes 테이블에서 si/gu/dong 확인"
