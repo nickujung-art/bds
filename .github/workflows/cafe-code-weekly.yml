@@ -17,7 +17,7 @@ jobs:
           STATUS=$(curl -sSf -o /tmp/cafe_code_response.json -w "%{http_code}" \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.SITE_URL }}/api/worker/cafe-code")
+            "${{ secrets.NEXT_PUBLIC_SITE_URL }}/api/worker/cafe-code")
 
           echo "HTTP status: $STATUS"
           cat /tmp/cafe_code_response.json

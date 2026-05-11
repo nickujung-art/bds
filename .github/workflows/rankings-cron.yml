@@ -18,7 +18,7 @@ jobs:
           STATUS=$(curl -sSf -o /tmp/rankings_response.json -w "%{http_code}" \
             -X GET \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.SITE_URL }}/api/cron/rankings")
+            "${{ secrets.NEXT_PUBLIC_SITE_URL }}/api/cron/rankings")
 
           echo "HTTP status: $STATUS"
           cat /tmp/rankings_response.json
