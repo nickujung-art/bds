@@ -41,7 +41,18 @@ export function KakaoMap({ complexes, initialCenter = DEFAULT_CENTER, initialLev
     [complexes],
   )
 
-  if (loading || error) return null
+  if (loading) return (
+    <div className="flex h-full items-center justify-center bg-gray-50 text-sm text-gray-400">
+      카카오 지도 로딩 중…
+    </div>
+  )
+  if (error) return (
+    <div className="flex h-full items-center justify-center bg-red-50 text-sm text-red-500 flex-col gap-2 p-4 text-center">
+      <span>카카오 지도 SDK 로드 실패</span>
+      <span className="text-xs text-gray-400">{String(error)}</span>
+      <span className="text-xs text-gray-400">NEXT_PUBLIC_KAKAO_JS_KEY가 올바르게 설정되어 있는지, Kakao 콘솔에서 해당 도메인이 등록되어 있는지 확인하세요.</span>
+    </div>
+  )
 
   return (
     <Map
