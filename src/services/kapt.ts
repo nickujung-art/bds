@@ -37,7 +37,7 @@ export async function fetchComplexList(sggCode: string): Promise<KaptComplex[]> 
       headers: { Accept: 'application/json' },
       signal: AbortSignal.timeout(10_000),
     })
-    if (!res.ok) throw new Error(`K-apt API ${res.status}: ${await res.text()}`)
+    if (!res.ok) throw new Error(`K-apt API error: HTTP ${res.status}`)
 
     const json: unknown = await res.json()
     const body = (json as { response?: { body?: unknown } })?.response?.body

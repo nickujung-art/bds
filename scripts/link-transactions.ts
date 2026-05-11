@@ -133,11 +133,13 @@ async function main(): Promise<void> {
   console.log(`미매칭 로그: ${LOG_PATH}`)
   console.log()
 
-  // 1. 총 COUNT 조회 (WHERE complex_id IS NULL)
+  // 1. 총 COUNT 조회 (WHERE complex_id IS NULL AND cancel_date IS NULL AND superseded_by IS NULL)
   const { count, error: countError } = await supabase
     .from('transactions')
     .select('id', { count: 'exact', head: true })
     .is('complex_id', null)
+    .is('cancel_date', null)
+    .is('superseded_by', null)
 
   if (countError) {
     console.error(`COUNT 조회 실패: ${countError.message}`)
@@ -165,6 +167,8 @@ async function main(): Promise<void> {
       .from('transactions')
       .select('id, sgg_code, raw_complex_name')
       .is('complex_id', null)
+      .is('cancel_date', null)
+      .is('superseded_by', null)
       .range(offset, offset + BATCH_SIZE - 1)
 
     if (fetchError) {
