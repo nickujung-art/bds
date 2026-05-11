@@ -342,3 +342,6 @@ body {
 .mini-bar > span.hi {
   background: var(--dj-orange);
 }
+.complex-list-item:hover > div {
+  background: var(--bg-surface-2);
+}

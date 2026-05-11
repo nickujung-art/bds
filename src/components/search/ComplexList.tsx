@@ -91,6 +91,7 @@ export function ComplexList({ complexes, query }: Props) {
           <Link
             key={c.id}
             href={`/complexes/${c.id}`}
+            className="complex-list-item"
             style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
           >
             <div
@@ -101,13 +102,6 @@ export function ComplexList({ complexes, query }: Props) {
                 padding: '12px 16px',
                 borderBottom: '1px solid var(--line-subtle)',
                 cursor: 'pointer',
-              }}
-              onMouseEnter={(e) => {
-                ;(e.currentTarget as HTMLDivElement).style.background =
-                  'var(--bg-surface-2)'
-              }}
-              onMouseLeave={(e) => {
-                ;(e.currentTarget as HTMLDivElement).style.background = ''
               }}
             >
               <div
