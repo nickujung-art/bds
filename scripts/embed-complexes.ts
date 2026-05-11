@@ -40,12 +40,12 @@ async function embedTexts(texts: string[]): Promise<number[][]> {
 
 interface Complex {
   id: string
-  name: string
+  canonical_name: string
   si: string
   gu: string
   dong: string | null
-  build_year: number | null
-  total_units: number | null
+  built_year: number | null
+  household_count: number | null
 }
 
 async function buildSummaryChunk(complex: Complex): Promise<string> {
@@ -65,9 +65,9 @@ async function buildSummaryChunk(complex: Complex): Promise<string> {
     : '실거래 데이터 없음'
 
   return [
-    `${complex.si} ${complex.gu} ${complex.dong ?? ''} ${complex.name}.`,
-    complex.build_year ? `${complex.build_year}년 준공.` : '',
-    complex.total_units ? `${complex.total_units}세대.` : '',
+    `${complex.si} ${complex.gu} ${complex.dong ?? ''} ${complex.canonical_name}.`,
+    complex.built_year ? `${complex.built_year}년 준공.` : '',
+    complex.household_count ? `${complex.household_count}세대.` : '',
     latestDeal,
   ]
     .filter(Boolean)
@@ -121,7 +121,7 @@ async function main() {
 
   const { data: complexes, error } = await supabase
     .from('complexes')
-    .select('id, name, si, gu, dong, build_year, total_units')
+    .select('id, canonical_name, si, gu, dong, built_year, household_count')
     .eq('status', 'active')
     .order('id')
 
