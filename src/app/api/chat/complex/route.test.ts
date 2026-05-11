@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
 
-// Anthropic SDK mock
-vi.mock('@anthropic-ai/sdk', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    messages: {
-      stream: vi.fn().mockReturnValue({
-        toReadableStream: () => new ReadableStream(),
+// Google Generative AI SDK mock
+vi.mock('@google/generative-ai', () => ({
+  GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
+    getGenerativeModel: vi.fn().mockReturnValue({
+      startChat: vi.fn().mockReturnValue({
+        sendMessageStream: vi.fn().mockResolvedValue({
+          stream: (async function* () { yield { text: () => '안녕하세요' } })(),
+        }),
       }),
-    },
+    }),
   })),
 }))
 

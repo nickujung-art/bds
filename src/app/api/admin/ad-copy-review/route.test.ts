@@ -5,14 +5,15 @@ vi.mock('@/lib/supabase/server', () => ({
   createSupabaseServerClient: vi.fn(),
 }))
 
-// Anthropic SDK mock
-vi.mock('@anthropic-ai/sdk', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    messages: {
-      create: vi.fn().mockResolvedValue({
-        content: [{ type: 'text', text: '{"violations":[],"suggestions":[]}' }],
-      }),
-    },
+// Google Generative AI SDK mock
+const mockGenerateContent = vi.fn().mockResolvedValue({
+  response: { text: () => '{"violations":[],"suggestions":[]}' },
+})
+vi.mock('@google/generative-ai', () => ({
+  GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
+    getGenerativeModel: vi.fn().mockReturnValue({
+      generateContent: mockGenerateContent,
+    }),
   })),
 }))
 
@@ -21,6 +22,9 @@ import type { Mock } from 'vitest'
 describe('POST /api/admin/ad-copy-review', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockGenerateContent.mockResolvedValue({
+      response: { text: () => '{"violations":[],"suggestions":[]}' },
+    })
   })
 
   it('인증되지 않은 사용자는 401 반환', async () => {
@@ -130,7 +134,7 @@ describe('POST /api/admin/ad-copy-review', () => {
     expect(res.status).toBe(400)
   })
 
-  it('관리자 요청 시 Claude API 호출 후 violations/suggestions 반환', async () => {
+  it('관리자 요청 시 Gemini API 호출 후 violations/suggestions 반환', async () => {
     const { createSupabaseServerClient } = await import('@/lib/supabase/server')
     ;(createSupabaseServerClient as Mock).mockResolvedValue({
       auth: {
@@ -149,18 +153,11 @@ describe('POST /api/admin/ad-copy-review', () => {
       }),
     })
 
-    // Anthropic mock 재설정: violations 포함 응답
-    const Anthropic = ((await import('@anthropic-ai/sdk')).default as unknown) as Mock
-    Anthropic.mockImplementationOnce(() => ({
-      messages: {
-        create: vi.fn().mockResolvedValue({
-          content: [{
-            type: 'text',
-            text: '{"violations":["100% 투자 수익 보장 위반"],"suggestions":["표현 완화 필요"]}',
-          }],
-        }),
+    mockGenerateContent.mockResolvedValueOnce({
+      response: {
+        text: () => '{"violations":["100% 투자 수익 보장 위반"],"suggestions":["표현 완화 필요"]}',
       },
-    }))
+    })
 
     const { POST } = await import('./route')
     const req = new Request('http://localhost/api/admin/ad-copy-review', {
@@ -175,7 +172,7 @@ describe('POST /api/admin/ad-copy-review', () => {
     expect(Array.isArray(body.suggestions)).toBe(true)
   })
 
-  it('Claude API 실패 시 error:true + status 200 반환 (등록 차단 안 함)', async () => {
+  it('Gemini API 실패 시 error:true + status 200 반환 (등록 차단 안 함)', async () => {
     const { createSupabaseServerClient } = await import('@/lib/supabase/server')
     ;(createSupabaseServerClient as Mock).mockResolvedValue({
       auth: {
@@ -194,13 +191,7 @@ describe('POST /api/admin/ad-copy-review', () => {
       }),
     })
 
-    // Anthropic mock: throw error
-    const Anthropic = ((await import('@anthropic-ai/sdk')).default as unknown) as Mock
-    Anthropic.mockImplementationOnce(() => ({
-      messages: {
-        create: vi.fn().mockRejectedValue(new Error('API timeout')),
-      },
-    }))
+    mockGenerateContent.mockRejectedValueOnce(new Error('API timeout'))
 
     const { POST } = await import('./route')
     const req = new Request('http://localhost/api/admin/ad-copy-review', {
@@ -209,14 +200,14 @@ describe('POST /api/admin/ad-copy-review', () => {
       body: JSON.stringify({ copy: '합리적인 가격의 좋은 아파트' }),
     })
     const res = await POST(req)
-    expect(res.status).toBe(200)  // 차단하지 않음
+    expect(res.status).toBe(200)
     const body = await res.json() as { violations: string[]; suggestions: string[]; error: boolean }
     expect(body.error).toBe(true)
     expect(body.violations).toEqual([])
     expect(body.suggestions).toEqual([])
   })
 
-  it('Claude API가 마크다운 코드 블록으로 감싼 JSON 파싱 성공', async () => {
+  it('Gemini가 마크다운 코드 블록으로 감싼 JSON 파싱 성공', async () => {
     const { createSupabaseServerClient } = await import('@/lib/supabase/server')
     ;(createSupabaseServerClient as Mock).mockResolvedValue({
       auth: {
@@ -235,17 +226,11 @@ describe('POST /api/admin/ad-copy-review', () => {
       }),
     })
 
-    const Anthropic = ((await import('@anthropic-ai/sdk')).default as unknown) as Mock
-    Anthropic.mockImplementationOnce(() => ({
-      messages: {
-        create: vi.fn().mockResolvedValue({
-          content: [{
-            type: 'text',
-            text: '```json\n{"violations":[],"suggestions":["문구 자연스럽게"]}\n```',
-          }],
-        }),
+    mockGenerateContent.mockResolvedValueOnce({
+      response: {
+        text: () => '```json\n{"violations":[],"suggestions":["문구 자연스럽게"]}\n```',
       },
-    }))
+    })
 
     const { POST } = await import('./route')
     const req = new Request('http://localhost/api/admin/ad-copy-review', {
