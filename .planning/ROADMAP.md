@@ -1,6 +1,6 @@
 # Roadmap — 단지온도
 
-**7 phases** | **37 requirements mapped** | All v1~v3 requirements covered ✓
+**8 phases** | **37 requirements mapped** | All v1~v3 requirements covered ✓
 
 ## Overview
 
@@ -12,7 +12,8 @@
 | 4 | 커뮤니티 기초 | V1.5 | 참여·소통 기능 + 데이터 확장 | COMM-01~05, DATA-01~02, NOTIF-01~02 | ✅ Complete |
 | 5 | 데이터 확장·운영 | V1.5 | V1.5 완성 — 데이터 깊이 + 운영 안정성 | DATA-03~05, OPS-01 | ✅ Complete |
 | 6 | AI·차별화 기술 | V2.0 | 기술 차별화 — AI 봇 + 고도화 분석 | DIFF-03, DATA-06~07, AD-01~02, AUTH-01 | 📋 Planned (5 plans) |
-| 7 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
+| 7 | 데이터 파이프라인 수리 | V2.0 | 단지↔거래 연결 + KAPT 단지정보 적재 — 서비스 데이터 기반 완성 | DATA-08~10 | 📋 Planned (3 plans) |
+| 8 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
 
 ---
 
@@ -297,7 +298,46 @@
 
 ---
 
-### Phase 7: 커뮤니티 심화·자동화
+### Phase 7: 데이터 파이프라인 수리
+
+**Goal:** KAPT API로 단지 상세정보(주소·세대수·준공연도·난방방식) 적재, MOLIT transactions↔complexes 연결, 향후 ingest 시 complex_id 자동 매핑 — 서비스 전체의 데이터 기반 완성.
+
+**Version:** V2.0
+
+**Depends on:** Phase 6 (pgvector, complex_embeddings 테이블 존재)
+
+**Requirements:**
+- DATA-08: KAPT API로 complexes 상세정보 채우기 (si, gu, dong, road_address, household_count, built_year, heat_type)
+- DATA-09: transactions.complex_id 일괄 연결 (sgg_code + 이름 매칭 → 불확실 건은 unmatched 로그)
+- DATA-10: ingestMonth 수정 — aptSeq → molit_complex_code 저장 + complex_id 자동 lookup
+
+**Plans:** 3 plans / 2 waves
+
+**Wave 1** *(독립 실행 가능 — 07-01/02 병렬 실행)*
+- [ ] 07-01-PLAN.md — KaptBasicInfoSchema 확장 + kapt-enrich.ts 스크립트 + GitHub Actions (DATA-08)
+- [ ] 07-02-PLAN.md — name-aliases.json 작성 + link-transactions.ts 스크립트 + GitHub Actions (DATA-09)
+
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 07-03-PLAN.md — ingestMonth 수정 (complex_id 자동 연결 + molit_complex_code 저장) + 테스트 (DATA-10)
+
+**Cross-cutting constraints:**
+- 단지명 단독 매칭 절대 금지 — 항상 sgg_code + pg_trgm 복합 매칭 (CLAUDE.md)
+- 배치 스크립트는 WHERE si IS NULL / WHERE complex_id IS NULL 조건으로 idempotent하게 실행
+- GitHub Actions secrets 경유 — 환경변수 절대 로그 출력 금지
+- molit_complex_code UPDATE 시 .is('molit_complex_code', null) guard 필수
+
+**Success Criteria:**
+1. complexes 테이블 669개 중 90% 이상 si/gu/dong이 채워진다
+2. transactions 186,765건 중 80% 이상 complex_id가 연결된다
+3. 단지 상세 페이지에서 세대수·준공연도가 표시된다
+4. AI 채팅 봇이 실거래 데이터를 포함한 답변을 제공한다
+5. 신규 ingestMonth 실행 시 complex_id가 자동으로 채워진다
+
+**UI hint**: no
+
+---
+
+### Phase 8: 커뮤니티 심화·자동화
 
 **Goal:** 게이미피케이션 + 카페 NLP 연동 + 카카오톡 채널 + 비교 모드 + 카페 자동 발행. V2.0 완성.
 
@@ -328,4 +368,4 @@
 |-----------|--------|------|
 | **V1.0 정식 출시** | Phase 1~3 | lint + build + test + E2E 5종 + axe-core 0 critical + 법적 페이지 존재 + Vercel 배포 |
 | **V1.5 커뮤니티** | Phase 4~5 | Phase 1~3 gate + 후기 댓글 + 신고 SLA ≤ 24h + DB 백업 |
-| **V2.0 차별화** | Phase 6~7 | Phase 4~5 gate + AI 봇 환각률 ≤ 5% + NLP 정확도 ≥ 85% + 광고 AI 법무 승인 |
+| **V2.0 차별화** | Phase 6~8 | Phase 4~5 gate + AI 봇 환각률 ≤ 5% + NLP 정확도 ≥ 85% + 광고 AI 법무 승인 |
