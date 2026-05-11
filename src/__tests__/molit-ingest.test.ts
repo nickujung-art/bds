@@ -314,7 +314,6 @@ describe('DATA-10: complex_id 자동 연결', () => {
       (call) => call[0] === 'transactions'
     )
     expect(upsertCall).toBeDefined()
-    const upsertArg = mockSupabase.from('transactions').upsert.mock?.calls?.[0]?.[0]
     // complex_id가 포함된 upsert 호출 확인 — rpc가 complex-uuid-1 반환하므로
     expect(mockSupabase.rpc).toHaveBeenCalledWith(
       'match_complex_by_admin',

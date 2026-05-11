@@ -7,6 +7,7 @@ import {
   type MolitSaleItem,
   type MolitRentItem,
 } from '@/services/molit'
+import { nameNormalize } from './name-normalize'
 
 // ── dedupe_key ─────────────────────────────────────────────
 // aptSeq("48121-792") 가 있으면 이름보다 안정적이므로 우선 사용
@@ -97,6 +98,31 @@ export async function ingestMonth(
   let zodFails = 0
   let totalRows = 0
 
+  // DATA-10: complex_id 캐시 (ingestMonth 호출 당 — 중복 RPC 방지, Pitfall 5)
+  // 모듈 스코프 금지 — 호출 간 캐시 오염 방지를 위해 함수 스코프에 정의
+  const complexIdCache = new Map<string, string | null>()
+
+  async function lookupComplexIdCached(
+    itemSggCode: string,
+    nameNormalized: string,
+  ): Promise<string | null> {
+    const key = `${itemSggCode}:${nameNormalized}`
+    if (complexIdCache.has(key)) return complexIdCache.get(key)!
+    const { data, error } = await supabase.rpc('match_complex_by_admin', {
+      p_sgg_code:        itemSggCode,
+      p_name_normalized: nameNormalized,
+      p_min_similarity:  0.9,  // 자동 연결은 고신뢰만 (DATA-10, T-07-03-02)
+    })
+    if (error || !data || (data as unknown[]).length === 0) {
+      complexIdCache.set(key, null)
+      return null
+    }
+    const row = (data as { id: string; trgm_sim: number }[])[0]!
+    const complexId = Number(row.trgm_sim) >= 0.9 ? row.id : null
+    complexIdCache.set(key, complexId)
+    return complexId
+  }
+
   async function processSaleItem(raw: unknown): Promise<void> {
     totalRows++
     const parsed = MolitSaleItemSchema.safeParse(raw)
@@ -110,6 +136,19 @@ export async function ingestMonth(
       const isCancelled = item.cdealType != null && item.cdealType.trim() !== ''
       const cancelDate = isCancelled ? dealDate : null
 
+      // DATA-10: complex_id 자동 연결
+      const nameNorm = nameNormalize(item.aptNm)
+      const complexId = await lookupComplexIdCached(String(item.sggCd), nameNorm)
+
+      // molit_complex_code 저장: aptSeq 있고 매칭 성공 시 1회만 (T-07-03-01)
+      if (item.aptSeq && complexId) {
+        await supabase
+          .from('complexes')
+          .update({ molit_complex_code: item.aptSeq })
+          .eq('id', complexId)
+          .is('molit_complex_code', null)  // 이미 설정된 경우 덮어쓰기 금지
+      }
+
       const outcome = await upsertTransaction({
         deal_type:        'sale',
         deal_date:        dealDate,
@@ -121,6 +160,7 @@ export async function ingestMonth(
         raw_region_code:  sggCode,
         cancel_date:      cancelDate,
         source_run_id:    runId,
+        complex_id:       complexId ?? null,  // DATA-10 추가
         dedupe_key:       makeDedupeKey({
           sggCode,
           yearMonth,
@@ -150,6 +190,10 @@ export async function ingestMonth(
       const dealDate = `${item.dealYear}-${String(item.dealMonth).padStart(2, '0')}-${String(item.dealDay).padStart(2, '0')}`
       const dealDateCompact = `${item.dealYear}${String(item.dealMonth).padStart(2, '0')}${String(item.dealDay).padStart(2, '0')}`
 
+      // DATA-10: complex_id 자동 연결 (전월세 — aptSeq 없으므로 molit_complex_code 업데이트 불필요)
+      const nameNorm = nameNormalize(item.aptNm)
+      const complexId = await lookupComplexIdCached(String(item.sggCd), nameNorm)
+
       const outcome = await upsertTransaction({
         deal_type:        dealType,
         deal_date:        dealDate,
@@ -161,6 +205,7 @@ export async function ingestMonth(
         raw_complex_name: item.aptNm,
         raw_region_code:  sggCode,
         source_run_id:    runId,
+        complex_id:       complexId ?? null,  // DATA-10 추가
         dedupe_key:       makeDedupeKey({
           sggCode,
           yearMonth,
