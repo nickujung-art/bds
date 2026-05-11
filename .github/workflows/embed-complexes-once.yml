@@ -1,0 +1,30 @@
+name: 단지 임베딩 (1회성)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  embed:
+    name: Voyage AI 단지 임베딩
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Run embed script
+        env:
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/embed-complexes.ts
+
+      - name: 완료
+        run: echo "임베딩 완료 — complex_embeddings 테이블에서 결과 확인"
