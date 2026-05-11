@@ -12,7 +12,7 @@
 | 4 | 커뮤니티 기초 | V1.5 | 참여·소통 기능 + 데이터 확장 | COMM-01~05, DATA-01~02, NOTIF-01~02 | ✅ Complete |
 | 5 | 데이터 확장·운영 | V1.5 | V1.5 완성 — 데이터 깊이 + 운영 안정성 | DATA-03~05, OPS-01 | ✅ Complete |
 | 6 | AI·차별화 기술 | V2.0 | 기술 차별화 — AI 봇 + 고도화 분석 | DIFF-03, DATA-06~07, AD-01~02, AUTH-01 | 📋 Planned (5 plans) |
-| 7 | 데이터 파이프라인 수리 | V2.0 | 단지↔거래 연결 + KAPT 단지정보 적재 — 서비스 데이터 기반 완성 | DATA-08~10 | 📋 Planned (3 plans) |
+| 7 | 데이터 파이프라인 수리 | V2.0 | 단지↔거래 연결 + KAPT 단지정보 적재 — 서비스 데이터 기반 완성 | DATA-08~10 | 🔄 Executing (3/3 plans — verifying) |
 | 8 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
 
 ---
@@ -314,9 +314,9 @@
 **Plans:** 3 plans / 1 wave
 
 **Wave 1** *(모두 독립 실행 가능 — 병렬 실행)*
-- [ ] 07-01-PLAN.md — KaptBasicInfoSchema 확장 + kapt-enrich.ts 스크립트 + GitHub Actions (DATA-08)
-- [ ] 07-02-PLAN.md — name-aliases.json 작성 + link-transactions.ts 스크립트 + GitHub Actions (DATA-09)
-- [ ] 07-03-PLAN.md — ingestMonth 수정 (complex_id 자동 연결 + molit_complex_code 저장) + 테스트 (DATA-10)
+- [x] 07-01-PLAN.md — KaptBasicInfoSchema 확장 + kapt-enrich.ts 스크립트 + GitHub Actions (DATA-08)
+- [x] 07-02-PLAN.md — name-aliases.json 작성 + link-transactions.ts 스크립트 + GitHub Actions (DATA-09)
+- [x] 07-03-PLAN.md — ingestMonth 수정 (complex_id 자동 연결 + molit_complex_code 저장) + 테스트 (DATA-10)
 
 **Cross-cutting constraints:**
 - 단지명 단독 매칭 절대 금지 — 항상 sgg_code + pg_trgm 복합 매칭 (CLAUDE.md)
