@@ -745,22 +745,25 @@ Phase 8은 신규 기능 추가이므로 rename/refactor 해당 없음.
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **DIFF-04 알림톡 수신 동의 및 전화번호 수집 방법**
    - What we know: 알림톡은 수신자 전화번호 필요. 개인정보 수집 동의 절차 필요.
    - What's unclear: 기존 Supabase Auth(네이버 OAuth + Email OTP)는 전화번호를 수집하지 않음.
    - Recommendation: 프로필 페이지에 "카카오톡 알림 신청" 폼 추가 (전화번호 입력 + 동의 체크). 개인정보처리방침 업데이트 필요 (LEGAL-02 연동).
+   - RESOLVED: 프로필 페이지에 "카카오톡 알림 신청" 폼 추가 (전화번호 입력 + 동의 체크), 개인정보처리방침 링크 포함.
 
 2. **DIFF-02 카페 검색 쿼리 전략**
    - What we know: Daum Search API로 단지명 키워드 검색 가능. 일 100,000회 한도 (현재 지도 API와 공유).
    - What's unclear: "창원 래미안"처럼 광역 검색 vs 단지별 개별 검색 중 어느 것이 정확도 ≥ 85% 달성에 유리한지.
    - Recommendation: 단지별 개별 검색 (canonical_name + 지역명). 수집 주기는 GitHub Actions에서 일 1회 cron.
+   - RESOLVED: 단지별 개별 검색 (canonical_name + 지역명), GitHub Actions 일 1회 cron.
 
 3. **DIFF-05 우선 알림 혜택 구체적 스펙**
    - What we know: "gold 등급 우선 알림"이 요구사항이지만 구체적 시간 차이 미정.
    - What's unclear: 30분 우선? 즉시 발송? 별도 알림 유형?
    - Recommendation: gold 등급에 즉시 발송, silver/bronze에 30분 딜레이 큐잉. DB에 `priority` 컬럼 추가.
+   - RESOLVED: gold 등급 즉시 발송, silver/bronze 30분 딜레이 큐잉.
 
 ---
 
