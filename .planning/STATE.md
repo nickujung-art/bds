@@ -54,6 +54,18 @@ Requirements: DATA-08~10
 
 Plans: 3/3 complete (07-01 ~ 07-03) — verified 2026-05-11
 
+---
+
+**Phase 8: 커뮤니티 심화·자동화** 📋 Planned
+
+Goal: 게이미피케이션 + 카페 NLP 연동 + 카카오톡 채널 + 비교 모드 + 카페 자동 발행. V2.0 완성.
+
+Requirements: DIFF-01~02, DIFF-04~06, OPS-02
+
+Plans: 7 plans ready (08-00 ~ 08-06) — planned 2026-05-12
+
+Next step: /gsd-execute-phase 8 (start with Wave 0: 08-00-PLAN.md)
+
 ## Phase Progress
 
 | # | Phase | Status |
@@ -65,7 +77,7 @@ Plans: 3/3 complete (07-01 ~ 07-03) — verified 2026-05-11
 | 5 | 데이터 확장·운영 안정성 | ✅ Complete |
 | 6 | AI·차별화 기술 | 📋 Planned |
 | 7 | 데이터 파이프라인 수리 | ✅ Complete |
-| 8 | 커뮤니티 심화·자동화 | ⬜ Not Started |
+| 8 | 커뮤니티 심화·자동화 | 📋 Planned (7 plans) |
 
 ## Key Context for Agents
 

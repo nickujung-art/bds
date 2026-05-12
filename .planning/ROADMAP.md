@@ -360,14 +360,27 @@
 
 **Plans:** 7 plans / 4 waves
 
-Plans:
+**Wave 0** *(BLOCKING — autonomous: false, supabase db push + SOLAPI 계정 선행)*
 - [ ] 08-00-PLAN.md — DB 마이그레이션 (게이미피케이션/카카오채널/카페글) + 패키지 설치 + RED 테스트 [BLOCKING]
+
+**Wave 1** *(blocked on Wave 0; 08-01/08-03 병렬 실행 가능 — files_modified 무중복)*
 - [ ] 08-01-PLAN.md — 게이미피케이션 백엔드 (getMemberTier) + TierBadge UI (DIFF-01)
-- [ ] 08-02-PLAN.md — 회원 등급 알림 우선순위 + deliverKakaoChannelNotifications (DIFF-05)
 - [ ] 08-03-PLAN.md — 즐겨찾기 단지 비교 표: compare.ts + CompareTable + CompareAddButton (DIFF-06)
+
+**Wave 2** *(blocked on Wave 1; 08-02/08-04 병렬 실행 가능 — files_modified 무중복)*
+- [ ] 08-02-PLAN.md — 회원 등급 알림 우선순위 + deliverKakaoChannelNotifications (DIFF-05)
 - [ ] 08-04-PLAN.md — 카페 NLP 파이프라인: daum-cafe.ts + cafe-ingest cron (DIFF-02)
 - [ ] 08-05-PLAN.md — 카카오 채널 알림: kakao-channel.ts + KakaoChannelSubscribeForm (DIFF-04)
-- [ ] 08-06-PLAN.md — 어드민 카드뉴스 1-click 복사 버튼 (OPS-02 scope 축소)
+
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 08-06-PLAN.md — 어드민 카드뉴스 1-click 복사 버튼 (OPS-02 scope 축소: Daum 카페 글쓰기 API 미공개)
+
+**Cross-cutting constraints:**
+- activity_points UPDATE는 DB 트리거(SECURITY DEFINER) 경유 필수 — 클라이언트 직접 수정 금지
+- SOLAPI API key, Daum Search API key: src/services/ 어댑터만 호출 — 컴포넌트/라우트 직접 사용 금지
+- 카페 글 단지 매칭: matchComplex() 파이프라인 필수 — 단지명 단독 매칭 절대 금지
+- 전화번호 저장: RLS owner-only + 로그 출력 금지
+- AI 슬롭 금지: backdrop-blur, gradient-text, glow, 보라/인디고 (TierBadge, CompareTable 포함)
 
 ---
 
