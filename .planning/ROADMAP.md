@@ -358,6 +358,17 @@
 
 **UI hint**: yes
 
+**Plans:** 7 plans / 4 waves
+
+Plans:
+- [ ] 08-00-PLAN.md — DB 마이그레이션 (게이미피케이션/카카오채널/카페글) + 패키지 설치 + RED 테스트 [BLOCKING]
+- [ ] 08-01-PLAN.md — 게이미피케이션 백엔드 (getMemberTier) + TierBadge UI (DIFF-01)
+- [ ] 08-02-PLAN.md — 회원 등급 알림 우선순위 + deliverKakaoChannelNotifications (DIFF-05)
+- [ ] 08-03-PLAN.md — 즐겨찾기 단지 비교 표: compare.ts + CompareTable + CompareAddButton (DIFF-06)
+- [ ] 08-04-PLAN.md — 카페 NLP 파이프라인: daum-cafe.ts + cafe-ingest cron (DIFF-02)
+- [ ] 08-05-PLAN.md — 카카오 채널 알림: kakao-channel.ts + KakaoChannelSubscribeForm (DIFF-04)
+- [ ] 08-06-PLAN.md — 어드민 카드뉴스 1-click 복사 버튼 (OPS-02 scope 축소)
+
 ---
 
 ## Milestone Summary
