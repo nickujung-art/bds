@@ -1,4 +1,5 @@
-import 'server-only'
+// NOTE: 이 파일은 server-only 아님 — getTierBadge는 클라이언트에서도 사용.
+// getMemberTier는 SupabaseClient를 인자로 받으므로 서버 컴포넌트/Route에서만 호출할 것.
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 
