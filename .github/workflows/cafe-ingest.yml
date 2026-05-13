@@ -1,0 +1,28 @@
+name: Cafe Ingest — NLP 단지 매칭
+
+on:
+  schedule:
+    - cron: '0 20 * * *'  # 05:00 KST
+  workflow_dispatch:
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Trigger cafe-ingest worker
+        run: |
+          STATUS=$(curl -sSf -o /tmp/cafe_response.json -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.NEXT_PUBLIC_SITE_URL }}/api/worker/cafe-ingest")
+
+          echo "HTTP status: $STATUS"
+          cat /tmp/cafe_response.json
+
+          if [ "$STATUS" != "200" ]; then
+            echo "Cafe ingest worker returned $STATUS"
+            exit 1
+          fi
