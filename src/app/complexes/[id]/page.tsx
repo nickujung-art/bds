@@ -21,6 +21,8 @@ import { AnalysisSection } from '@/components/complex/AnalysisSection'
 import { AiChatPanel } from '@/components/complex/AiChatPanel'
 import { CafePostsList } from '@/components/complex/CafePostsList'
 import { getCafePostsByComplex } from '@/lib/data/cafe-posts'
+import { getManagementCostMonthly } from '@/lib/data/management-cost'
+import { ManagementCostCard } from '@/components/complex/ManagementCostCard'
 
 export const revalidate = 86400
 
@@ -133,6 +135,7 @@ export default async function ComplexDetailPage({ params }: Props) {
     gapLabelData,
     districtStats,
     cafePosts,
+    managementCostRows,
   ] = await Promise.all([
     getComplexTransactionSummary(id, 'sale', supabase),
     getComplexTransactionSummary(id, 'jeonse', supabase),
@@ -177,6 +180,8 @@ export default async function ComplexDetailPage({ params }: Props) {
       : Promise.resolve(null),
     // 카페 이야기 — matchComplex() 경유 매칭된 글만 (오류 시 빈 배열 fallback)
     getCafePostsByComplex(id, supabase).catch(() => []),
+    // 관리비 (오류 시 빈 배열 fallback)
+    getManagementCostMonthly(id, supabase).catch(() => []),
   ])
 
   const facilityKapt = facilityKaptResult?.data ?? null
@@ -583,6 +588,12 @@ export default async function ComplexDetailPage({ params }: Props) {
               </p>
             )}
           </div>
+
+          {/* 관리비 */}
+          <ManagementCostCard
+            rows={managementCostRows}
+            householdCount={complex.household_count}
+          />
 
           {/* 재건축 타임라인 — status='in_redevelopment' 단지만 표시 */}
           {complex.status === 'in_redevelopment' && redevelopmentProject && (
