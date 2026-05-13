@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { searchCafePosts, extractComplexNames } from '@/services/daum-cafe'
+import { searchCafePosts, extractComplexNames } from '@/services/naver-cafe'
 import { ingestCafePost } from '@/lib/data/cafe-posts'
 
 export const runtime = 'nodejs'
@@ -24,7 +24,7 @@ function resolveSggCode(query: string): string {
   return '48125'
 }
 
-// 카카오 일 한도(100,000회) 고려: 쿼리 수 제한
+// Naver Search API 일 한도(25,000회) 고려: 쿼리 수 제한
 const SEARCH_QUERIES = [
   '창원 성산구 아파트',
   '창원 의창구 아파트',

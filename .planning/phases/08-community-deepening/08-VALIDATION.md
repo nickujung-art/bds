@@ -39,7 +39,7 @@ created: 2026-05-12
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | 08-00-01 | 00 | 0 | DIFF-01/05 | T-8-01 | activity_points UPDATE는 트리거만 가능, 클라이언트 직접 UPDATE 차단 | unit | `npm run test -- --grep "member.tier"` | ❌ W0 | ⬜ pending |
-| 08-00-02 | 00 | 0 | DIFF-02 | — | N/A | unit | `npm run test -- --grep "daum-cafe"` | ❌ W0 | ⬜ pending |
+| 08-00-02 | 00 | 0 | DIFF-02 | — | N/A | unit | `npm run test -- --grep "naver-cafe"` | ❌ W0 | ⬜ pending |
 | 08-00-03 | 00 | 0 | DIFF-04 | T-8-02 | SOLAPI API key는 서버 전용, 클라이언트 노출 차단 | unit | `npm run test -- --grep "kakao-channel"` | ❌ W0 | ⬜ pending |
 | 08-00-04 | 00 | 0 | DIFF-06 | — | N/A | unit | `npm run test -- --grep "compare"` | ❌ W0 | ⬜ pending |
 | 08-01-01 | 01 | 1 | DIFF-01 | T-8-01 | 후기 INSERT → activity_points 원자적 갱신 | unit | `npm run test -- --grep "member.tier"` | ❌ W0 | ⬜ pending |
@@ -48,7 +48,7 @@ created: 2026-05-12
 | 08-03-01 | 03 | 1 | DIFF-06 | — | /compare?ids= 4개 초과 시 slice(0,4) 적용 | unit | `npm run test -- --grep "compare.*limit"` | ❌ W0 | ⬜ pending |
 | 08-03-02 | 03 | 1 | DIFF-06 | — | CompareTable 2개 단지 렌더 | unit | `npm run test -- --grep "CompareTable"` | ❌ W0 | ⬜ pending |
 | 08-04-01 | 04 | 2 | DIFF-02 | T-8-03 | Gemini 프롬프트 인젝션 방지 (구분자 사용) | unit | `npm run test -- --grep "extractComplexNames"` | ❌ W0 | ⬜ pending |
-| 08-04-02 | 04 | 2 | DIFF-02 | — | 단지명 단독 매칭 금지 — matchComplex() 파이프라인 경유 | unit | `npm run test -- --grep "daum-cafe.*match"` | ❌ W0 | ⬜ pending |
+| 08-04-02 | 04 | 2 | DIFF-02 | — | 단지명 단독 매칭 금지 — matchComplex() 파이프라인 경유 | unit | `npm run test -- --grep "naver-cafe.*match"` | ❌ W0 | ⬜ pending |
 | 08-05-01 | 05 | 2 | DIFF-04 | T-8-02 | 알림톡 발송은 src/services/kakao-channel.ts 어댑터만 경유 | unit | `npm run test -- --grep "deliver.*kakao"` | ❌ W0 | ⬜ pending |
 | 08-06-01 | 06 | 3 | OPS-02 | — | 어드민 카드뉴스 복사 버튼 동작 | E2E | `npm run test:e2e -- --grep "cardnews.*copy"` | ❌ W0 | ⬜ pending |
 
@@ -59,7 +59,7 @@ created: 2026-05-12
 ## Wave 0 Requirements
 
 - [ ] `src/__tests__/member-tier.test.ts` — DIFF-01, DIFF-05 커버
-- [ ] `src/__tests__/daum-cafe.test.ts` — DIFF-02 커버
+- [ ] `src/__tests__/naver-cafe.test.ts` — DIFF-02 커버
 - [ ] `src/__tests__/kakao-channel.test.ts` — DIFF-04 커버
 - [ ] `src/__tests__/compare.test.ts` — DIFF-06 커버
 - [ ] `src/__tests__/tierbadge.test.ts` — DIFF-01 💬 cafeVerified 마크 커버

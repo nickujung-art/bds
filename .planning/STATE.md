@@ -67,7 +67,7 @@ Plans: 7/7 complete (08-00 ~ 08-06) — completed 2026-05-13
 Waves:
 - Wave 0: 08-00 (DB 마이그레이션) ✅
 - Wave 1: 08-01 (TierBadge), 08-03 (비교 모드) ✅
-- Wave 2: 08-02 (알림 우선순위), 08-04 (Daum 카페 NLP), 08-05 (카카오 채널 구독) ✅
+- Wave 2: 08-02 (알림 우선순위), 08-04 (Naver 카페 NLP), 08-05 (카카오 채널 구독) ✅
 - Wave 3: 08-06 (어드민 복사 버튼) ✅
 
 ## Phase Progress

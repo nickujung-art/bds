@@ -12,11 +12,11 @@
 | ID | Description | Research Support |
 |----|-------------|------------------|
 | DIFF-01 | 게이미피케이션 마크 (👑🔥💬) + 회원 등급 기반 UI | activity_points + member_tier 스키마 설계, 후기/댓글에 등급 마크 렌더 패턴 |
-| DIFF-02 | 카페 글 NLP 단지 매칭 (정확도 ≥ 85%) + 단지 페이지 연동 | Daum Search API (cafe 엔드포인트) + Gemini NER + 기존 matchComplex() 파이프라인 재사용 |
+| DIFF-02 | 카페 글 NLP 단지 매칭 (정확도 ≥ 85%) + 단지 페이지 연동 | Naver Search API (cafe 엔드포인트) + Gemini NER + 기존 matchComplex() 파이프라인 재사용 |
 | DIFF-04 | 카카오톡 채널 알리미 (웹 푸시 거부 대안) | SOLAPI SDK v6 (alimtalk) + 기존 notifications 테이블 + GitHub Actions 워커 확장 |
 | DIFF-05 | 회원 등급 시스템 + 우선 알림 혜택 | member_tier 컬럼 + 트리거 자동 갱신 + 알림 우선순위 로직 |
 | DIFF-06 | 즐겨찾기 단지 2~4개 비교 표 | nuqs 2.8.9 URL state + Promise.all 병렬 fetch + 기존 getComplexById + FavoritesTable 패턴 |
-| OPS-02 | 카카오 카페 매니저 OAuth 카드뉴스 자동 발행 (법무 승인 후) | Daum 카페 글쓰기 API 미공개 확인 → 대안 조사 결과 포함 |
+| OPS-02 | 카카오 카페 매니저 OAuth 카드뉴스 자동 발행 (법무 승인 후) | Naver 카페 글쓰기 API 미공개 확인 → 대안 조사 결과 포함 |
 </phase_requirements>
 
 ---
@@ -39,7 +39,7 @@ Phase 8은 V2.0의 최종 단계로, 커뮤니티 참여를 심화시키는 6개
 |------------|-------------|----------------|-----------|
 | 활동 포인트 계산 (DIFF-01, DIFF-05) | DB (Postgres 트리거) | API Route | 포인트는 데이터 변경 시점에 원자적으로 갱신 — 클라이언트 신뢰 불가 |
 | 회원 등급 마크 UI (DIFF-01) | Frontend Server (RSC) | — | 등급은 profiles 테이블에서 read, 렌더는 서버 컴포넌트 |
-| Daum 카페 검색 (DIFF-02) | API / Backend (cron) | — | REST API key는 서버 전용 — KAKAO_REST_API_KEY 이미 존재 |
+| Naver 카페 검색 (DIFF-02) | API / Backend (cron) | — | REST API key는 서버 전용 — KAKAO_REST_API_KEY 이미 존재 |
 | NLP 단지 매칭 (DIFF-02) | API / Backend (cron) | — | Gemini API key는 서버 전용 |
 | 카카오톡 채널 발송 (DIFF-04) | API / Backend (GitHub Actions worker) | — | SOLAPI API key 서버 전용, 기존 notify-worker 패턴 확장 |
 | 비교 표 URL state (DIFF-06) | Browser / Client | Frontend Server | nuqs parseAsArrayOf → 클라이언트 UI, 초기 데이터는 RSC |
@@ -88,7 +88,7 @@ npm install solapi nuqs
 
 ```
 [카페 글 수집 cron (GitHub Actions)]
-    → Daum Search API /v2/search/cafe
+    → Naver Search API /v2/search/cafe
     → Gemini Flash (NER: 단지명 추출)
     → matchComplex() [기존 3축 파이프라인]
     → cafe_posts 테이블 upsert
@@ -116,7 +116,7 @@ npm install solapi nuqs
 src/
 ├── services/
 │   ├── kakao-channel.ts      # SOLAPI alimtalk 어댑터 (DIFF-04)
-│   └── daum-cafe.ts          # Daum Search cafe API 어댑터 (DIFF-02)
+│   └── naver-cafe.ts          # Naver Search cafe API 어댑터 (DIFF-02)
 ├── lib/
 │   ├── data/
 │   │   ├── member-tier.ts    # 등급 조회/갱신 (DIFF-01, DIFF-05)
@@ -170,14 +170,14 @@ CREATE TRIGGER reviews_award_points
   FOR EACH ROW EXECUTE FUNCTION public.award_review_points();
 ```
 
-### Pattern 2: Daum Cafe 검색 + Gemini NER 파이프라인
+### Pattern 2: Naver 카페 검색 + Gemini NER 파이프라인
 
 **What:** 카페 검색 결과 → Gemini로 단지명 추출 → 기존 matchComplex() 연결
 **When to use:** 정확도 ≥ 85% 목표는 단순 regex로 달성 불가. Gemini Flash는 이미 프로젝트에 설치됨.
 
 ```typescript
 // Source: src/app/api/admin/ad-copy-review/route.ts의 Gemini 패턴 참조
-// src/services/daum-cafe.ts
+// src/services/naver-cafe.ts
 const CAFE_SEARCH_URL = 'https://dapi.kakao.com/v2/search/cafe'
 
 export interface CafePost {
@@ -201,7 +201,7 @@ export async function searchCafePosts(
     headers: { Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}` },
     signal: AbortSignal.timeout(10_000),
   })
-  if (!res.ok) throw new Error(`Daum cafe search HTTP ${res.status}`)
+  if (!res.ok) throw new Error(`Naver cafe search HTTP ${res.status}`)
 
   const json = (await res.json()) as {
     documents: Array<{
@@ -327,7 +327,7 @@ export function CompareSelector() {
 - **클라이언트에서 포인트 계산:** `activity_points`를 클라이언트 Server Action에서 UPDATE하면 레이스 컨디션 발생. 반드시 DB 트리거 경유.
 - **카카오톡 알림 직접 발신:** 카카오 공식 API는 비즈니스 채널 심사 + 비즈 앱 전환 필요. SOLAPI 같은 공식 딜러사를 경유해야 한다.
 - **단지명 단독 매칭:** CLAUDE.md 엄격 규칙. 카페 글에서 추출한 단지명으로 매칭 시에도 `matchComplex()` 파이프라인 경유 필수 (sgg_code + 좌표 없으면 admin_code axis만 사용하고 confidence 0.85 캡).
-- **Daum 카페 글쓰기 API 직접 호출:** 해당 API는 공개되지 않았다. [VERIFIED: kakao developers docs 확인]
+- **Naver 카페 글쓰기 API 직접 호출:** 해당 API는 공개되지 않았다. [VERIFIED: kakao developers docs 확인]
 - **SOLAPI 클라이언트 사이드 직접 호출:** API key 노출 위험. 반드시 src/services/kakao-channel.ts 어댑터를 통해 서버에서만 호출.
 
 ---
@@ -364,7 +364,7 @@ export function CompareSelector() {
 **How to avoid:** Wave 0 작업에 "SOLAPI 계정 생성 + 비즈니스 채널 연결 + 알림톡 템플릿 등록" 체크리스트 포함. 코딩보다 선행.
 **Warning signs:** 개발 환경에서 SOLAPI 테스트 발송 시 400/403 응답.
 
-### Pitfall 3: Daum 카페 글쓰기 API 존재 가정
+### Pitfall 3: Naver 카페 글쓰기 API 존재 가정
 
 **What goes wrong:** OPS-02를 구현하려 했더니 카페에 글을 자동으로 쓰는 공개 API가 없음.
 **Why it happens:** 네이버 카페는 글쓰기 API 제공, 다음 카페는 검색(read-only)만 제공. [VERIFIED: kakao developers docs]
@@ -422,7 +422,7 @@ await messageService.send({
 })
 ```
 
-### Daum Cafe 검색 API 요청
+### Naver 카페 검색 API 요청
 
 ```typescript
 // Source: [CITED: developers.kakao.com/docs/ko/daum-search/dev-guide]
@@ -477,7 +477,7 @@ async function linkCafePostToComplex(
 
 ### 현황
 
-다음(Daum) 카페는 글쓰기 공개 API를 제공하지 않는다. [VERIFIED: kakao developers docs 직접 확인]
+다음(Daum)·네이버(Naver) 카페는 글쓰기 공개 API를 제공하지 않는다. 검색(read-only) API만 존재. OPS-02는 어드민 수동 플로우로 대체.
 
 - 제공: `GET /v2/search/cafe` — 검색(읽기)만 가능
 - 미제공: 글쓰기, 게시 엔드포인트
@@ -648,7 +648,7 @@ Phase 8은 신규 기능 추가이므로 rename/refactor 해당 없음.
 | Dependency | Required By | Available | Version | Fallback |
 |------------|------------|-----------|---------|----------|
 | @google/generative-ai | DIFF-02 Gemini NER | ✓ | 0.24.1 | — |
-| KAKAO_REST_API_KEY | DIFF-02 Daum Search | ✓ (env 존재) | — | — |
+| KAKAO_REST_API_KEY | DIFF-02 Naver Search | ✓ (env 존재) | — | — |
 | GEMINI_API_KEY | DIFF-02 NER | 확인 필요 (env에 없음) | — | ANTHROPIC_API_KEY로 대체 가능 |
 | SOLAPI 계정 | DIFF-04 알림톡 | ✗ (신규 가입 필요) | — | 없음 (Wave 0 선행 필수) |
 | 카카오 비즈니스 채널 | DIFF-04 | ✗ (신규 심사 필요) | — | 없음 |
@@ -679,7 +679,7 @@ Phase 8은 신규 기능 추가이므로 rename/refactor 해당 없음.
 |--------|----------|-----------|-------------------|-------------|
 | DIFF-01 | member_tier 자동 갱신 (review INSERT → bronze→silver 전환) | unit | `npm run test -- --grep "member.tier"` | ❌ Wave 0 |
 | DIFF-01 | TierBadge 컴포넌트 렌더 | unit | `npm run test -- --grep "TierBadge"` | ❌ Wave 0 |
-| DIFF-02 | Daum 카페 검색 API 어댑터 | unit (mock) | `npm run test -- --grep "daum-cafe"` | ❌ Wave 0 |
+| DIFF-02 | Naver 카페 검색 API 어댑터 | unit (mock) | `npm run test -- --grep "naver-cafe"` | ❌ Wave 0 |
 | DIFF-02 | Gemini NER 단지명 추출 | unit (mock) | `npm run test -- --grep "extractComplexNames"` | ❌ Wave 0 |
 | DIFF-02 | cafe_posts 매칭 정확도 ≥ 85% | manual (100건 샘플) | — | manual-only |
 | DIFF-04 | SOLAPI 알림톡 발송 (mock) | unit (mock) | `npm run test -- --grep "kakao-channel"` | ❌ Wave 0 |
@@ -700,7 +700,7 @@ Phase 8은 신규 기능 추가이므로 rename/refactor 해당 없음.
 ### Wave 0 Gaps
 
 - [ ] `src/__tests__/member-tier.test.ts` — DIFF-01, DIFF-05 커버
-- [ ] `src/__tests__/daum-cafe.test.ts` — DIFF-02 커버
+- [ ] `src/__tests__/naver-cafe.test.ts` — DIFF-02 커버
 - [ ] `src/__tests__/kakao-channel.test.ts` — DIFF-04 커버
 - [ ] `src/__tests__/compare.test.ts` — DIFF-06 커버
 - [ ] `npm install solapi nuqs` — 신규 패키지
@@ -726,7 +726,7 @@ Phase 8은 신규 기능 추가이므로 rename/refactor 해당 없음.
 | 포인트 조작 (클라이언트 직접 호출) | Tampering | DB 트리거 + SECURITY DEFINER (클라이언트 UPDATE 금지) |
 | 알림톡 수신자 번호 개인정보 노출 | Information Disclosure | RLS owner-only, 서버 로그 제외 |
 | Gemini 프롬프트 인젝션 (카페 글 내용) | Tampering | 기존 패턴: `[카피 내용]` 구분자로 감싸 사용자 입력 분리 |
-| Daum Search API 키 노출 | Information Disclosure | 서버 전용 (KAKAO_REST_API_KEY, src/services/ 어댑터만 호출) |
+| Naver Search API 키 노출 | Information Disclosure | 서버 전용 (KAKAO_REST_API_KEY, src/services/ 어댑터만 호출) |
 | URL 비교 모드 ID 조작 | Information Disclosure | RSC에서 ids.slice(0, 4), getComplexById null 체크 |
 | SOLAPI API key 노출 | Information Disclosure | 서버 전용 환경변수, src/services/kakao-channel.ts 어댑터만 |
 
@@ -754,7 +754,7 @@ Phase 8은 신규 기능 추가이므로 rename/refactor 해당 없음.
    - RESOLVED: 프로필 페이지에 "카카오톡 알림 신청" 폼 추가 (전화번호 입력 + 동의 체크), 개인정보처리방침 링크 포함.
 
 2. **DIFF-02 카페 검색 쿼리 전략**
-   - What we know: Daum Search API로 단지명 키워드 검색 가능. 일 100,000회 한도 (현재 지도 API와 공유).
+   - What we know: Naver Search API로 단지명 키워드 검색 가능. 일 100,000회 한도 (현재 지도 API와 공유).
    - What's unclear: "창원 래미안"처럼 광역 검색 vs 단지별 개별 검색 중 어느 것이 정확도 ≥ 85% 달성에 유리한지.
    - Recommendation: 단지별 개별 검색 (canonical_name + 지역명). 수집 주기는 GitHub Actions에서 일 1회 cron.
    - RESOLVED: 단지별 개별 검색 (canonical_name + 지역명), GitHub Actions 일 1회 cron.
@@ -769,7 +769,7 @@ Phase 8은 신규 기능 추가이므로 rename/refactor 해당 없음.
 
 ## Project Constraints (from CLAUDE.md)
 
-- **CRITICAL:** 외부 API 호출(Daum Search, SOLAPI, Gemini)은 반드시 `src/services/` 어댑터에서만. 컴포넌트·라우트에서 직접 호출 금지.
+- **CRITICAL:** 외부 API 호출(Naver Search, SOLAPI, Gemini)은 반드시 `src/services/` 어댑터에서만. 컴포넌트·라우트에서 직접 호출 금지.
 - **CRITICAL:** Supabase 쿼리는 서버 컴포넌트 또는 API Route에서만.
 - **CRITICAL:** 신규 테이블 모두 RLS 정책 명시 (supabase/migrations/ 포함).
 - **CRITICAL:** 단지명 단독 매칭 절대 금지 — 항상 위치(sgg_code 또는 좌표) + 이름 복합 매칭.
@@ -784,7 +784,7 @@ Phase 8은 신규 기능 추가이므로 rename/refactor 해당 없음.
 ## Sources
 
 ### Primary (HIGH confidence)
-- [VERIFIED: kakao developers docs] — Daum Search cafe API `/v2/search/cafe` read-only 확인, 글쓰기 API 없음 확인
+- [VERIFIED: kakao developers docs] — Naver Search cafe API `/v2/search/cafe` read-only 확인, 글쓰기 API 없음 확인
 - [VERIFIED: kakao developers docs] — 카카오톡 채널 API와 알림톡 비즈메시지 API 분리 확인
 - [VERIFIED: npm registry 2026-05-12] — solapi@6.0.1, nuqs@2.8.9 현행 버전
 - [VERIFIED: codebase] — src/lib/data/complex-matching.ts 기존 3축 매칭 파이프라인
@@ -797,14 +797,14 @@ Phase 8은 신규 기능 추가이므로 rename/refactor 해당 없음.
 - [CITED: solapi GitHub solapi-nodejs] — SolapiMessageService, pfId, templateId, variables 파라미터 구조
 
 ### Tertiary (LOW confidence)
-- WebSearch 결과 — Daum 카페 글쓰기 API 부재 (복수 출처 교차 확인으로 MEDIUM으로 승격)
+- WebSearch 결과 — Naver 카페 글쓰기 API 부재 (복수 출처 교차 확인으로 MEDIUM으로 승격)
 
 ---
 
 ## Metadata
 
 **Confidence breakdown:**
-- Standard stack: MEDIUM — solapi, nuqs 버전 npm registry 직접 확인. Daum Search API 공식 문서 확인.
+- Standard stack: MEDIUM — solapi, nuqs 버전 npm registry 직접 확인. Naver Search API 공식 문서 확인.
 - Architecture: MEDIUM — 기존 프로젝트 패턴 기반 설계, 게이미피케이션 포인트/등급 기준은 ASSUMED.
 - Pitfalls: HIGH — 카카오 채널 vs 알림톡 혼동, 카페 글쓰기 API 부재는 공식 문서 확인.
 

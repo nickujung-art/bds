@@ -11,7 +11,7 @@
 | New/Modified File | Role | Data Flow | Closest Analog | Match Quality |
 |-------------------|------|-----------|----------------|---------------|
 | `src/services/kakao-channel.ts` | service | request-response | `src/services/kapt.ts` | role-match |
-| `src/services/daum-cafe.ts` | service | request-response | `src/services/molit.ts` | exact |
+| `src/services/naver-cafe.ts` | service | request-response | `src/services/molit.ts` | exact |
 | `src/lib/data/member-tier.ts` | data | CRUD | `src/lib/data/profile.ts` | exact |
 | `src/lib/data/cafe-posts.ts` | data | CRUD | `src/lib/data/reviews.ts` | exact |
 | `src/lib/data/compare.ts` | data | batch | `src/lib/data/complex-detail.ts` | role-match |
@@ -85,7 +85,7 @@ if (!res.ok) {
 
 ---
 
-### `src/services/daum-cafe.ts` (service, request-response)
+### `src/services/naver-cafe.ts` (service, request-response)
 
 **Analog:** `src/services/molit.ts`
 
@@ -125,7 +125,7 @@ export async function searchCafePosts(query: string, size = DEFAULT_SIZE): Promi
     headers: { Authorization: `KakaoAK ${apiKey}` },
     signal:  AbortSignal.timeout(10_000),
   })
-  if (!res.ok) throw new Error(`Daum cafe search HTTP ${res.status}`)
+  if (!res.ok) throw new Error(`Naver cafe search HTTP ${res.status}`)
 
   const json = (await res.json()) as {
     documents: Array<{
@@ -820,7 +820,7 @@ if (!secret || secret !== process.env.CRON_SECRET) {
 
 ### 환경변수 존재 검증
 **Source:** `src/services/kapt.ts` lines 21-22  
-**Apply to:** `src/services/kakao-channel.ts`, `src/services/daum-cafe.ts`
+**Apply to:** `src/services/kakao-channel.ts`, `src/services/naver-cafe.ts`
 ```typescript
 const apiKey = process.env.KAKAO_REST_API_KEY
 if (!apiKey) throw new Error('KAKAO_REST_API_KEY is not set')
@@ -879,7 +879,7 @@ border: '1px solid var(--line-default)'
 
 ### Zod 스키마 기반 입력 검증
 **Source:** `src/services/molit.ts` lines 15-32 (Zod safeParse 패턴)  
-**Apply to:** `src/services/daum-cafe.ts`, `KakaoChannelSubscribeForm`
+**Apply to:** `src/services/naver-cafe.ts`, `KakaoChannelSubscribeForm`
 ```typescript
 const parsed = Schema.safeParse(item)
 if (parsed.success) items.push(parsed.data)

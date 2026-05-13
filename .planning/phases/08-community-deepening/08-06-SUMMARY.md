@@ -27,7 +27,7 @@ commits:
 
 ## Scope 배경
 
-Daum 카페 글쓰기 공개 API 부재 (VERIFIED: kakao developers docs) + 법무 미승인으로
+Naver 카페 글쓰기 공개 API 부재 (VERIFIED: kakao developers docs) + 법무 미승인으로
 자동 발행 → 클립보드 복사 1-click 수동 붙여넣기로 축소.
 Phase 9 카카오 파트너사 계약 후 자동화 재검토.
 

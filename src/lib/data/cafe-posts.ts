@@ -1,6 +1,6 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { CafePost } from '@/services/daum-cafe'
+import type { CafePost } from '@/services/naver-cafe'
 import { matchComplex } from '@/lib/data/complex-matching'
 
 // database.ts는 Phase 8 마이그레이션 테이블(cafe_posts)을 아직 포함하지 않음

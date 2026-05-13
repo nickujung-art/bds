@@ -1,8 +1,8 @@
 import 'server-only'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-// T-8-02: KAKAO_REST_API_KEY는 서버 전용. 클라이언트에서 절대 호출 금지.
-const CAFE_SEARCH_URL = 'https://dapi.kakao.com/v2/search/cafe'
+// T-8-02: NAVER_CLIENT_ID/SECRET는 서버 전용. 클라이언트에서 절대 호출 금지.
+const CAFE_SEARCH_URL = 'https://openapi.naver.com/v1/search/cafearticle.json'
 
 export interface CafePost {
   title:    string
@@ -12,37 +12,44 @@ export interface CafePost {
   cafeName: string
 }
 
+function stripHtml(text: string): string {
+  return text.replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+}
+
 export async function searchCafePosts(
   query: string,
   size = 10,
 ): Promise<CafePost[]> {
   const url = new URL(CAFE_SEARCH_URL)
   url.searchParams.set('query', query)
-  url.searchParams.set('sort', 'recency')
-  url.searchParams.set('size', String(size))
+  url.searchParams.set('sort', 'date')
+  url.searchParams.set('display', String(Math.min(size, 100)))
 
   const res = await fetch(url.toString(), {
-    headers: { Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}` },
+    headers: {
+      'X-Naver-Client-Id':     process.env.NAVER_CLIENT_ID     ?? '',
+      'X-Naver-Client-Secret': process.env.NAVER_CLIENT_SECRET ?? '',
+    },
     signal: AbortSignal.timeout(10_000),
   })
 
-  if (!res.ok) throw new Error(`Daum cafe search HTTP ${res.status}`)
+  if (!res.ok) throw new Error(`Naver cafe search HTTP ${res.status}`)
 
   const json = (await res.json()) as {
-    documents: Array<{
+    items: Array<{
       title:    string
-      contents: string
-      url:      string
-      datetime: string
+      link:     string
+      description: string
       cafename: string
+      pubDate:  string
     }>
   }
 
-  return json.documents.map(d => ({
-    title:    d.title,
-    contents: d.contents,
-    url:      d.url,
-    datetime: d.datetime,
+  return (json.items ?? []).map(d => ({
+    title:    stripHtml(d.title),
+    contents: stripHtml(d.description),
+    url:      d.link,
+    datetime: new Date(d.pubDate).toISOString(),
     cafeName: d.cafename,
   }))
 }
@@ -54,7 +61,6 @@ export async function searchCafePosts(
 export async function extractComplexNames(text: string): Promise<string[]> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    // Fallback: GEMINI_API_KEY 없으면 빈 배열 반환 (운영 오류 방지)
     return []
   }
 

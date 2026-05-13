@@ -22,4 +22,4 @@ CREATE POLICY "cafe_posts: public read"
   ON public.cafe_posts FOR SELECT USING (true);
 -- write: service_role only (cron 워커)
 
-COMMENT ON TABLE public.cafe_posts IS 'DIFF-02: Daum Search + Gemini NER 파이프라인 결과 저장. complex_id NULL 허용 (매칭 실패).';
+COMMENT ON TABLE public.cafe_posts IS 'DIFF-02: Naver Search + Gemini NER 파이프라인 결과 저장. complex_id NULL 허용 (매칭 실패).';

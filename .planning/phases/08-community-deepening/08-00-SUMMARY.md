@@ -10,7 +10,7 @@ dependency_graph:
     - supabase/migrations/20260512000002_phase8_kakao_channel.sql
     - supabase/migrations/20260512000003_phase8_cafe_posts.sql
     - src/__tests__/member-tier.test.ts
-    - src/__tests__/daum-cafe.test.ts
+    - src/__tests__/naver-cafe.test.ts
     - src/__tests__/kakao-channel.test.ts
     - src/__tests__/compare.test.ts
     - src/__tests__/tierbadge.test.ts
@@ -31,7 +31,7 @@ key_files:
     - supabase/migrations/20260512000002_phase8_kakao_channel.sql
     - supabase/migrations/20260512000003_phase8_cafe_posts.sql
     - src/__tests__/member-tier.test.ts
-    - src/__tests__/daum-cafe.test.ts
+    - src/__tests__/naver-cafe.test.ts
     - src/__tests__/kakao-channel.test.ts
     - src/__tests__/compare.test.ts
     - src/__tests__/tierbadge.test.ts
@@ -83,7 +83,7 @@ metrics:
 5개 테스트 파일 작성 (모두 RED 상태 — 구현 모듈 미존재):
 - `member-tier.test.ts`: getMemberTier 3단계(bronze/silver/gold) + getNotificationDelay 우선순위
 - `tierbadge.test.ts`: getTierBadge 💬/🔥/👑 마크 조합 5가지
-- `daum-cafe.test.ts`: searchCafePosts HTTP 정상/오류 + extractComplexNames 프롬프트 인젝션 방지
+- `naver-cafe.test.ts`: searchCafePosts HTTP 정상/오류 + extractComplexNames 프롬프트 인젝션 방지
 - `kakao-channel.test.ts`: sendAlimtalk SOLAPI 호출 + deliverKakaoChannelNotifications 존재 확인
 - `compare.test.ts`: buildCompareIds 4개 제한/빈배열/null 필터 + getCompareData 병렬 fetch
 
@@ -153,7 +153,7 @@ supabase db push
 - supabase/migrations/20260512000002_phase8_kakao_channel.sql: FOUND
 - supabase/migrations/20260512000003_phase8_cafe_posts.sql: FOUND
 - src/__tests__/member-tier.test.ts: FOUND
-- src/__tests__/daum-cafe.test.ts: FOUND
+- src/__tests__/naver-cafe.test.ts: FOUND
 - src/__tests__/kakao-channel.test.ts: FOUND
 - src/__tests__/compare.test.ts: FOUND
 - src/__tests__/tierbadge.test.ts: FOUND
