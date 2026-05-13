@@ -38,7 +38,7 @@ export function clusterComplexes(
 ): ClusterFeature[] {
   if (complexes.length === 0) return []
 
-  const index = new Supercluster({ radius: 60, maxZoom: 16 })
+  const index = new Supercluster({ radius: 60, maxZoom: 14 })
   index.load(
     complexes.map((c) => ({
       type: 'Feature' as const,
