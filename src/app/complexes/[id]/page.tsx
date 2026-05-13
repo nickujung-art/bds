@@ -267,7 +267,7 @@ export default async function ComplexDetailPage({ params }: Props) {
       </header>
 
       {/* Body */}
-      <div
+      <main
         style={{
           padding: '24px 32px',
           display: 'grid',
@@ -690,7 +690,7 @@ export default async function ComplexDetailPage({ params }: Props) {
             <AdBanner key={ad.id} ad={ad} />
           ))}
         </div>
-      </div>
+      </main>
 
       {/* AI 상담 패널 — position:fixed, stacking context 밖에 렌더 */}
       <AiChatPanel complexId={id} complexName={complex.canonical_name} />

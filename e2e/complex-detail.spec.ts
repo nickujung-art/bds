@@ -13,8 +13,11 @@ test.describe('단지 상세 페이지', () => {
     await page.waitForLoadState('domcontentloaded')
     const firstComplexLink = page.locator('a[href^="/complexes/"]').first()
     if (await firstComplexLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await firstComplexLink.click()
-      await page.waitForLoadState('domcontentloaded')
+      // SPA 네비게이션: waitForLoadState는 URL 변경을 보장하지 않으므로 waitForURL 사용
+      await Promise.all([
+        page.waitForURL(/\/complexes\//, { timeout: 10000 }),
+        firstComplexLink.click(),
+      ])
       return true
     }
     // 2차: /map에서 /complexes/ 링크 찾기
@@ -22,8 +25,10 @@ test.describe('단지 상세 페이지', () => {
     await page.waitForLoadState('domcontentloaded')
     const mapComplexLink = page.locator('a[href^="/complexes/"]').first()
     if (await mapComplexLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await mapComplexLink.click()
-      await page.waitForLoadState('domcontentloaded')
+      await Promise.all([
+        page.waitForURL(/\/complexes\//, { timeout: 10000 }),
+        mapComplexLink.click(),
+      ])
       return true
     }
     return false
