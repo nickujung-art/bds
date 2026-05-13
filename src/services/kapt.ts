@@ -60,7 +60,9 @@ export async function fetchComplexList(sggCode: string): Promise<KaptComplex[]> 
 }
 
 // ===== fetchKaptBasicInfo (DATA-01) =====
-const BASIC_INFO_URL = 'https://apis.data.go.kr/1613000/AptBasisInfoServiceV3/getAphusBassInfoV3'
+// V3 엔드포인트 (data.go.kr 별도 키 승인 필요). 500 시 V1으로 fallback.
+const BASIC_INFO_URL_V3 = 'https://apis.data.go.kr/1613000/AptBasisInfoServiceV3/getAphusBassInfoV3'
+const BASIC_INFO_URL_V1 = 'https://apis.data.go.kr/1613000/AptBasisInfoService/getAphusBassInfo'
 
 export const kaptBasicInfoSchema = z.object({
   kaptCode:       z.string(),
@@ -70,7 +72,6 @@ export const kaptBasicInfoSchema = z.object({
   heatType:       z.string().optional(),          // 난방방식 (V1 필드명)
   managementType: z.string().optional(),          // 관리방식
   totalArea:      z.coerce.number().optional(),   // 연면적
-  // DATA-08: 추가 필드 (KAPT API V3 응답 확장)
   kaptUsedate:    z.string().optional(),          // 사용승인일 YYYYMMDD (준공연도 원천)
   doroJuso:       z.string().optional(),          // 도로명주소
   codeHeatNm:     z.string().optional(),          // 난방방식 명칭 (heatType 폴백용)
@@ -82,11 +83,12 @@ const KaptBasicInfoSchema = kaptBasicInfoSchema
 
 export type KaptBasicInfo = z.infer<typeof kaptBasicInfoSchema>
 
-export async function fetchKaptBasicInfo(kaptCode: string): Promise<KaptBasicInfo | null> {
-  const apiKey = process.env.KAPT_API_KEY
-  if (!apiKey) throw new Error('KAPT_API_KEY is not set')
-
-  const url = new URL(BASIC_INFO_URL)
+async function fetchKaptBasicInfoFromUrl(
+  baseUrl: string,
+  kaptCode: string,
+  apiKey: string,
+): Promise<KaptBasicInfo | null> {
+  const url = new URL(baseUrl)
   url.searchParams.set('ServiceKey', apiKey)
   url.searchParams.set('kaptCode', kaptCode)
   url.searchParams.set('_type', 'json')
@@ -101,4 +103,18 @@ export async function fetchKaptBasicInfo(kaptCode: string): Promise<KaptBasicInf
   const item = (json as { response?: { body?: { item?: unknown } } })?.response?.body?.item
   const parsed = KaptBasicInfoSchema.safeParse(item)
   return parsed.success ? parsed.data : null
+}
+
+export async function fetchKaptBasicInfo(kaptCode: string): Promise<KaptBasicInfo | null> {
+  const apiKey = process.env.KAPT_API_KEY
+  if (!apiKey) throw new Error('KAPT_API_KEY is not set')
+
+  // V3 먼저 시도, 500이면 V1으로 fallback (API 키 권한이 V1에만 있는 경우)
+  try {
+    return await fetchKaptBasicInfoFromUrl(BASIC_INFO_URL_V3, kaptCode, apiKey)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (!msg.includes('500')) throw err
+    return await fetchKaptBasicInfoFromUrl(BASIC_INFO_URL_V1, kaptCode, apiKey)
+  }
 }

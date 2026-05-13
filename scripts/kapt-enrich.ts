@@ -117,12 +117,13 @@ async function main(): Promise<void> {
   // 2. buildDongMap: fetchComplexList를 sgg_code별 1회 호출
   const dongMap = await buildDongMap(sggCodes)
 
-  // 3. complexes에서 WHERE kapt_code IS NOT NULL AND si IS NULL 조회
+  // 3. complexes에서 WHERE kapt_code IS NOT NULL AND built_year IS NULL 조회
+  // (si는 regions 테이블에서 SQL로 채워질 수 있으므로 built_year를 idempotent 마커로 사용)
   const { data: complexesData, error: complexesError } = await supabase
     .from('complexes')
     .select('id, kapt_code, sgg_code, canonical_name, data_completeness')
     .not('kapt_code', 'is', null)
-    .is('si', null)
+    .is('built_year', null)
 
   if (complexesError) {
     console.error('[kapt-enrich] complexes 조회 실패:', complexesError.message)
@@ -131,7 +132,7 @@ async function main(): Promise<void> {
 
   const complexes = complexesData as ComplexRow[]
   const total = complexes.length
-  console.log(`[kapt-enrich] 처리 대상: ${total}개 단지 (WHERE kapt_code IS NOT NULL AND si IS NULL)`)
+  console.log(`[kapt-enrich] 처리 대상: ${total}개 단지 (WHERE kapt_code IS NOT NULL AND built_year IS NULL)`)
 
   if (total === 0) {
     console.log('[kapt-enrich] 처리 대상 없음 — 이미 모두 보강 완료')
