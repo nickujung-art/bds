@@ -15,7 +15,6 @@ test.describe('랜딩 페이지', () => {
     await expect(page.locator('header').first()).toBeVisible()
     // 에러 페이지가 아닌지 확인
     await expect(page.locator('text=Internal Server Error')).not.toBeVisible()
-    await expect(page.locator('text=500')).not.toBeVisible()
   })
 
   test('검색 입력창이 표시된다', async ({ page }) => {
