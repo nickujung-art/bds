@@ -507,7 +507,7 @@ export default async function ComplexDetailPage({ params }: Props) {
                   {
                     label: '주차대수',
                     value: facilityKapt.parking_count != null
-                      ? `세대당 ${facilityKapt.parking_count}대`
+                      ? `총 ${facilityKapt.parking_count.toLocaleString()}면`
                       : null,
                   },
                   {

@@ -103,15 +103,19 @@ async function main(): Promise<void> {
         continue
       }
 
+      // 지상+지하 주차면수 합산
+      const parkingTotal =
+        (parsed.kaptdPcntu ?? 0) + (parsed.kaptdPcnt ?? 0) || null
+
       const { error: upsertError } = await supabase
         .from('facility_kapt')
         .upsert(
           {
             complex_id: complex.id,
             kapt_code: complex.kapt_code,
-            parking_count: parsed.parkNose ?? null,
-            elevator_count: parsed.elevCnt ?? null,
-            management_cost_m2: parsed.managCost ?? null,
+            parking_count: parkingTotal,
+            elevator_count: parsed.kaptdEcnt ?? null,
+            management_cost_m2: null, // 별도 월별 관리비 API 필요
             data_month: DATA_MONTH,
           },
           { onConflict: 'complex_id,data_month' },
@@ -122,9 +126,8 @@ async function main(): Promise<void> {
         failCount++
       } else {
         const fields = [
-          parsed.parkNose != null ? `주차=${parsed.parkNose}면` : null,
-          parsed.elevCnt != null ? `엘리베이터=${parsed.elevCnt}대` : null,
-          parsed.managCost != null ? `관리비=${parsed.managCost}원/m²` : null,
+          parkingTotal != null ? `주차=${parkingTotal}면` : null,
+          parsed.kaptdEcnt != null ? `엘리베이터=${parsed.kaptdEcnt}대` : null,
         ].filter(Boolean).join(', ')
         console.log(`${progress} ${complex.canonical_name} → ${fields || '(데이터 없음)'} done`)
         successCount++
