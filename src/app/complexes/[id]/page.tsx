@@ -524,7 +524,7 @@ export default async function ComplexDetailPage({ params }: Props) {
                   },
                   {
                     label: '난방방식',
-                    value: ((facilityKapt as unknown) as { heat_type?: string | null }).heat_type ?? null,
+                    value: complex.heat_type ?? null,
                   },
                   {
                     label: '관리방식',

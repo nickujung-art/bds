@@ -115,6 +115,7 @@ async function main(): Promise<void> {
             kapt_code: complex.kapt_code,
             parking_count: parkingTotal,
             elevator_count: parsed.kaptdEcnt ?? null,
+            management_type: parsed.codeMgr ?? null,
             management_cost_m2: null, // 별도 월별 관리비 API 필요
             data_month: DATA_MONTH,
           },
