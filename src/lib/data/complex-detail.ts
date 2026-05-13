@@ -11,6 +11,7 @@ export interface ComplexDetail {
   built_year:      number | null
   household_count: number | null
   floors_above:    number | null
+  heat_type:       string | null
   sgg_code:        string
   status:          string
   lat:             number | null
@@ -33,7 +34,7 @@ export async function getComplexById(
     .select(`
       id, canonical_name, road_address,
       si, gu, dong,
-      built_year, household_count, floors_above,
+      built_year, household_count, floors_above, heat_type,
       sgg_code, status, lat, lng
     `)
     .eq('id', id)
