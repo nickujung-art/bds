@@ -1,0 +1,36 @@
+name: KAPT 단지 시설 정보 적재 (1회성)
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'DEBUG 모드 (첫 3개 raw 응답 확인 후 종료)'
+        type: boolean
+        default: false
+
+jobs:
+  kapt-facility-enrich:
+    name: KAPT 단지 시설 정보 적재
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Run KAPT facility enrich
+        run: |
+          if [ "${{ inputs.debug }}" = "true" ]; then
+            npx tsx scripts/kapt-facility-enrich.ts --debug
+          else
+            npx tsx scripts/kapt-facility-enrich.ts
+          fi
+        env:
+          KAPT_API_KEY: ${{ secrets.KAPT_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

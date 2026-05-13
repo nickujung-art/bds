@@ -118,3 +118,45 @@ export async function fetchKaptBasicInfo(kaptCode: string): Promise<KaptBasicInf
     return await fetchKaptBasicInfoFromUrl(BASIC_INFO_URL_V1, kaptCode, apiKey)
   }
 }
+
+// ===== fetchKaptDetailInfo =====
+// V4 상세 정보조회 — 주차·엘리베이터·관리비 등
+// 필드명이 API 버전마다 다를 수 있으므로 optional로 넓게 수신 후 scripts에서 매핑
+const DETAIL_INFO_URL_V4 = 'https://apis.data.go.kr/1613000/AptBasisInfoServiceV4/getAphusDtlInfoV4'
+
+export const kaptDetailInfoSchema = z.object({
+  kaptCode:    z.string(),
+  kaptName:    z.string(),
+  // 주차 (API 버전마다 필드명 상이 — 실제 응답으로 확인 필요)
+  parkNose:    z.coerce.number().optional(),   // 주차면수
+  // 엘리베이터
+  elevCnt:     z.coerce.number().optional(),   // 엘리베이터 수
+  // 관리비 (m²당 원) — 있으면 수신
+  managCost:   z.coerce.number().optional(),
+  // 기타 시설
+  cdaFloorCnt: z.coerce.number().optional(),   // 최고층수
+  kaptTarea:   z.coerce.number().optional(),   // 연면적
+})
+
+export type KaptDetailInfo = z.infer<typeof kaptDetailInfoSchema>
+
+export async function fetchKaptDetailInfo(kaptCode: string): Promise<{ parsed: KaptDetailInfo | null; raw: unknown }> {
+  const apiKey = process.env.KAPT_API_KEY
+  if (!apiKey) throw new Error('KAPT_API_KEY is not set')
+
+  const url = new URL(DETAIL_INFO_URL_V4)
+  url.searchParams.set('ServiceKey', apiKey)
+  url.searchParams.set('kaptCode', kaptCode)
+  url.searchParams.set('_type', 'json')
+
+  const res = await fetch(url.toString(), {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) throw new Error(`K-apt DetailInfo API ${res.status}`)
+
+  const json: unknown = await res.json()
+  const item = (json as { response?: { body?: { item?: unknown } } })?.response?.body?.item
+  const parsed = kaptDetailInfoSchema.safeParse(item)
+  return { parsed: parsed.success ? parsed.data : null, raw: item }
+}
