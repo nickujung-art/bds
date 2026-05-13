@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { CardnewsDownloadButton } from '@/components/admin/CardnewsDownloadButton'
+import { AdminCardnewsCopyButton } from '@/components/admin/AdminCardnewsCopyButton'
 
 export const revalidate = 0
 
@@ -24,6 +25,45 @@ export default async function AdminCardnewsPage() {
   if (!profile || !['admin', 'superadmin'].includes((profile as { role: string }).role ?? '')) {
     redirect('/')
   }
+
+  // 최근 30일 신고가 TOP 5 (카드뉴스 텍스트 생성용)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10)
+    .replaceAll('-', '')
+
+  const { data: topDeals } = await supabase
+    .from('transactions')
+    .select('complex_id, price, area_m2, deal_date, complexes(canonical_name, sgg_code)')
+    .gte('deal_date', thirtyDaysAgo)
+    .is('cancel_date', null)
+    .is('superseded_by', null)
+    .eq('deal_type', 'sale')
+    .order('price', { ascending: false })
+    .limit(5)
+
+  const periodStart = new Date(thirtyDaysAgo.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
+  const periodEnd   = new Date()
+  const fmtDate = (d: Date) =>
+    `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+
+  const lines = (topDeals ?? []).map((d, i) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const c = (d as any).complexes as { canonical_name: string } | null
+    const name  = c?.canonical_name ?? '(단지명 없음)'
+    const price = Math.round(Number(d.price) / 10000)
+    const area  = Number(d.area_m2).toFixed(0)
+    return `${i + 1}위. ${name} — ${price.toLocaleString()}억원 (${area}㎡)`
+  })
+
+  const cardnewsText = [
+    '📊 이번 주 창원·김해 신고가 TOP 5',
+    '',
+    ...lines,
+    '',
+    `📅 집계 기간: ${fmtDate(periodStart)} ~ ${fmtDate(periodEnd)}`,
+    '🔗 단지온도에서 상세 보기: https://danjiondo.kr',
+  ].join('\n').slice(0, 500)
 
   return (
     <div
@@ -106,7 +146,10 @@ export default async function AdminCardnewsPage() {
               최근 30일 · 창원·김해 실거래가 기준 상위 5개 단지
             </div>
           </div>
-          <CardnewsDownloadButton />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <CardnewsDownloadButton />
+            <AdminCardnewsCopyButton text={cardnewsText} />
+          </div>
         </div>
       </div>
     </div>
