@@ -19,6 +19,8 @@ import { RedevelopmentTimeline } from '@/components/complex/RedevelopmentTimelin
 import { GapLabel } from '@/components/complex/GapLabel'
 import { AnalysisSection } from '@/components/complex/AnalysisSection'
 import { AiChatPanel } from '@/components/complex/AiChatPanel'
+import { CafePostsList } from '@/components/complex/CafePostsList'
+import { getCafePostsByComplex } from '@/lib/data/cafe-posts'
 
 export const revalidate = 86400
 
@@ -130,6 +132,7 @@ export default async function ComplexDetailPage({ params }: Props) {
     quadrantData,
     gapLabelData,
     districtStats,
+    cafePosts,
   ] = await Promise.all([
     getComplexTransactionSummary(id, 'sale', supabase),
     getComplexTransactionSummary(id, 'jeonse', supabase),
@@ -172,6 +175,8 @@ export default async function ComplexDetailPage({ params }: Props) {
           }
         })()
       : Promise.resolve(null),
+    // 카페 이야기 — matchComplex() 경유 매칭된 글만 (오류 시 빈 배열 fallback)
+    getCafePostsByComplex(id, supabase).catch(() => []),
   ])
 
   const facilityKapt = facilityKaptResult?.data ?? null
@@ -603,6 +608,9 @@ export default async function ComplexDetailPage({ params }: Props) {
               initialStats={reviewStats}
             />
           </div>
+
+          {/* 카페 이야기 — matchComplex() 경유 매칭된 글만 표시 */}
+          <CafePostsList posts={cafePosts} />
         </div>
 
         {/* Right rail */}
