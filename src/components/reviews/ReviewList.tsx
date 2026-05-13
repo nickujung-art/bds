@@ -1,6 +1,8 @@
 import type { ReviewStats } from '@/lib/data/reviews'
 import type { ReviewWithComments } from '@/lib/data/comments'
+import type { MemberTier } from '@/lib/data/member-tier'
 import { CommentSection } from './CommentSection'
+import { TierBadge } from './TierBadge'
 
 interface Props {
   reviews: ReviewWithComments[]
@@ -132,6 +134,16 @@ export function ReviewList({ reviews, stats, currentUserId, complexName }: Props
               >
                 {formatDate(r.created_at)}
               </span>
+            </div>
+            {/* 작성자 행: 익명 닉네임 + 등급 배지 */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+              <span style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)' }}>
+                {r.user_id ? r.user_id.slice(0, 5) + '***' : '익명'}
+              </span>
+              <TierBadge
+                tier={(r.reviewer_tier as MemberTier | null | undefined) ?? 'bronze'}
+                cafeVerified={r.reviewer_cafe_nickname != null}
+              />
             </div>
             <p
               style={{

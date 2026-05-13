@@ -22,7 +22,9 @@ export async function getMemberTier(
   userId: string,
   supabase: SupabaseClient<Database>,
 ): Promise<MemberTierInfo> {
-  const { data } = await supabase
+  // database.ts는 Phase 8 마이그레이션 컬럼(activity_points, member_tier)을 아직 포함하지 않음
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
     .from('profiles')
     .select('activity_points, member_tier')
     .eq('id', userId)
