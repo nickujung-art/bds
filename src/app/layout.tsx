@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { Footer } from '@/components/layout/Footer'
 import './globals.css'
 
@@ -40,7 +41,9 @@ export default function RootLayout({
   return (
     <html lang="ko" className={pretendard.variable}>
       <body className="font-sans antialiased">
-        {children}
+        <NuqsAdapter>
+          {children}
+        </NuqsAdapter>
         <Footer />
       </body>
     </html>

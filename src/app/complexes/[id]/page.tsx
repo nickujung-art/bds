@@ -12,6 +12,7 @@ import { getGapLabelData } from '@/lib/data/gap-label'
 import { DealTypeTabs } from '@/components/complex/DealTypeTabs'
 import { FavoriteButton } from '@/components/complex/FavoriteButton'
 import { ShareButton } from '@/components/complex/ShareButton'
+import { CompareAddButton } from '@/components/complex/CompareAddButton'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { NeighborhoodOpinion } from '@/components/reviews/NeighborhoodOpinion'
 import { RedevelopmentTimeline } from '@/components/complex/RedevelopmentTimeline'
@@ -249,6 +250,7 @@ export default async function ComplexDetailPage({ params }: Props) {
           location={[complex.si, complex.gu, complex.dong].filter(Boolean).join(' ')}
         />
         <FavoriteButton complexId={id} />
+        <CompareAddButton complexId={id} complexName={complex.canonical_name} />
         <Link
           href={`/login?next=/complexes/${id}`}
           className="btn btn-md btn-orange"

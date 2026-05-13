@@ -140,5 +140,9 @@ export async function getCompareData(
     }),
   )
 
-  return results.filter((c): c is ComplexSummary => c !== null)
+  const filtered: ComplexSummary[] = []
+  for (const c of results) {
+    if (c !== null) filtered.push(c)
+  }
+  return filtered
 }
