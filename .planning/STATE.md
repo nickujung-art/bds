@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-12T00:00:00Z"
-last_activity: 2026-05-12 — Phase 8 STARTED (0/7 plans, 커뮤니티 심화·자동화)
+last_updated: "2026-05-13T00:00:00Z"
+last_activity: 2026-05-13 — Phase 8 COMPLETE (7/7 plans — Wave 0~3 완료, V2.0 커뮤니티 심화)
 progress:
   total_phases: 8
-  completed_phases: 6
-  total_plans: 27
-  completed_plans: 27
-  percent: 88
+  completed_phases: 7
+  total_plans: 34
+  completed_plans: 34
+  percent: 95
 ---
 
 # Project State — 단지온도
@@ -56,15 +56,19 @@ Plans: 3/3 complete (07-01 ~ 07-03) — verified 2026-05-11
 
 ---
 
-**Phase 8: 커뮤니티 심화·자동화** 📋 Planned
+**Phase 8: 커뮤니티 심화·자동화** ✅ Complete
 
 Goal: 게이미피케이션 + 카페 NLP 연동 + 카카오톡 채널 + 비교 모드 + 카페 자동 발행. V2.0 완성.
 
 Requirements: DIFF-01~02, DIFF-04~06, OPS-02
 
-Plans: 7 plans ready (08-00 ~ 08-06) — planned 2026-05-12
+Plans: 7/7 complete (08-00 ~ 08-06) — completed 2026-05-13
 
-Next step: /gsd-execute-phase 8 (start with Wave 0: 08-00-PLAN.md)
+Waves:
+- Wave 0: 08-00 (DB 마이그레이션) ✅
+- Wave 1: 08-01 (TierBadge), 08-03 (비교 모드) ✅
+- Wave 2: 08-02 (알림 우선순위), 08-04 (Daum 카페 NLP), 08-05 (카카오 채널 구독) ✅
+- Wave 3: 08-06 (어드민 복사 버튼) ✅
 
 ## Phase Progress
 
@@ -77,7 +81,7 @@ Next step: /gsd-execute-phase 8 (start with Wave 0: 08-00-PLAN.md)
 | 5 | 데이터 확장·운영 안정성 | ✅ Complete |
 | 6 | AI·차별화 기술 | 📋 Planned |
 | 7 | 데이터 파이프라인 수리 | ✅ Complete |
-| 8 | 커뮤니티 심화·자동화 | 📋 Planned (7 plans) |
+| 8 | 커뮤니티 심화·자동화 | ✅ Complete (7/7 plans) |
 
 ## Key Context for Agents
 
