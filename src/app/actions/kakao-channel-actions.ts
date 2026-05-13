@@ -21,11 +21,14 @@ export async function subscribeKakaoChannel(
     consent: formData.get('consent') === 'true',
   })
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? '입력을 확인해주세요' }
+    // zod v3: .issues (zod v4: .errors)
+    return { error: parsed.error.issues[0]?.message ?? '입력을 확인해주세요' }
   }
 
   // T-8-04: phone_number를 로그에 절대 출력 금지
-  const { error } = await supabase
+  // database.ts는 Phase 8 마이그레이션 컬럼(kakao_channel_subscriptions)을 아직 포함하지 않음
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from('kakao_channel_subscriptions')
     .upsert(
       {

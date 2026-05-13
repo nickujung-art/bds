@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 import webpush from 'web-push'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
+import { shouldDeliverNow } from './generate-alerts'
 import { sendAlimtalk } from '@/services/kakao-channel'
 
 const BATCH_SIZE = 50
@@ -106,68 +107,78 @@ export async function deliverPendingNotifications(
   return { sent, failed }
 }
 
+/**
+ * DIFF-04/05: 카카오톡 채널 알림 발송
+ * kakao_channel_subscriptions의 is_active 구독자에게 pending 알림을 전달한다.
+ * 등급에 따라 shouldDeliverNow로 딜레이 적용 (gold 즉시, silver/bronze 30분 딜레이).
+ * T-8-04: phone_number를 로그에 절대 출력 금지.
+ */
 export async function deliverKakaoChannelNotifications(
   supabase: SupabaseClient<Database>,
 ): Promise<{ sent: number; failed: number }> {
-  const pfId = process.env.KAKAO_CHANNEL_PF_ID
+  // database.ts는 Phase 8 마이그레이션 컬럼(kakao_channel_subscriptions)을 아직 포함하지 않음
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: subscriptions } = await (supabase as any)
+    .from('kakao_channel_subscriptions')
+    .select('user_id, phone_number')
+    .eq('is_active', true)
 
-  const { data: pending } = await supabase
-    .from('notifications')
-    .select('id, user_id, title, body, type')
-    .eq('status', 'pending')
-    .eq('type', 'kakao_channel')
-    .order('created_at')
-    .limit(BATCH_SIZE)
-
-  if (!pending?.length) return { sent: 0, failed: 0 }
+  if (!subscriptions?.length) return { sent: 0, failed: 0 }
 
   let sent   = 0
   let failed = 0
 
-  for (const n of pending) {
+  for (const sub of subscriptions) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notif = n as any
+    const subscription = sub as any as { user_id: string; phone_number: string }
 
-    try {
-      const { data: sub } = await supabase
-        .from('kakao_channel_subscriptions')
-        .select('phone_number')
-        .eq('user_id', notif.user_id as string)
-        .eq('is_active', true)
-        .single()
+    // 해당 사용자의 pending 알림 조회
+    const { data: pending } = await supabase
+      .from('notifications')
+      .select('id, title, body, type, created_at')
+      .eq('user_id', subscription.user_id)
+      .eq('status', 'pending')
+      .order('created_at')
+      .limit(10)
 
-      if (!sub?.phone_number) {
+    for (const notif of pending ?? []) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const n = notif as any as {
+        id: string; title: string; body: string; type: string; created_at: string
+      }
+
+      try {
+        const canSend = await shouldDeliverNow(
+          subscription.user_id,
+          supabase,
+          new Date(n.created_at),
+        )
+        if (!canSend) continue
+
+        // T-8-04: phone_number를 로그에 절대 출력 금지
+        await sendAlimtalk({
+          to:         subscription.phone_number,
+          pfId:       process.env.KAKAO_CHANNEL_PF_ID ?? '',
+          templateId: 'KA01TP_PRICE_ALERT',
+          variables:  {
+            '#{제목}': n.title,
+            '#{내용}': n.body,
+          },
+        })
+
+        await supabase
+          .from('notifications')
+          .update({ status: 'sent', delivered_at: new Date().toISOString() })
+          .eq('id', n.id)
+
+        sent++
+      } catch {
         await supabase
           .from('notifications')
           .update({ status: 'failed' })
-          .eq('id', notif.id as string)
+          .eq('id', n.id)
         failed++
-        continue
       }
-
-      // T-8-04: phone_number를 로그에 절대 출력 금지
-      await sendAlimtalk({
-        to:         (sub as { phone_number: string }).phone_number,
-        pfId:       pfId ?? '',
-        templateId: 'KA01TP_PRICE_ALERT',
-        variables:  {
-          '#{제목}': notif.title as string,
-          '#{내용}': notif.body  as string,
-        },
-      })
-
-      await supabase
-        .from('notifications')
-        .update({ status: 'sent', delivered_at: new Date().toISOString() })
-        .eq('id', notif.id as string)
-
-      sent++
-    } catch {
-      await supabase
-        .from('notifications')
-        .update({ status: 'failed' })
-        .eq('id', notif.id as string)
-      failed++
     }
   }
 

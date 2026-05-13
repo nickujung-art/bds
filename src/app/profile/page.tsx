@@ -7,6 +7,7 @@ import { signOut } from '@/lib/auth/actions'
 import { deleteAccount } from '@/lib/auth/consent-actions'
 import { PushToggle } from '@/components/profile/PushToggle'
 import { TopicToggle } from '@/components/profile/TopicToggle'
+import { KakaoChannelSubscribeForm } from '@/components/profile/KakaoChannelSubscribeForm'
 import { getNotificationTopics } from '@/lib/data/topics'
 
 export const revalidate = 0
@@ -205,6 +206,14 @@ export default async function ProfilePage() {
           </h3>
           <PushToggle initialSubscribed={isPushSubscribed} vapidPublicKey={vapidKey} />
           <TopicToggle initialTopics={topics} />
+          <div
+            style={{
+              height:     1,
+              background: 'var(--line-subtle)',
+              margin:     '16px 0 0',
+            }}
+          />
+          <KakaoChannelSubscribeForm />
         </div>
 
         {/* Admin link */}

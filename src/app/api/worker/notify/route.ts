@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { generatePriceAlerts } from '@/lib/notifications/generate-alerts'
-import { deliverPendingNotifications } from '@/lib/notifications/deliver'
+import { deliverPendingNotifications, deliverKakaoChannelNotifications } from '@/lib/notifications/deliver'
 
 export const runtime = 'nodejs'
 
@@ -15,6 +15,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const generated = await generatePriceAlerts(supabase)
   const { sent, failed } = await deliverPendingNotifications(supabase)
+  const { sent: kakaoSent, failed: kakaoFailed } = await deliverKakaoChannelNotifications(supabase)
 
-  return NextResponse.json({ generated, sent, failed })
+  return NextResponse.json({ generated, sent, failed, kakaoSent, kakaoFailed })
 }
