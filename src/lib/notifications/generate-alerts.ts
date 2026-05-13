@@ -1,6 +1,7 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
+import { getMemberTier, getNotificationDelay } from '@/lib/data/member-tier'
 
 function formatPrice(price: number): string {
   const uk = Math.floor(price / 10000)
@@ -83,4 +84,22 @@ export async function generatePriceAlerts(
   }
 
   return created
+}
+
+/**
+ * DIFF-05: 등급별 알림 발송 우선순위
+ * gold → 즉시(딜레이 0ms), silver/bronze → 생성 30분 후
+ */
+export async function shouldDeliverNow(
+  userId: string,
+  supabase: SupabaseClient<Database>,
+  notificationCreatedAt: Date,
+): Promise<boolean> {
+  const { tier } = await getMemberTier(userId, supabase)
+  const delayMs = getNotificationDelay(tier)
+
+  if (delayMs === 0) return true
+
+  const elapsedMs = Date.now() - notificationCreatedAt.getTime()
+  return elapsedMs >= delayMs
 }
