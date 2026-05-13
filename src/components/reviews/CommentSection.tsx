@@ -2,12 +2,14 @@
 
 import { useState, useTransition } from 'react'
 import { submitComment, reportComment } from '@/lib/auth/comment-actions'
-import type { Comment } from '@/lib/data/comments'
+import type { CommentWithUserInfo } from '@/lib/data/comments'
+import { getTierBadge } from '@/lib/data/member-tier'
+import type { MemberTier } from '@/lib/data/member-tier'
 
 interface Props {
   reviewId: string
   complexId: string
-  initialComments: Pick<Comment, 'id' | 'content' | 'created_at' | 'user_id'>[]
+  initialComments: CommentWithUserInfo[]
   currentUserId?: string | null
 }
 
@@ -68,8 +70,37 @@ export function CommentSection({ reviewId, complexId, initialComments, currentUs
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)' }}>
-                  {formatNick(c.user_id)} · {new Date(c.created_at).toLocaleDateString('ko-KR')}
+                <span
+                  style={{
+                    font: '500 11px/1 var(--font-sans)',
+                    color: 'var(--fg-tertiary)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 2,
+                  }}
+                >
+                  {formatNick(c.user_id)}
+                  {/* TierBadge: 등급 배지 (getTierBadge 문자열 렌더) */}
+                  {getTierBadge({
+                    tier: (c.member_tier as MemberTier | null | undefined) ?? 'bronze',
+                    cafeVerified: c.cafe_nickname != null,
+                  }) && (
+                    <span
+                      style={{
+                        font: '600 10px/1 var(--font-sans)',
+                        letterSpacing: '0.02em',
+                        marginLeft: 2,
+                      }}
+                      aria-label="등급 배지"
+                    >
+                      {getTierBadge({
+                        tier: (c.member_tier as MemberTier | null | undefined) ?? 'bronze',
+                        cafeVerified: c.cafe_nickname != null,
+                      })}
+                    </span>
+                  )}
+                  {' · '}
+                  {new Date(c.created_at).toLocaleDateString('ko-KR')}
                 </span>
                 {currentUserId && currentUserId !== c.user_id && (
                   <button
