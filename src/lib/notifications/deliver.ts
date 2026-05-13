@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 import webpush from 'web-push'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
+import { sendAlimtalk } from '@/services/kakao-channel'
 
 const BATCH_SIZE = 50
 
@@ -86,6 +87,74 @@ export async function deliverPendingNotifications(
         })
         await sendPushToUser(supabase, notif.user_id as string, payload)
       }
+
+      await supabase
+        .from('notifications')
+        .update({ status: 'sent', delivered_at: new Date().toISOString() })
+        .eq('id', notif.id as string)
+
+      sent++
+    } catch {
+      await supabase
+        .from('notifications')
+        .update({ status: 'failed' })
+        .eq('id', notif.id as string)
+      failed++
+    }
+  }
+
+  return { sent, failed }
+}
+
+export async function deliverKakaoChannelNotifications(
+  supabase: SupabaseClient<Database>,
+): Promise<{ sent: number; failed: number }> {
+  const pfId = process.env.KAKAO_CHANNEL_PF_ID
+
+  const { data: pending } = await supabase
+    .from('notifications')
+    .select('id, user_id, title, body, type')
+    .eq('status', 'pending')
+    .eq('type', 'kakao_channel')
+    .order('created_at')
+    .limit(BATCH_SIZE)
+
+  if (!pending?.length) return { sent: 0, failed: 0 }
+
+  let sent   = 0
+  let failed = 0
+
+  for (const n of pending) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notif = n as any
+
+    try {
+      const { data: sub } = await supabase
+        .from('kakao_channel_subscriptions')
+        .select('phone_number')
+        .eq('user_id', notif.user_id as string)
+        .eq('is_active', true)
+        .single()
+
+      if (!sub?.phone_number) {
+        await supabase
+          .from('notifications')
+          .update({ status: 'failed' })
+          .eq('id', notif.id as string)
+        failed++
+        continue
+      }
+
+      // T-8-04: phone_number를 로그에 절대 출력 금지
+      await sendAlimtalk({
+        to:         (sub as { phone_number: string }).phone_number,
+        pfId:       pfId ?? '',
+        templateId: 'KA01TP_PRICE_ALERT',
+        variables:  {
+          '#{제목}': notif.title as string,
+          '#{내용}': notif.body  as string,
+        },
+      })
 
       await supabase
         .from('notifications')
