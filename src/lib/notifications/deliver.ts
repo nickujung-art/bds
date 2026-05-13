@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 import webpush from 'web-push'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
+import { shouldDeliverNow } from './generate-alerts'
 
 const BATCH_SIZE = 50
 
@@ -99,6 +100,83 @@ export async function deliverPendingNotifications(
         .update({ status: 'failed' })
         .eq('id', notif.id as string)
       failed++
+    }
+  }
+
+  return { sent, failed }
+}
+
+/**
+ * DIFF-04/05: 카카오톡 채널 알림 발송
+ * kakao_channel_subscriptions의 is_active 구독자에게 pending 알림을 전달한다.
+ * 등급에 따라 shouldDeliverNow로 딜레이 적용.
+ */
+export async function deliverKakaoChannelNotifications(
+  supabase: SupabaseClient<Database>,
+): Promise<{ sent: number; failed: number }> {
+  // 구독자 조회
+  // database.ts는 Phase 8 마이그레이션 컬럼(kakao_channel_subscriptions)을 아직 포함하지 않음
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: subscriptions } = await (supabase as any)
+    .from('kakao_channel_subscriptions')
+    .select('user_id, phone_number')
+    .eq('is_active', true)
+
+  if (!subscriptions?.length) return { sent: 0, failed: 0 }
+
+  let sent   = 0
+  let failed = 0
+
+  for (const sub of subscriptions) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subscription = sub as any as { user_id: string; phone_number: string }
+
+    // 해당 사용자의 pending 알림 조회
+    const { data: pending } = await supabase
+      .from('notifications')
+      .select('id, title, body, type, created_at')
+      .eq('user_id', subscription.user_id)
+      .eq('status', 'pending')
+      .order('created_at')
+      .limit(10)
+
+    for (const notif of pending ?? []) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const n = notif as any as { id: string; title: string; body: string; type: string; created_at: string }
+
+      try {
+        const canSend = await shouldDeliverNow(
+          subscription.user_id,
+          supabase,
+          new Date(n.created_at),
+        )
+        if (!canSend) continue
+
+        // kakao-channel 어댑터 동적 import (SOLAPI 계정 없으면 스킵)
+        const kakaoKey = process.env.SOLAPI_API_KEY
+        if (kakaoKey) {
+          const { sendAlimtalk } = await import('@/services/kakao-channel')
+          await sendAlimtalk({
+            to:         subscription.phone_number,
+            pfId:       process.env.KAKAO_CHANNEL_PF_ID!,
+            templateId: 'KA01TP_PRICE_ALERT',
+            variables:  { '#{내용}': n.body },
+          })
+        }
+
+        await supabase
+          .from('notifications')
+          .update({ status: 'sent', delivered_at: new Date().toISOString() })
+          .eq('id', n.id)
+
+        sent++
+      } catch {
+        await supabase
+          .from('notifications')
+          .update({ status: 'failed' })
+          .eq('id', n.id)
+        failed++
+      }
     }
   }
 
