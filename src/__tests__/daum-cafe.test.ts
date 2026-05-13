@@ -53,7 +53,9 @@ describe('extractComplexNames', () => {
         }),
       }),
     }
+    vi.resetModules()
     vi.doMock('@google/generative-ai', () => ({ GoogleGenerativeAI: vi.fn(() => mockGenAI) }))
+    vi.doMock('server-only', () => ({}))
 
     const { extractComplexNames } = await import('@/services/daum-cafe')
     const result = await extractComplexNames('창원 래미안더센트럴 매매 후기')
