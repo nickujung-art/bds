@@ -60,8 +60,8 @@ export async function fetchComplexList(sggCode: string): Promise<KaptComplex[]> 
 }
 
 // ===== fetchKaptBasicInfo (DATA-01) =====
-// V3 엔드포인트 (data.go.kr 별도 키 승인 필요). 500 시 V1으로 fallback.
-const BASIC_INFO_URL_V3 = 'https://apis.data.go.kr/1613000/AptBasisInfoServiceV3/getAphusBassInfoV3'
+// V4 엔드포인트 (data.go.kr 국토교통부_공동주택 기본 정보제공 서비스 승인 필요). 500 시 V1으로 fallback.
+const BASIC_INFO_URL_V4 = 'https://apis.data.go.kr/1613000/AptBasisInfoServiceV4/getAphusBassInfoV4'
 const BASIC_INFO_URL_V1 = 'https://apis.data.go.kr/1613000/AptBasisInfoService/getAphusBassInfo'
 
 export const kaptBasicInfoSchema = z.object({
@@ -109,9 +109,9 @@ export async function fetchKaptBasicInfo(kaptCode: string): Promise<KaptBasicInf
   const apiKey = process.env.KAPT_API_KEY
   if (!apiKey) throw new Error('KAPT_API_KEY is not set')
 
-  // V3 먼저 시도, 500이면 V1으로 fallback (API 키 권한이 V1에만 있는 경우)
+  // V4 먼저 시도, 500이면 V1으로 fallback
   try {
-    return await fetchKaptBasicInfoFromUrl(BASIC_INFO_URL_V3, kaptCode, apiKey)
+    return await fetchKaptBasicInfoFromUrl(BASIC_INFO_URL_V4, kaptCode, apiKey)
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     if (!msg.includes('500')) throw err
