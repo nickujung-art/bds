@@ -1,21 +1,24 @@
 /**
  * K-apt 관리비 엑셀 임포트 스크립트
  *
- * 실행: npx tsx scripts/import-management-cost.ts [--file <path>] [--debug] [--dry-run]
+ * 실행: npx tsx scripts/import-management-cost.ts [--file <path>] [--dir <path>] [--debug] [--dry-run]
  * 환경변수: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  *
- * 기본 파일: ./2026aptcost.xlsx
+ * 기본 폴더: ./data/management-cost/
  * 필터: 시군구 = 창원* 또는 김해*
  * 매칭: kapt_code → complexes.id
  * 적재: management_cost_monthly (upsert, unique: complex_id + year_month)
  *
- * --debug   : 매칭 실패 단지 목록 출력
- * --dry-run : DB 적재 없이 파싱/매칭만 확인
+ * --file <path> : 파일 1개 지정
+ * --dir <path>  : 폴더의 모든 xlsx 파일 일괄 처리 (기본: data/management-cost/)
+ * --debug       : 매칭 실패 단지 목록 출력
+ * --dry-run     : DB 적재 없이 파싱/매칭만 확인
  */
 import { loadEnvConfig } from '@next/env'
 import { createClient } from '@supabase/supabase-js'
 import * as XLSX from 'xlsx'
 import * as path from 'path'
+import * as fs from 'fs'
 
 loadEnvConfig(process.cwd())
 
@@ -32,10 +35,33 @@ const supabase = createClient(
 
 const DEBUG = process.argv.includes('--debug')
 const DRY_RUN = process.argv.includes('--dry-run')
+
 const fileArgIdx = process.argv.indexOf('--file')
-const FILE_PATH = fileArgIdx !== -1
-  ? process.argv[fileArgIdx + 1]!
-  : path.join(process.cwd(), '2026aptcost.xlsx')
+const dirArgIdx = process.argv.indexOf('--dir')
+
+function resolveFiles(): string[] {
+  if (fileArgIdx !== -1) {
+    const p = process.argv[fileArgIdx + 1]!
+    return [path.isAbsolute(p) ? p : path.join(process.cwd(), p)]
+  }
+  const dir = dirArgIdx !== -1
+    ? process.argv[dirArgIdx + 1]!
+    : path.join(process.cwd(), 'data', 'management-cost')
+  const absDir = path.isAbsolute(dir) ? dir : path.join(process.cwd(), dir)
+  if (!fs.existsSync(absDir)) {
+    console.error(`[mgmt-cost] 폴더를 찾을 수 없습니다: ${absDir}`)
+    process.exit(1)
+  }
+  const files = fs.readdirSync(absDir)
+    .filter(f => f.toLowerCase().endsWith('.xlsx'))
+    .map(f => path.join(absDir, f))
+    .sort()
+  if (files.length === 0) {
+    console.error(`[mgmt-cost] xlsx 파일이 없습니다: ${absDir}`)
+    process.exit(1)
+  }
+  return files
+}
 
 // 엑셀 컬럼 인덱스 (ROW1 헤더 기준, 0-indexed)
 const COL = {
@@ -75,51 +101,36 @@ function toYearMonth(yyyymm: unknown): string | null {
   return `${s.slice(0, 4)}-${s.slice(4, 6)}-01`
 }
 
-async function main(): Promise<void> {
-  console.log('[mgmt-cost] 시작 —', new Date().toISOString())
-  console.log('[mgmt-cost] 파일:', FILE_PATH)
-  if (DRY_RUN) console.log('[mgmt-cost] *** DRY RUN 모드 — DB 적재 없음 ***')
-
-  // 엑셀 로드
-  console.log('[mgmt-cost] 엑셀 파일 로딩 중...')
-  const wb = XLSX.readFile(FILE_PATH, { dense: true })
-  const ws = wb.Sheets['sheet1']
-  if (!ws) {
-    console.error('[mgmt-cost] sheet1을 찾을 수 없습니다.')
-    process.exit(1)
-  }
-  // range:1 → 헤더 행(ROW0 공지, ROW1 헤더) 건너뛰고 ROW1부터
+function parseFile(filePath: string): Record<string, unknown>[] {
+  const wb = XLSX.readFile(filePath, { dense: true })
+  // sheet 이름이 다를 수 있으므로 첫 번째 시트 사용
+  const sheetName = wb.SheetNames[0]
+  if (!sheetName) throw new Error('엑셀에 시트가 없습니다')
+  const ws = wb.Sheets[sheetName]!
   const allRows = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: '', range: 1 })
-  const dataRows = allRows.slice(1) // ROW1이 헤더이므로 데이터는 ROW2부터
+  return allRows.slice(1) as unknown as Record<string, unknown>[]
+}
 
-  // 창원/김해 필터
+async function processFile(
+  filePath: string,
+  kaptToId: Map<string, string>,
+): Promise<{ success: number; fail: number; unmatched: number }> {
+  console.log(`\n[mgmt-cost] ▶ ${path.basename(filePath)}`)
+
+  const dataRows = parseFile(filePath)
+
   const filtered = dataRows.filter(row => {
-    const sgg = String((row as unknown[])[COL.sgg] ?? '')
+    const r = row as unknown as unknown[]
+    const sgg = String(r[COL.sgg] ?? '')
     return sgg.includes('창원') || sgg.includes('김해')
   })
-  console.log(`[mgmt-cost] 전체: ${dataRows.length}행 → 창원/김해: ${filtered.length}행`)
+  console.log(`  전체: ${dataRows.length}행 → 창원/김해: ${filtered.length}행`)
 
-  // complexes 테이블에서 kapt_code → id 매핑 로드
-  const { data: complexData, error } = await supabase
-    .from('complexes')
-    .select('id, kapt_code, canonical_name')
-    .not('kapt_code', 'is', null)
-  if (error) {
-    console.error('[mgmt-cost] complexes 조회 실패:', error.message)
-    process.exit(1)
-  }
-  const kaptToId = new Map<string, string>()
-  for (const c of complexData ?? []) {
-    kaptToId.set(c.kapt_code as string, c.id as string)
-  }
-  console.log(`[mgmt-cost] complexes 매핑: ${kaptToId.size}개 단지`)
-
-  // 파싱 + 매칭
   const records: Record<string, unknown>[] = []
   const unmatched = new Map<string, string>()
 
   for (const row of filtered) {
-    const r = row as unknown[]
+    const r = row as unknown as unknown[]
     const kaptCode = String(r[COL.kapt_code] ?? '').trim()
     const complexId = kaptToId.get(kaptCode)
 
@@ -132,49 +143,46 @@ async function main(): Promise<void> {
     if (!yearMonth) continue
 
     records.push({
-      complex_id:            complexId,
-      kapt_code:             kaptCode,
-      year_month:            yearMonth,
-      common_cost_total:     toInt(r[COL.common_cost_total]),
-      labor_cost:            toInt(r[COL.labor_cost]),
-      cleaning_cost:         toInt(r[COL.cleaning_cost]),
-      guard_cost:            toInt(r[COL.guard_cost]),
-      disinfection_cost:     toInt(r[COL.disinfection_cost]),
-      elevator_cost:         toInt(r[COL.elevator_cost]),
-      repair_cost:           toInt(r[COL.repair_cost]),
-      network_cost:          toInt(r[COL.network_cost]),
-      vehicle_cost:          toInt(r[COL.vehicle_cost]),
-      consignment_fee:       toInt(r[COL.consignment_fee]),
-      individual_cost_total: toInt(r[COL.individual_cost_total]),
-      electricity_cost:      toInt(r[COL.electricity_cost]),
-      water_cost:            toInt(r[COL.water_cost]),
-      heating_cost:          toInt(r[COL.heating_cost]),
-      hot_water_cost:        toInt(r[COL.hot_water_cost]),
-      gas_cost:              toInt(r[COL.gas_cost]),
+      complex_id:               complexId,
+      kapt_code:                kaptCode,
+      year_month:               yearMonth,
+      common_cost_total:        toInt(r[COL.common_cost_total]),
+      labor_cost:               toInt(r[COL.labor_cost]),
+      cleaning_cost:            toInt(r[COL.cleaning_cost]),
+      guard_cost:               toInt(r[COL.guard_cost]),
+      disinfection_cost:        toInt(r[COL.disinfection_cost]),
+      elevator_cost:            toInt(r[COL.elevator_cost]),
+      repair_cost:              toInt(r[COL.repair_cost]),
+      network_cost:             toInt(r[COL.network_cost]),
+      vehicle_cost:             toInt(r[COL.vehicle_cost]),
+      consignment_fee:          toInt(r[COL.consignment_fee]),
+      individual_cost_total:    toInt(r[COL.individual_cost_total]),
+      electricity_cost:         toInt(r[COL.electricity_cost]),
+      water_cost:               toInt(r[COL.water_cost]),
+      heating_cost:             toInt(r[COL.heating_cost]),
+      hot_water_cost:           toInt(r[COL.hot_water_cost]),
+      gas_cost:                 toInt(r[COL.gas_cost]),
       long_term_repair_monthly: toInt(r[COL.long_term_repair_monthly]),
       long_term_repair_total:   toInt(r[COL.long_term_repair_total]),
     })
   }
 
-  console.log(`[mgmt-cost] 매칭 성공: ${records.length}건 / 실패: ${unmatched.size}개 단지`)
+  console.log(`  매칭 성공: ${records.length}건 / 미매칭 단지: ${unmatched.size}개`)
 
   if (DEBUG && unmatched.size > 0) {
-    console.log('\n[mgmt-cost] 매칭 실패 단지:')
     for (const [code, name] of unmatched) {
-      console.log(`  ${code}  ${name}`)
+      console.log(`    미매칭: ${code}  ${name}`)
     }
   }
 
   if (DRY_RUN) {
-    console.log('\n[mgmt-cost] DRY RUN 완료 — 샘플 레코드:')
-    console.log(JSON.stringify(records[0], null, 2))
-    return
+    console.log('  [DRY RUN] 샘플:', JSON.stringify(records[0] ?? null, null, 2))
+    return { success: 0, fail: 0, unmatched: unmatched.size }
   }
 
-  // 배치 upsert (500건씩)
   const BATCH = 500
-  let successCount = 0
-  let failCount = 0
+  let success = 0
+  let fail = 0
 
   for (let i = 0; i < records.length; i += BATCH) {
     const batch = records.slice(i, i + BATCH)
@@ -183,22 +191,57 @@ async function main(): Promise<void> {
       .upsert(batch, { onConflict: 'complex_id,year_month' })
 
     if (upsertErr) {
-      console.error(`[mgmt-cost] upsert 실패 (배치 ${i / BATCH + 1}):`, upsertErr.message)
-      failCount += batch.length
+      console.error(`  upsert 실패 (배치 ${Math.floor(i / BATCH) + 1}):`, upsertErr.message)
+      fail += batch.length
     } else {
-      successCount += batch.length
-      process.stdout.write(`\r[mgmt-cost] 진행: ${successCount}/${records.length}`)
+      success += batch.length
+      process.stdout.write(`\r  진행: ${success}/${records.length}`)
     }
   }
+  process.stdout.write('\n')
 
-  console.log('\n')
-  console.log('[mgmt-cost] 완료 ─────────────────────────────────')
-  console.log(`  성공: ${successCount}건`)
-  console.log(`  실패: ${failCount}건`)
-  console.log(`  미매칭 단지: ${unmatched.size}개`)
+  return { success, fail, unmatched: unmatched.size }
+}
+
+async function main(): Promise<void> {
+  console.log('[mgmt-cost] 시작 —', new Date().toISOString())
+  if (DRY_RUN) console.log('[mgmt-cost] *** DRY RUN 모드 — DB 적재 없음 ***')
+
+  const files = resolveFiles()
+  console.log(`[mgmt-cost] 처리할 파일: ${files.length}개`)
+  files.forEach(f => console.log(`  - ${path.basename(f)}`))
+
+  // complexes 매핑 1회 로드
+  const { data: complexData, error } = await supabase
+    .from('complexes')
+    .select('id, kapt_code')
+    .not('kapt_code', 'is', null)
+  if (error) {
+    console.error('[mgmt-cost] complexes 조회 실패:', error.message)
+    process.exit(1)
+  }
+  const kaptToId = new Map<string, string>()
+  for (const c of complexData ?? []) {
+    kaptToId.set(c.kapt_code as string, c.id as string)
+  }
+  console.log(`[mgmt-cost] complexes 매핑: ${kaptToId.size}개 단지`)
+
+  let totalSuccess = 0
+  let totalFail = 0
+
+  for (const file of files) {
+    const result = await processFile(file, kaptToId)
+    totalSuccess += result.success
+    totalFail += result.fail
+  }
+
+  console.log('\n[mgmt-cost] ══ 전체 완료 ══════════════════════════')
+  console.log(`  파일 수: ${files.length}개`)
+  console.log(`  총 성공: ${totalSuccess}건`)
+  console.log(`  총 실패: ${totalFail}건`)
   console.log(`  완료 시각: ${new Date().toISOString()}`)
 
-  if (failCount > 0) process.exit(1)
+  if (totalFail > 0) process.exit(1)
 }
 
 main().catch((err: unknown) => {

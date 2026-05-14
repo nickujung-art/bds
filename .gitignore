@@ -41,3 +41,6 @@ phases/**/step*-output.json
 
 # E2E auth storage state (contains session tokens)
 e2e/.auth/user.json
+
+# K-apt 관리비 엑셀 원본 파일 (용량 큼, 민감 데이터 포함 가능)
+data/management-cost/*.xlsx
