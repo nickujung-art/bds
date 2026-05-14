@@ -27,9 +27,17 @@ function ArrUpIcon() {
 
 function formatScore(rankType: RankType, score: number): string {
   if (rankType === 'high_price') return formatPrice(score)
-  if (rankType === 'price_per_pyeong') return `${Math.round(score / 10000).toLocaleString()}만/평`
+  if (rankType === 'price_per_pyeong') return `${Math.round(score).toLocaleString()}만/평`
   if (rankType === 'volume') return `${score}건`
   return `${score}명` // interest
+}
+
+function formatAreaM2(m2: number): string {
+  return `${Math.round(m2)}㎡`
+}
+
+function formatPyeong(m2: number): string {
+  return `${(m2 / 3.3058).toFixed(1)}평`
 }
 
 export function RankingTabs({ initialData }: Props) {
@@ -75,53 +83,72 @@ export function RankingTabs({ initialData }: Props) {
         }}
       >
         {rows.length > 0 ? (
-          rows.map((r) => (
-            <Link
-              key={r.id}
-              href={`/complexes/${r.id}`}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '14px 0',
-                  borderBottom: '1px solid var(--line-subtle)',
-                  gap: 4,
-                }}
+          rows.map((r) => {
+            const href = activeTab === 'high_price' && r.area_m2
+              ? `/complexes/${r.id}?area=${Math.round(r.area_m2)}`
+              : `/complexes/${r.id}`
+            return (
+              <Link
+                key={r.id}
+                href={href}
+                style={{ textDecoration: 'none', color: 'inherit' }}
               >
-                <span
+                <div
                   style={{
-                    width: 24,
-                    font: '700 14px/1 var(--font-sans)',
-                    color: r.rank <= 3 ? 'var(--dj-orange)' : 'var(--fg-tertiary)',
-                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '14px 0',
+                    borderBottom: '1px solid var(--line-subtle)',
+                    gap: 4,
                   }}
                 >
-                  {r.rank}
-                </span>
-                <span style={{ flex: 1, font: '600 14px/1 var(--font-sans)' }}>
-                  {r.canonical_name}
-                </span>
-                {r.rank <= 3 && (
-                  <span style={{ display: 'flex', alignItems: 'center', color: 'var(--dj-orange)' }}>
-                    <ArrUpIcon />
+                  <span
+                    style={{
+                      width: 24,
+                      font: '700 14px/1 var(--font-sans)',
+                      color: r.rank <= 3 ? 'var(--dj-orange)' : 'var(--fg-tertiary)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {r.rank}
                   </span>
-                )}
-                <span
-                  className="tnum"
-                  style={{
-                    font: '500 13px/1 var(--font-sans)',
-                    color: 'var(--fg-sec)',
-                    width: 90,
-                    textAlign: 'right',
-                  }}
-                >
-                  {formatScore(activeTab, r.score)}
-                </span>
-              </div>
-            </Link>
-          ))
+                  <span style={{ flex: 1, font: '600 14px/1 var(--font-sans)', minWidth: 0 }}>
+                    {r.canonical_name}
+                    {activeTab === 'high_price' && r.area_m2 && (
+                      <span
+                        title={formatPyeong(r.area_m2)}
+                        style={{
+                          marginLeft: 5,
+                          font: '500 11px/1 var(--font-sans)',
+                          color: 'var(--fg-tertiary)',
+                          cursor: 'default',
+                        }}
+                      >
+                        {formatAreaM2(r.area_m2)}
+                      </span>
+                    )}
+                  </span>
+                  {r.rank <= 3 && (
+                    <span style={{ display: 'flex', alignItems: 'center', color: 'var(--dj-orange)' }}>
+                      <ArrUpIcon />
+                    </span>
+                  )}
+                  <span
+                    className="tnum"
+                    style={{
+                      font: '500 13px/1 var(--font-sans)',
+                      color: 'var(--fg-sec)',
+                      width: 90,
+                      textAlign: 'right',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {formatScore(activeTab, r.score)}
+                  </span>
+                </div>
+              </Link>
+            )
+          })
         ) : (
           <div
             style={{

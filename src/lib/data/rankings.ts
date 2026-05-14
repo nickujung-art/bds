@@ -16,6 +16,7 @@ export interface RankingRow {
   gu: string | null
   score: number
   rank: number
+  area_m2?: number | null  // 신고가 탭: 해당 거래 면적
 }
 
 // ── 읽기 함수 (createReadonlyClient 또는 admin client 모두 사용 가능) ──────────
@@ -32,7 +33,7 @@ export async function getRankingsByType(
   const { data, error } = await supabase
     .from('complex_rankings')
     .select(`
-      score, rank,
+      score, rank, metadata,
       complexes!inner (id, canonical_name, si, gu)
     `)
     .eq('rank_type', rankType)
@@ -48,6 +49,7 @@ export async function getRankingsByType(
     const r = row as any
     const c = Array.isArray(r.complexes) ? r.complexes[0] : r.complexes
     if (!c) continue
+    const meta = r.metadata as Record<string, unknown> | null
     results.push({
       id: c.id as string,
       canonical_name: c.canonical_name as string,
@@ -55,6 +57,7 @@ export async function getRankingsByType(
       gu: c.gu as string | null,
       score: Number(r.score),
       rank: Number(r.rank),
+      area_m2: typeof meta?.area_m2 === 'number' ? meta.area_m2 : null,
     })
   }
   return results
@@ -65,6 +68,7 @@ export async function getRankingsByType(
 interface AggRow {
   complex_id: string
   score: number
+  metadata?: Record<string, unknown>
 }
 
 async function aggregateHighPrice(supabase: SupabaseClient<Database>): Promise<AggRow[]> {
@@ -74,7 +78,7 @@ async function aggregateHighPrice(supabase: SupabaseClient<Database>): Promise<A
 
   const { data, error } = await supabase
     .from('transactions')
-    .select('complex_id, price')
+    .select('complex_id, price, area_m2')
     .is('cancel_date', null)
     .is('superseded_by', null)
     .eq('deal_type', 'sale')
@@ -86,19 +90,24 @@ async function aggregateHighPrice(supabase: SupabaseClient<Database>): Promise<A
 
   if (error) throw new Error(`aggregateHighPrice failed: ${error.message}`)
 
-  // 단지별 최고가 집계
-  const map = new Map<string, number>()
+  // 단지별 최고가 + 해당 거래 면적 집계
+  const map = new Map<string, { price: number; area_m2: number | null }>()
   for (const row of data ?? []) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const r = row as any
     const cid: string = r.complex_id
     const price: number = r.price
-    if (!map.has(cid) || price > map.get(cid)!) map.set(cid, price)
+    const cur = map.get(cid)
+    if (!cur || price > cur.price) map.set(cid, { price, area_m2: r.area_m2 ?? null })
   }
   return Array.from(map.entries())
-    .sort(([, a], [, b]) => b - a)
+    .sort(([, a], [, b]) => b.price - a.price)
     .slice(0, 100)
-    .map(([complex_id, score]) => ({ complex_id, score }))
+    .map(([complex_id, { price, area_m2 }]) => ({
+      complex_id,
+      score: price,
+      metadata: area_m2 != null ? { area_m2 } : undefined,
+    }))
 }
 
 async function aggregateVolume(supabase: SupabaseClient<Database>): Promise<AggRow[]> {
@@ -231,9 +240,11 @@ export async function computeRankings(
       rank: idx + 1,
       window_days: WINDOW_DAYS,
       computed_at: computedAt,
+      metadata: row.metadata ?? null,
     }))
 
-    const { error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
       .from('complex_rankings')
       .upsert(upsertRows, {
         onConflict: 'rank_type,complex_id,window_days',
