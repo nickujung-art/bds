@@ -68,3 +68,38 @@ export async function getComplexTransactionSummary(
     }),
   )
 }
+
+export interface RawTransaction {
+  dealDate:  string  // "YYYY-MM-DD"
+  yearMonth: string  // "YYYY-MM"
+  price:     number  // 만원
+  area:      number  // m2 (numeric → number)
+}
+
+/**
+ * UX-01/UX-02 — 개별 거래 행 fetch (IQR 계산 + 평형 그룹화 + 기간 slice 원천)
+ * complex_transactions_for_chart RPC 호출 — Phase 9 Wave 0 신규
+ */
+export async function getComplexRawTransactions(
+  complexId: string,
+  dealType: 'sale' | 'jeonse',
+  supabase: SupabaseClient,
+  months = 120,
+): Promise<RawTransaction[]> {
+  const { data, error } = await supabase.rpc('complex_transactions_for_chart', {
+    p_complex_id: complexId,
+    p_deal_type:  dealType,
+    p_months:     months,
+    p_area_m2:    null,  // 전체 평형 fetch — 클라이언트에서 slice
+  })
+  if (error) throw new Error(`getComplexRawTransactions failed: ${error.message}`)
+  if (!data) return []
+  return (data as Array<{ deal_date: string; year_month: string; price: number | string; area_m2: number | string }>).map(
+    (row) => ({
+      dealDate:  row.deal_date,
+      yearMonth: row.year_month,
+      price:     Number(row.price),
+      area:      Number(row.area_m2),
+    }),
+  )
+}
