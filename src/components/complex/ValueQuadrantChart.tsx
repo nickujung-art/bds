@@ -83,11 +83,10 @@ export function ValueQuadrantChart({
       <div
         style={{ position: 'relative' }}
         role="img"
-        aria-label={`단지 가성비 분석 산점도 — ${regionLabel} 내 단지 평당가와 학군점수 비교`}
+        aria-label={`단지 가성비 분석 산점도 — ${regionLabel} 내 단지 평당가와 전세가율 비교`}
       >
-        {/* 스크린 리더 전용 요약 */}
         <p className="sr-only">
-          현재 단지는 {regionLabel} 내 {totalCount}개 단지와 비교한 평당가×학군점수 분포입니다.
+          현재 단지는 {regionLabel} 내 {totalCount}개 단지와 비교한 평당가×전세가율 분포입니다.
         </p>
 
         <ResponsiveContainer width="100%" height={280}>
@@ -102,10 +101,12 @@ export function ValueQuadrantChart({
             />
             <YAxis
               dataKey="y"
-              name="학군점수"
+              name="전세가율"
               type="number"
+              domain={['auto', 'auto']}
+              tickFormatter={(v: number) => `${Math.round(v)}%`}
               tick={{ fontSize: 11, fill: '#9ca3af' }}
-              width={32}
+              width={38}
             />
             <Tooltip
               contentStyle={{
@@ -118,24 +119,12 @@ export function ValueQuadrantChart({
                 const num = typeof value === 'number' ? value : Number(value)
                 return name === '평당가'
                   ? [`${Math.round(num)}만원/평`, '평당가']
-                  : [`${num.toFixed(1)}점`, '학군점수']
+                  : [`${num.toFixed(1)}%`, '전세가율']
               }}
               labelFormatter={(label) => String(label ?? '')}
             />
-            {/* 4분면 구분선 — 시·구 중앙값 기준 */}
-            <ReferenceLine
-              x={medianX}
-              stroke="#d1d5db"
-              strokeDasharray="4 2"
-              strokeWidth={1.5}
-            />
-            <ReferenceLine
-              y={medianY}
-              stroke="#d1d5db"
-              strokeDasharray="4 2"
-              strokeWidth={1.5}
-            />
-            {/* 배경 단지: 회색 */}
+            <ReferenceLine x={medianX} stroke="#d1d5db" strokeDasharray="4 2" strokeWidth={1.5} />
+            <ReferenceLine y={medianY} stroke="#d1d5db" strokeDasharray="4 2" strokeWidth={1.5} />
             <Scatter
               name="배경단지"
               data={backgroundPoints}
@@ -143,7 +132,6 @@ export function ValueQuadrantChart({
               opacity={0.6}
               isAnimationActive={false}
             />
-            {/* 현재 단지: 주황 강조 */}
             <Scatter
               name="현재단지"
               data={targetPoints}
@@ -154,54 +142,18 @@ export function ValueQuadrantChart({
           </ScatterChart>
         </ResponsiveContainer>
 
-        {/* 4분면 라벨 — 절대 위치 div 오버레이 (Recharts SVG 외부) */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 28,
-            left: 12,
-            font: '500 11px/1 var(--font-sans)',
-            color: 'var(--fg-tertiary)',
-            pointerEvents: 'none',
-          }}
-        >
+        {/* 4분면 라벨 */}
+        <div style={{ position: 'absolute', top: 28, left: 44, font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)', pointerEvents: 'none' }}>
           가성비
         </div>
-        <div
-          style={{
-            position: 'absolute',
-            top: 28,
-            right: 12,
-            font: '500 11px/1 var(--font-sans)',
-            color: 'var(--fg-tertiary)',
-            pointerEvents: 'none',
-          }}
-        >
+        <div style={{ position: 'absolute', top: 28, right: 12, font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)', pointerEvents: 'none' }}>
           프리미엄
         </div>
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 28,
-            left: 12,
-            font: '500 11px/1 var(--font-sans)',
-            color: 'var(--fg-tertiary)',
-            pointerEvents: 'none',
-          }}
-        >
-          현실적
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 28,
-            right: 12,
-            font: '500 11px/1 var(--font-sans)',
-            color: 'var(--fg-tertiary)',
-            pointerEvents: 'none',
-          }}
-        >
+        <div style={{ position: 'absolute', bottom: 28, left: 44, font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)', pointerEvents: 'none' }}>
           주의
+        </div>
+        <div style={{ position: 'absolute', bottom: 28, right: 12, font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)', pointerEvents: 'none' }}>
+          고위험
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ export interface QuadrantPoint {
   complexId: string
   complexName: string
   x: number       // 평당가 (만원/평) — price / (area_m2 / 3.3058) / 10000
-  y: number       // 학군점수 (0-100)
+  y: number       // 전세가율 (%) — avg_jeonse_per_pyeong / avg_sale_per_pyeong * 100
   isTarget: boolean
 }
 
@@ -51,86 +51,62 @@ export async function getQuadrantData(
 
   const complexIds = complexList.map(c => c.id)
 
-  // 2. 최근 12개월 sale 거래에서 단지별 평당가 집계
+  // 2. 최근 12개월 매매·전세 거래에서 단지별 평당가 집계
   const twelveMonthsAgo = new Date()
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
-  const fromDate = twelveMonthsAgo.toISOString().slice(0, 10)  // YYYY-MM-DD
+  const fromDate = twelveMonthsAgo.toISOString().slice(0, 10)
 
-  // NOTE: Supabase JS client cannot GROUP BY without an RPC function.
-  // This approach fetches raw rows and aggregates client-side.
-  // Risk: a lower limit may cut low-volume complexes if high-volume ones fill the window.
-  // Phase 6 improvement: create get_avg_price_by_complex() RPC for accurate SQL aggregation.
-  // Mitigation: increased limit to 50000 and order by complex_id to improve locality
-  // (rows for the same complex are contiguous, reducing cross-complex cutoff risk).
-  // H-2: limit(50000) + order('complex_id') — 집계 편향 최소화
-  const { data: txData, error: txErr } = await supabase
+  const txBase = supabase
     .from('transactions')
     .select('complex_id, price, area_m2')
     .in('complex_id', complexIds)
-    .is('cancel_date', null)          // 필수 — CLAUDE.md 대원칙
-    .is('superseded_by', null)        // 필수 — CLAUDE.md 대원칙
-    .eq('deal_type', 'sale')
+    .is('cancel_date', null)
+    .is('superseded_by', null)
     .gte('deal_date', fromDate)
     .gt('area_m2', 0)
-    .order('complex_id')    // group locality — reduce cross-complex cutoff risk
-    .limit(50000)           // increased from 10000 — reduces per-complex skew
+    .order('complex_id')
 
-  if (txErr) throw new Error(`getQuadrantData transactions failed: ${txErr.message}`)
+  const [{ data: saleData, error: saleErr }, { data: jeonseData, error: jeonseErr }] =
+    await Promise.all([
+      txBase.eq('deal_type', 'sale').limit(50000),
+      txBase.eq('deal_type', 'jeonse').limit(30000),
+    ])
 
-  // 단지별 평균 평당가 계산 (만원/평)
-  const priceMap = new Map<string, number[]>()
-  for (const tx of txData ?? []) {
-    if (!tx.complex_id || !tx.price || !tx.area_m2) continue
-    const ppp = (tx.price as number) / ((tx.area_m2 as number) / 3.3058) / 10000
-    if (!priceMap.has(tx.complex_id)) priceMap.set(tx.complex_id, [])
-    priceMap.get(tx.complex_id)!.push(ppp)
-  }
+  if (saleErr) throw new Error(`getQuadrantData sale failed: ${saleErr.message}`)
+  if (jeonseErr) throw new Error(`getQuadrantData jeonse failed: ${jeonseErr.message}`)
 
-  const avgPriceMap = new Map<string, number>()
-  for (const [cid, prices] of priceMap.entries()) {
-    avgPriceMap.set(cid, prices.reduce((a, b) => a + b, 0) / prices.length)
-  }
-
-  // 3. 배정 초등학교 거리로 학군점수 계산
-  // Note: score=0 means school ≥1km away (not null/excluded).
-  // Only complexes with NO is_assignment=true school are excluded from the chart.
-  // A complex 1km+ from its school appears at y≈0 in the chart — this is intentional.
-  // L-3: score=0 동작 문서화
-  //
-  // facility_school.school_type 값은 영문 'elementary' (migration 20260430000004_facility.sql 기준)
-  const { data: schoolData, error: schoolErr } = await supabase
-    .from('facility_school')
-    .select('complex_id, distance_m')
-    .in('complex_id', complexIds)
-    .eq('is_assignment', true)
-    .eq('school_type', 'elementary')
-
-  if (schoolErr) throw new Error(`getQuadrantData school failed: ${schoolErr.message}`)
-
-  // 단지별 가장 가까운 배정 초등학교 거리로 점수 계산
-  const schoolScoreMap = new Map<string, number>()
-  for (const s of schoolData ?? []) {
-    if (!s.complex_id || s.distance_m == null) continue
-    const score = Math.max(0, Math.min(100, 100 - (s.distance_m / 10)))
-    // 가장 가까운 학교 우선
-    const existing = schoolScoreMap.get(s.complex_id)
-    if (existing === undefined || score > existing) {
-      schoolScoreMap.set(s.complex_id, score)
+  function buildAvgPpMap(rows: { complex_id: string | null; price: number | null; area_m2: number | null }[]): Map<string, number> {
+    const acc = new Map<string, number[]>()
+    for (const tx of rows) {
+      if (!tx.complex_id || !tx.price || !tx.area_m2) continue
+      const ppp = (tx.price as number) / ((tx.area_m2 as number) / 3.3058) / 10000
+      if (!acc.has(tx.complex_id)) acc.set(tx.complex_id, [])
+      acc.get(tx.complex_id)!.push(ppp)
     }
+    const avg = new Map<string, number>()
+    for (const [cid, vals] of acc.entries()) {
+      if (vals.length >= 2) avg.set(cid, vals.reduce((a, b) => a + b, 0) / vals.length)
+    }
+    return avg
   }
 
-  // 4. 포인트 조합 (배정 초등학교 없는 단지 제외 — score=0은 포함)
+  const avgSaleMap   = buildAvgPpMap(saleData ?? [])
+  const avgJeonseMap = buildAvgPpMap(jeonseData ?? [])
+
+  // 3. 포인트 조합: 매매+전세 둘 다 있는 단지만 (전세가율 계산 가능)
   const points: QuadrantPoint[] = []
   for (const complex of complexList) {
-    const x = avgPriceMap.get(complex.id)
-    const y = schoolScoreMap.get(complex.id)
-    if (x === undefined || y === undefined) continue  // 데이터 없으면 제외
+    const saleAvg   = avgSaleMap.get(complex.id)
+    const jeonseAvg = avgJeonseMap.get(complex.id)
+    if (!saleAvg || !jeonseAvg) continue
+
+    const jeonseRatio = (jeonseAvg / saleAvg) * 100
 
     points.push({
       complexId: complex.id,
       complexName: complex.canonical_name,
-      x: Math.round(x * 100) / 100,
-      y: Math.round(y * 10) / 10,
+      x: Math.round(saleAvg * 10) / 10,
+      y: Math.round(jeonseRatio * 10) / 10,
       isTarget: complex.id === targetComplexId,
     })
   }
