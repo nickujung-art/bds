@@ -73,7 +73,7 @@ export function TransactionChart({ normal, outliers, dealType }: Props) {
   // D-03: 평균선은 normal만으로 계산 (이상치 제외)
   const avgSeries = aggregateMonthlyAverage(normal)
 
-  // Scatter용 데이터 (normal/outlier 각 점)
+  // Scatter용 데이터 — ComposedChart에서 Scatter의 y값은 dataKey="price"로 명시
   const normalDots  = normal.map(p => ({ yearMonth: p.yearMonth, price: p.price }))
   const outlierDots = outliers.map(p => ({ yearMonth: p.yearMonth, price: p.price }))
 
@@ -99,10 +99,11 @@ export function TransactionChart({ normal, outliers, dealType }: Props) {
           labelFormatter={(label) => String(label)}
           contentStyle={{ fontSize: 12 }}
         />
-        {/* 정상 거래 점 — 채워진 원 */}
+        {/* 정상 거래 점 — 채워진 원, dataKey로 ComposedChart y축 매핑 */}
         <Scatter
           name={LABEL[dealType]}
           data={normalDots}
+          dataKey="price"
           fill="#1d4ed8"
           shape="circle"
         />
@@ -110,6 +111,7 @@ export function TransactionChart({ normal, outliers, dealType }: Props) {
         <Scatter
           name="이상 거래 의심 (분기 IQR 기준)"
           data={outlierDots}
+          dataKey="price"
           fill="transparent"
           stroke="#9ca3af"
           opacity={0.4}

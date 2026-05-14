@@ -11,11 +11,12 @@
  * --debug : 첫 3개 단지 raw API 응답 출력 후 종료
  * --limit N: N개 단지만 처리
  */
-import { loadEnvConfig } from '@next/env'
+import { config as dotenvConfig } from 'dotenv'
+import path from 'path'
 import { createClient } from '@supabase/supabase-js'
 import { fetchKaptBasicInfo, fetchKaptDetailInfo } from '../src/services/kapt'
 
-loadEnvConfig(process.cwd())
+dotenvConfig({ path: path.resolve(process.cwd(), '.env.local') })
 
 if (!process.env.KAPT_API_KEY) {
   console.error('[kapt-facility] KAPT_API_KEY 환경변수가 없습니다.')

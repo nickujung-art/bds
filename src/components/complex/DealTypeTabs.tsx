@@ -32,11 +32,12 @@ export function DealTypeTabs({ rawSaleData, rawJeonseData }: Props) {
   const [active, setActive] = useState<DealTab>('sale')
 
   // D-02: 기간 필터 nuqs URL 상태 (기본값 '3y', clearOnDefault로 URL 청소)
+  // shallow:true — 필터 변경 시 서버 컴포넌트 재요청 방지 (클라이언트 슬라이스만)
   const [period, setPeriod] = useQueryState(
     'period',
     parseAsStringEnum<PeriodKey>(['1y', '3y', '5y', 'all'])
       .withDefault('3y')
-      .withOptions({ clearOnDefault: true }),
+      .withOptions({ clearOnDefault: true, shallow: true, history: 'replace' }),
   )
 
   // 활성 탭의 raw 데이터
@@ -49,7 +50,9 @@ export function DealTypeTabs({ rawSaleData, rawJeonseData }: Props) {
   // D-04: 평형 필터 nuqs URL 상태 (기본값 = 최다 거래 평형)
   const [area, setArea] = useQueryState(
     'area',
-    parseAsString.withDefault(defaultArea != null ? String(defaultArea) : ''),
+    parseAsString
+      .withDefault(defaultArea != null ? String(defaultArea) : '')
+      .withOptions({ shallow: true, history: 'replace' }),
   )
 
   // 현재 선택된 평형 (URL에 없거나 빈 값이면 default)
