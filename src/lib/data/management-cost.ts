@@ -44,12 +44,14 @@ export async function getManagementCostMonthly(
 }
 
 export interface SeasonalAverages {
-  summerAvg:     number | null  // 하절기 (6~9월) 총 단지 합계 월평균
-  winterAvg:     number | null  // 동절기 (10~3월) 총 단지 합계 월평균
-  summerPerUnit: number | null  // 세대당 하절기 월평균
-  winterPerUnit: number | null  // 세대당 동절기 월평균
-  summerCount:   number         // 하절기 row 개수
-  winterCount:   number         // 동절기 row 개수
+  overallAvg:     number | null  // 전체 월평균 (단지 합계)
+  overallPerUnit: number | null  // 세대당 전체 월평균
+  summerAvg:      number | null  // 하절기 (6~9월) 단지 합계 월평균
+  winterAvg:      number | null  // 동절기 (10~3월) 단지 합계 월평균
+  summerPerUnit:  number | null  // 세대당 하절기 월평균
+  winterPerUnit:  number | null  // 세대당 동절기 월평균
+  summerCount:    number         // 하절기 row 개수
+  winterCount:    number         // 동절기 row 개수
 }
 
 function monthOf(yearMonth: string): number {
@@ -95,10 +97,13 @@ export function getSeasonalAverages(
     return Math.round(av / householdCount)
   }
 
-  const summerAvg = avg(summer)
-  const winterAvg = avg(winter)
+  const overallAvg = avg(rows)
+  const summerAvg  = avg(summer)
+  const winterAvg  = avg(winter)
 
   return {
+    overallAvg,
+    overallPerUnit: perUnit(overallAvg),
     summerAvg,
     winterAvg,
     summerPerUnit: perUnit(summerAvg),
