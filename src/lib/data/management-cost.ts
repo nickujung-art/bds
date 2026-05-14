@@ -33,7 +33,7 @@ export async function getManagementCostMonthly(
     )
     .eq('complex_id', complexId)
     .order('year_month', { ascending: false })
-    .limit(6)
+    .limit(24)
 
   if (error) {
     console.error('[management-cost] getManagementCostMonthly 조회 실패:', error.message)
@@ -71,6 +71,29 @@ function rowTotal(r: ManagementCostRow): number {
   return (r.common_cost_total ?? 0)
     + (r.individual_cost_total ?? 0)
     + (r.long_term_repair_monthly ?? 0)
+}
+
+/**
+ * 하절기·동절기 모두 데이터가 있는 가장 최근 연도의 rows를 반환.
+ * 2026년이 아직 하절기 전이라면 2025년으로 fallback.
+ */
+export function selectBaseYearRows(rows: ManagementCostRow[]): { rows: ManagementCostRow[]; baseYear: number | null } {
+  const byYear = new Map<number, ManagementCostRow[]>()
+  for (const r of rows) {
+    const year = parseInt(r.year_month.slice(0, 4), 10)
+    const arr = byYear.get(year) ?? []
+    arr.push(r)
+    byYear.set(year, arr)
+  }
+  const years = [...byYear.keys()].sort((a, b) => b - a)
+  for (const year of years) {
+    const yr = byYear.get(year) ?? []
+    const hasSummer = yr.some(r => isSummer(monthOf(r.year_month)))
+    const hasWinter = yr.some(r => isWinter(monthOf(r.year_month)))
+    if (hasSummer && hasWinter) return { rows: yr, baseYear: year }
+  }
+  // fallback: 그냥 전체 사용
+  return { rows, baseYear: null }
 }
 
 /**

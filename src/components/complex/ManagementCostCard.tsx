@@ -1,5 +1,5 @@
 import type { ManagementCostRow } from '@/lib/data/management-cost'
-import { getSeasonalAverages } from '@/lib/data/management-cost'
+import { getSeasonalAverages, selectBaseYearRows } from '@/lib/data/management-cost'
 
 interface Props {
   rows: ManagementCostRow[]
@@ -23,8 +23,9 @@ export function ManagementCostCard({ rows, householdCount }: Props) {
   if (rows.length === 0) return null
 
   const latest = rows[0]!
-  const oldest = rows[rows.length - 1]!
-  const seasonal = getSeasonalAverages(rows, householdCount)
+  const { rows: baseRows, baseYear } = selectBaseYearRows(rows)
+  const oldest = baseRows[baseRows.length - 1]!
+  const seasonal = getSeasonalAverages(baseRows, householdCount)
   const noUnitData = householdCount == null || householdCount <= 0
 
   const hasBothSeasons = seasonal.summerCount > 0 && seasonal.winterCount > 0
@@ -51,7 +52,7 @@ export function ManagementCostCard({ rows, householdCount }: Props) {
       >
         <h3 style={{ font: '700 15px/1.4 var(--font-sans)', margin: 0 }}>관리비</h3>
         <span style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)' }}>
-          K-apt 기준 · 최근 {fmtMonth(latest.year_month)}
+          K-apt 기준 · {baseYear ? `${baseYear}년` : `최근 ${fmtMonth(latest.year_month)}`}
         </span>
       </div>
 
