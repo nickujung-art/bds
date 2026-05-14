@@ -56,20 +56,18 @@ export async function getQuadrantData(
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
   const fromDate = twelveMonthsAgo.toISOString().slice(0, 10)
 
-  const txBase = supabase
-    .from('transactions')
-    .select('complex_id, price, area_m2')
-    .in('complex_id', complexIds)
-    .is('cancel_date', null)
-    .is('superseded_by', null)
-    .gte('deal_date', fromDate)
-    .gt('area_m2', 0)
-    .order('complex_id')
-
+  // txBase를 공유하면 Supabase 쿼리 빌더가 동일 객체를 mutate해서 deal_type 필터 충돌
+  // → 매매·전세 각각 독립 체인으로 분리
   const [{ data: saleData, error: saleErr }, { data: jeonseData, error: jeonseErr }] =
     await Promise.all([
-      txBase.eq('deal_type', 'sale').limit(50000),
-      txBase.eq('deal_type', 'jeonse').limit(30000),
+      supabase.from('transactions').select('complex_id, price, area_m2')
+        .in('complex_id', complexIds).is('cancel_date', null).is('superseded_by', null)
+        .eq('deal_type', 'sale').gte('deal_date', fromDate).gt('area_m2', 0)
+        .order('complex_id').limit(50000),
+      supabase.from('transactions').select('complex_id, price, area_m2')
+        .in('complex_id', complexIds).is('cancel_date', null).is('superseded_by', null)
+        .eq('deal_type', 'jeonse').gte('deal_date', fromDate).gt('area_m2', 0)
+        .order('complex_id').limit(30000),
     ])
 
   if (saleErr) throw new Error(`getQuadrantData sale failed: ${saleErr.message}`)
