@@ -93,7 +93,6 @@ export function TransactionChart({ normal, outliers, dealType }: Props) {
           tick={{ fontSize: 11 }}
           tickFormatter={formatPrice}
           width={56}
-          dataKey="price"
         />
         <Tooltip
           formatter={tooltipPrice}

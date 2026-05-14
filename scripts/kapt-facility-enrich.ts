@@ -59,9 +59,9 @@ async function main(): Promise<void> {
     .not('kapt_code', 'is', null)
     .order('canonical_name')
 
-  if (LIMIT) query.limit(LIMIT)
+  const limitedQuery = LIMIT ? query.limit(LIMIT) : query
 
-  const { data, error } = await query
+  const { data, error } = await limitedQuery
   if (error) {
     console.error('[kapt-facility] complexes 조회 실패:', error.message)
     process.exit(1)

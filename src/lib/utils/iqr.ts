@@ -16,7 +16,7 @@ export interface IqrResult {
 }
 
 export function computeIqrOutliers(points: PricePoint[]): IqrResult {
-  if (points.length < 2) {
+  if (points.length < 4) {
     return { normal: [...points], outliers: [] }
   }
 

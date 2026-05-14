@@ -125,7 +125,6 @@ export default async function ComplexDetailPage({ params }: Props) {
 
   const [
     saleData,
-    _jeonseData,
     sidebarAds,
     reviews,
     reviewStats,
@@ -140,7 +139,6 @@ export default async function ComplexDetailPage({ params }: Props) {
     rawJeonseData,
   ] = await Promise.all([
     getComplexTransactionSummary(id, 'sale', supabase),
-    getComplexTransactionSummary(id, 'jeonse', supabase),
     getActiveAds('sidebar', supabase),
     getReviewsWithComments(id, supabase),
     getComplexReviewStats(id, supabase),

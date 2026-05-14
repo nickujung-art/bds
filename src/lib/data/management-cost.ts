@@ -35,7 +35,11 @@ export async function getManagementCostMonthly(
     .order('year_month', { ascending: false })
     .limit(6)
 
-  if (error || !data) return []
+  if (error) {
+    console.error('[management-cost] getManagementCostMonthly 조회 실패:', error.message)
+    return []
+  }
+  if (!data) return []
   return data as ManagementCostRow[]
 }
 
