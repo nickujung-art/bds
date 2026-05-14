@@ -528,22 +528,22 @@ const parkingPerUnit = facilityKapt?.parking_count && complex.household_count
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **building_count 추가 방식**
    - What we know: `kaptDongCnt` 필드가 `kaptBasicInfoSchema`에 존재하나 DB에 없음. `kapt-enrich.ts`는 `complexes` 테이블 상세정보를 채우고, `kapt-facility-enrich.ts`는 `facility_kapt`를 채움.
-   - What's unclear: `building_count`를 `complexes`에 넣을지 `facility_kapt`에 넣을지. complexes에 있으면 kapt-enrich.ts 수정 필요. facility_kapt에 있으면 kapt-facility-enrich.ts 수정 필요.
-   - Recommendation: `facility_kapt.building_count`가 적합 (다른 시설 정보와 함께 있고, kapt-facility-enrich.ts 수정으로 처리). 단, 마이그레이션 + 스크립트 재실행 비용 고려. Claude's Discretion 허용 범위인 "null → 숨김" 전략이 더 간단할 수 있음.
+   - What's unclear: `building_count`를 `complexes`에 넣을지 `facility_kapt`에 넣을지.
+   - RESOLVED: `facility_kapt.building_count` 컬럼 추가 (09-00-PLAN.md Task 1 마이그레이션). `kapt-facility-enrich.ts`에서 `kaptDongCnt` 저장 추가 (09-00-PLAN.md Task 2). 데이터가 없는 기존 단지는 null → 엘리베이터 동당 항목 숨김 처리 (09-03-PLAN.md).
 
 2. **IQR 계산 단위 (거래 전체 vs 월 단위)**
-   - What we know: CONTEXT.md D-03 "그래프 선(평균선)에서는 이상치 제외". 즉 이상치는 평균 계산에서 빼고 점으로만 표시.
+   - What we know: CONTEXT.md D-03 "그래프 선(평균선)에서는 이상치 제외". 이상치는 평균 계산에서 빼고 점으로만 표시.
    - What's unclear: IQR을 전체 기간 데이터로 계산할지, 분기별/연도별로 계산할지.
-   - Recommendation: CONTEXT.md에 "분기 IQR 기준"이라는 표현이 있으므로 분기(3개월) 단위 IQR 계산. 쿼터별로 Q1/Q3 산출 후 1.5×IQR 범위 설정.
+   - RESOLVED: 전체 기간 데이터 기반 IQR 계산 채택 (09-01-PLAN.md iqr.ts 유틸리티). 분기별 IQR은 데이터가 적은 단지에서 의미없는 결과를 낼 수 있어 전체 기간 단일 IQR이 더 안정적임.
 
 3. **페이지 revalidate 유지 여부**
-   - What we know: `export const revalidate = 86400`. nuqs의 `useQueryState`는 클라이언트에서만 작동해서 searchParams를 RSC에서 읽지 않으면 ISR 유지됨.
+   - What we know: `export const revalidate = 86400`. nuqs의 `useQueryState`는 클라이언트에서만 작동.
    - What's unclear: Next.js 15의 PPR(Partial Prerendering) 환경에서 동작 변화 가능성.
-   - Recommendation: searchParams를 RSC에서 읽지 않는 순수 클라이언트 URL 상태 전략으로 확정.
+   - RESOLVED: `page.tsx`에서 `searchParams`를 읽지 않음으로써 ISR(`revalidate = 86400`) 유지 확정 (09-02-PLAN.md 아키텍처). `period`, `area` 파라미터는 클라이언트 컴포넌트 `DealTypeTabs`의 `useQueryState`로만 관리.
 
 ---
 

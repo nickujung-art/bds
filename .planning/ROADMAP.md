@@ -1,6 +1,6 @@
 # Roadmap — 단지온도
 
-**8 phases** | **37 requirements mapped** | All v1~v3 requirements covered ✓
+**9 phases** | **41 requirements mapped** | v1~v4 requirements covered ✓
 
 ## Overview
 
@@ -14,6 +14,7 @@
 | 6 | AI·차별화 기술 | V2.0 | 기술 차별화 — AI 봇 + 고도화 분석 | DIFF-03, DATA-06~07, AD-01~02, AUTH-01 | 📋 Planned (5 plans) |
 | 7 | 데이터 파이프라인 수리 | V2.0 | 단지↔거래 연결 + KAPT 단지정보 적재 — 서비스 데이터 기반 완성 | DATA-08~10 | ✅ Complete |
 | 8 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
+| 9 | 단지 상세 UX 고도화 | V2.1 | 실거래가 그래프·시설·관리비 실수요자 관점 개선 | UX-01~04 | 📋 Planned (5 plans) |
 
 ---
 
@@ -381,6 +382,42 @@
 - 카페 글 단지 매칭: matchComplex() 파이프라인 필수 — 단지명 단독 매칭 절대 금지
 - 전화번호 저장: RLS owner-only + 로그 출력 금지
 - AI 슬롭 금지: backdrop-blur, gradient-text, glow, 보라/인디고 (TierBadge, CompareTable 포함)
+
+---
+
+### Phase 9: 단지 상세 UX 고도화
+
+**Goal:** 실거래가 그래프·시설 정보·관리비 섹션을 실수요자 관점으로 재설계. 평형별 데이터 분리, 기간 필터, 이상치 처리로 신뢰성 높은 단지 상세 완성.
+
+**Version:** V2.1
+
+**Requirements:**
+- UX-01: 실거래가 그래프 — 월세 탭 제거 + 기간 필터(1년/3년/5년/전체) + IQR 이상치 투명 점 표시
+- UX-02: 실거래가·관리비 평형별 필터 — 전용면적 기준 칩 셀렉터(nuqs URL 상태), 기본값 최다 거래 평형
+- UX-03: 시설 정보 표시 개선 — 주차 세대당 + 엘리베이터 동당 표시
+- UX-04: 관리비 계절별 표시 — 상세내역 제거 + 하절기/동절기 월평균 + 세대당 평균 (단지 합계 ÷ 세대수, 평형별 분리 없음)
+
+**Plans:** 5 plans / 3 waves
+
+**Wave 0** *(BLOCKING — autonomous: false, supabase db push 필요)*
+- [ ] 09-00-PLAN.md — DB 마이그레이션 (building_count + complex_transactions_for_chart RPC) + kapt-facility-enrich.ts 갱신 + RED 테스트 스캐폴드
+
+**Wave 1** *(blocked on Wave 0; 09-01/09-03 병렬 실행 가능 — files_modified 무중복)*
+- [ ] 09-01-PLAN.md — 데이터 레이어 + 순수 유틸리티 (iqr.ts, period-filter.ts, area-groups.ts, facility-format.ts, getComplexRawTransactions, getSeasonalAverages) (UX-01/02/03/04)
+- [ ] 09-03-PLAN.md — 시설 카드 주차/엘리베이터 표시 개선 (page.tsx) (UX-03)
+
+**Wave 2** *(blocked on Wave 1; 09-02/09-04 병렬 실행 가능 — files_modified 무중복)*
+- [ ] 09-02-PLAN.md — DealTypeTabs + TransactionChart 재작성 (월세 제거 + nuqs period/area + 평형 칩 + IQR 투명 점) + page.tsx raw fetch 연결 (UX-01, UX-02)
+- [ ] 09-04-PLAN.md — ManagementCostCard 재작성 (계절별 표시 + 상세 항목 제거 + fallback) (UX-04)
+
+**Success Criteria:**
+1. 실거래가 그래프에 월세 탭이 없고, 기간 필터(1/3/5/전체)가 URL 상태로 동작한다
+2. IQR 1.5배 기준 이상치가 투명 점으로 구분 표시된다
+3. 평형 칩 선택 시 그래프·목록이 해당 평형 데이터만 표시된다 (URL 공유 가능)
+4. 시설 카드에 주차가 "세대당 N.N대", 엘리베이터가 "동당 N대"로 표시된다
+5. 관리비 카드에 하절기/동절기 월평균이 표시된다
+
+**UI hint**: yes
 
 ---
 

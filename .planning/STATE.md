@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
+milestone: v2.1
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-13T00:00:00Z"
-last_activity: 2026-05-13 — Phase 8 COMPLETE (7/7 plans — Wave 0~3 완료, V2.0 커뮤니티 심화)
+last_updated: "2026-05-14T00:00:00Z"
+last_activity: 2026-05-14 — Phase 9 PLANNED (5/5 plans — Wave 0~2, 단지 상세 UX 고도화)
 progress:
-  total_phases: 8
+  total_phases: 9
   completed_phases: 7
-  total_plans: 34
+  total_plans: 39
   completed_plans: 34
-  percent: 95
+  percent: 87
 ---
 
 # Project State — 단지온도
@@ -82,6 +82,19 @@ Waves:
 | 6 | AI·차별화 기술 | 📋 Planned |
 | 7 | 데이터 파이프라인 수리 | ✅ Complete |
 | 8 | 커뮤니티 심화·자동화 | ✅ Complete (7/7 plans) |
+| 9 | 단지 상세 UX 고도화 | 📋 Planned (5 plans) |
+
+---
+
+**Phase 9: 단지 상세 UX 고도화** 📋 Planned
+
+Goal: 실거래가 그래프·시설 정보·관리비 섹션을 실수요자 관점으로 재설계
+
+Requirements: UX-01~04
+
+Plans: 5 plans ready (09-00 ~ 09-04) — planned 2026-05-14
+
+Next step: /gsd-execute-phase 9 (start with Wave 0: 09-00-PLAN.md — supabase db push 필요)
 
 ## Key Context for Agents
 
