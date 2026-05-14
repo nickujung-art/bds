@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createReadonlyClient } from '@/lib/supabase/readonly'
-import { getComplexById, getComplexTransactionSummary } from '@/lib/data/complex-detail'
+import { getComplexById, getComplexTransactionSummary, getComplexRawTransactions } from '@/lib/data/complex-detail'
 import { getActiveAds } from '@/lib/data/ads'
 import { getComplexReviewStats } from '@/lib/data/reviews'
 import { getReviewsWithComments } from '@/lib/data/comments'
@@ -126,7 +126,6 @@ export default async function ComplexDetailPage({ params }: Props) {
   const [
     saleData,
     jeonseData,
-    monthlyData,
     sidebarAds,
     reviews,
     reviewStats,
@@ -137,10 +136,11 @@ export default async function ComplexDetailPage({ params }: Props) {
     districtStats,
     cafePosts,
     managementCostRows,
+    rawSaleData,
+    rawJeonseData,
   ] = await Promise.all([
     getComplexTransactionSummary(id, 'sale', supabase),
     getComplexTransactionSummary(id, 'jeonse', supabase),
-    getComplexTransactionSummary(id, 'monthly', supabase),
     getActiveAds('sidebar', supabase),
     getReviewsWithComments(id, supabase),
     getComplexReviewStats(id, supabase),
@@ -183,6 +183,9 @@ export default async function ComplexDetailPage({ params }: Props) {
     getCafePostsByComplex(id, supabase).catch(() => []),
     // 관리비 (오류 시 빈 배열 fallback)
     getManagementCostMonthly(id, supabase).catch(() => []),
+    // raw 거래 데이터 (IQR + 평형 칩 클라이언트 슬라이스용)
+    getComplexRawTransactions(id, 'sale', supabase).catch(() => []),
+    getComplexRawTransactions(id, 'jeonse', supabase).catch(() => []),
   ])
 
   const facilityKapt = facilityKaptResult?.data ?? null
@@ -392,9 +395,8 @@ export default async function ComplexDetailPage({ params }: Props) {
               <GapLabel gap={gap} />
             </div>
             <DealTypeTabs
-              saleData={saleData}
-              jeonseData={jeonseData}
-              monthlyData={monthlyData}
+              rawSaleData={rawSaleData}
+              rawJeonseData={rawJeonseData}
             />
           </div>
 
