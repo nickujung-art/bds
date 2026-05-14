@@ -23,6 +23,8 @@ import { CafePostsList } from '@/components/complex/CafePostsList'
 import { getCafePostsByComplex } from '@/lib/data/cafe-posts'
 import { getManagementCostMonthly } from '@/lib/data/management-cost'
 import { ManagementCostCard } from '@/components/complex/ManagementCostCard'
+import { getComplexFacilityEdu } from '@/lib/data/facility-edu'
+import { EducationCard } from '@/components/complex/EducationCard'
 import { formatParkingPerUnit, formatElevatorPerBuilding } from '@/lib/utils/facility-format'
 
 export const revalidate = 86400
@@ -135,6 +137,7 @@ export default async function ComplexDetailPage({ params }: Props) {
     districtStats,
     cafePosts,
     managementCostRows,
+    facilityEdu,
     rawSaleData,
     rawJeonseData,
   ] = await Promise.all([
@@ -181,6 +184,8 @@ export default async function ComplexDetailPage({ params }: Props) {
     getCafePostsByComplex(id, supabase).catch(() => []),
     // 관리비 (오류 시 빈 배열 fallback)
     getManagementCostMonthly(id, supabase).catch(() => []),
+    // 교육 환경 (오류 시 빈 데이터 fallback)
+    getComplexFacilityEdu(id, supabase).catch(() => ({ schools: [], hagwons: [], daycares: [], hagwonStats: null })),
     // raw 거래 데이터 (IQR + 평형 칩 클라이언트 슬라이스용)
     getComplexRawTransactions(id, 'sale', supabase).catch(() => []),
     getComplexRawTransactions(id, 'jeonse', supabase).catch(() => []),
@@ -613,6 +618,9 @@ export default async function ComplexDetailPage({ params }: Props) {
             rows={managementCostRows}
             householdCount={complex.household_count}
           />
+
+          {/* 교육 환경 */}
+          <EducationCard data={facilityEdu} />
 
           {/* 재건축 타임라인 — status='in_redevelopment' 단지만 표시 */}
           {complex.status === 'in_redevelopment' && redevelopmentProject && (

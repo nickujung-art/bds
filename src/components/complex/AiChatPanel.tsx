@@ -103,8 +103,8 @@ export function AiChatPanel({ complexId, complexName }: AiPanelProps) {
     return () => document.removeEventListener('keydown', handler)
   }, [isOpen])
 
-  async function sendMessage() {
-    const content = inputValue.trim()
+  async function sendMessage(overrideContent?: string) {
+    const content = (overrideContent ?? inputValue).trim()
     if (!content || isPending) return
 
     const userMsg: ChatMessage = { role: 'user', content }
@@ -141,34 +141,24 @@ export function AiChatPanel({ complexId, complexName }: AiPanelProps) {
         if (done) break
         const chunk = decoder.decode(value)
         for (const line of chunk.split('\n')) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6)) as {
-                type?: string
-                delta?: { type?: string; text?: string }
-              }
-              if (
-                data.type === 'content_block_delta' &&
-                data.delta?.type === 'text_delta' &&
-                data.delta.text
-              ) {
-                assistantText += data.delta.text
-                // 실시간 스트리밍 업데이트
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  const lastIdx = updated.length - 1
-                  if (updated[lastIdx]?.isPending) {
-                    updated[lastIdx] = {
-                      role: 'assistant',
-                      content: assistantText,
-                    }
-                  }
-                  return updated
-                })
-              }
-            } catch {
-              // SSE 파싱 오류 무시
+          if (!line.startsWith('data: ')) continue
+          const raw = line.slice(6)
+          if (raw === '[DONE]') break
+          try {
+            const data = JSON.parse(raw) as { text?: string }
+            if (data.text) {
+              assistantText += data.text
+              setMessages((prev) => {
+                const updated = [...prev]
+                const lastIdx = updated.length - 1
+                if (updated[lastIdx]?.isPending) {
+                  updated[lastIdx] = { role: 'assistant', content: assistantText }
+                }
+                return updated
+              })
             }
+          } catch {
+            // SSE 파싱 오류 무시
           }
         }
       }
@@ -202,6 +192,13 @@ export function AiChatPanel({ complexId, complexName }: AiPanelProps) {
       setIsPending(false)
     }
   }
+
+  const SAMPLE_QUESTIONS = [
+    '최근 실거래가 흐름이 어때?',
+    '관리비가 어느 정도 돼?',
+    '주차 공간이 충분한가요?',
+    '주변 학교가 어디야?',
+  ]
 
   const welcomeMessage: ChatMessage = {
     role: 'assistant',
@@ -369,6 +366,41 @@ export function AiChatPanel({ complexId, complexName }: AiPanelProps) {
               </div>
             ))}
           </div>
+
+          {/* 샘플 질문 — 대화 시작 전에만 표시 */}
+          {messages.length === 0 && (
+            <div
+              style={{
+                padding: '0 16px 12px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '6px',
+                flexShrink: 0,
+              }}
+            >
+              {SAMPLE_QUESTIONS.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => void sendMessage(q)}
+                  disabled={isPending}
+                  style={{
+                    padding: '5px 11px',
+                    borderRadius: 20,
+                    border: '1px solid var(--line-default)',
+                    background: 'var(--bg-surface)',
+                    color: 'var(--fg-secondary)',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* 입력 영역 */}
           <div
