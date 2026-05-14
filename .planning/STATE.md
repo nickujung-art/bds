@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: milestone
-status: in_progress
-last_updated: "2026-05-14T12:00:00Z"
-last_activity: 2026-05-14 — Phase 6 COMPLETE (5/5 plans — AI·차별화 기술 전체 구현 완료)
+status: complete
+last_updated: "2026-05-14T14:30:00Z"
+last_activity: 2026-05-14 — Phase 9 COMPLETE (5/5 plans — 단지 상세 UX 고도화 완료)
 progress:
   total_phases: 9
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 44
-  completed_plans: 39
-  percent: 89
+  completed_plans: 44
+  percent: 100
 ---
 
 # Project State — 단지온도
@@ -86,19 +86,24 @@ Waves:
 | 6 | AI·차별화 기술 | ✅ Complete |
 | 7 | 데이터 파이프라인 수리 | ✅ Complete |
 | 8 | 커뮤니티 심화·자동화 | ✅ Complete (7/7 plans) |
-| 9 | 단지 상세 UX 고도화 | 📋 Planned (5 plans) |
+| 9 | 단지 상세 UX 고도화 | ✅ Complete (5/5 plans) |
 
 ---
 
-**Phase 9: 단지 상세 UX 고도화** 📋 Planned
+**Phase 9: 단지 상세 UX 고도화** ✅ Complete
 
 Goal: 실거래가 그래프·시설 정보·관리비 섹션을 실수요자 관점으로 재설계
 
 Requirements: UX-01~04
 
-Plans: 5 plans ready (09-00 ~ 09-04) — planned 2026-05-14
+Plans: 5/5 complete (09-00 ~ 09-04) — UAT complete 2026-05-14
 
-Next step: /gsd-execute-phase 9 (start with Wave 0: 09-00-PLAN.md — supabase db push 필요)
+Waves:
+- Wave 0: 09-00 (DB 마이그레이션 — management_cost_kapt, facility_kapt 스키마) ✅
+- Wave 1: 09-01 (IQR 이상치 필터·기간 필터·평형 칩 URL 상태 — nuqs shallow), 09-02 (ManagementCostCard 3-column) ✅
+- Wave 2: 09-03 (FacilitiesCard 세대당/동당 표시), 09-04 (K-apt building_count 적재 — 669개) ✅
+
+Key fixes (UAT): nuqs shallow:true, Recharts Scatter dataKey, building_count 667/669 DB 적재
 
 ## Key Context for Agents
 
