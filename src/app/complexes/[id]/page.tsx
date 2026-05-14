@@ -125,7 +125,7 @@ export default async function ComplexDetailPage({ params }: Props) {
 
   const [
     saleData,
-    jeonseData,
+    _jeonseData,
     sidebarAds,
     reviews,
     reviewStats,
