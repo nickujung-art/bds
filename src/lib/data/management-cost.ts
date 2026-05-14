@@ -38,3 +38,68 @@ export async function getManagementCostMonthly(
   if (error || !data) return []
   return data as ManagementCostRow[]
 }
+
+export interface SeasonalAverages {
+  summerAvg:     number | null  // 하절기 (6~9월) 총 단지 합계 월평균
+  winterAvg:     number | null  // 동절기 (10~3월) 총 단지 합계 월평균
+  summerPerUnit: number | null  // 세대당 하절기 월평균
+  winterPerUnit: number | null  // 세대당 동절기 월평균
+  summerCount:   number         // 하절기 row 개수
+  winterCount:   number         // 동절기 row 개수
+}
+
+function monthOf(yearMonth: string): number {
+  // "YYYY-MM-01" → 6,7,8,9,...
+  return parseInt(yearMonth.slice(5, 7), 10)
+}
+
+function isSummer(m: number): boolean {
+  return m >= 6 && m <= 9
+}
+
+function isWinter(m: number): boolean {
+  return m >= 10 || m <= 3
+}
+
+function rowTotal(r: ManagementCostRow): number {
+  return (r.common_cost_total ?? 0)
+    + (r.individual_cost_total ?? 0)
+    + (r.long_term_repair_monthly ?? 0)
+}
+
+/**
+ * UX-04 — 하절기(6~9월) vs 동절기(10~3월) 월평균 집계
+ * 호출자(ManagementCostCard)가 summerCount/winterCount로 D-08 "4개월 이상 데이터 있을 때만 표시" 분기 결정.
+ * 평균은 단지 합계 기준. 세대당은 합계 / householdCount.
+ */
+export function getSeasonalAverages(
+  rows: ManagementCostRow[],
+  householdCount: number | null,
+): SeasonalAverages {
+  const summer = rows.filter(r => isSummer(monthOf(r.year_month)))
+  const winter = rows.filter(r => isWinter(monthOf(r.year_month)))
+
+  const avg = (subset: ManagementCostRow[]): number | null => {
+    if (subset.length === 0) return null
+    const total = subset.reduce((sum, r) => sum + rowTotal(r), 0)
+    return Math.round(total / subset.length)
+  }
+
+  const perUnit = (av: number | null): number | null => {
+    if (av == null) return null
+    if (householdCount == null || householdCount <= 0) return null
+    return Math.round(av / householdCount)
+  }
+
+  const summerAvg = avg(summer)
+  const winterAvg = avg(winter)
+
+  return {
+    summerAvg,
+    winterAvg,
+    summerPerUnit: perUnit(summerAvg),
+    winterPerUnit: perUnit(winterAvg),
+    summerCount: summer.length,
+    winterCount: winter.length,
+  }
+}
