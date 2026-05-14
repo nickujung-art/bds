@@ -24,7 +24,8 @@ if (fs.existsSync(envPath)) {
   for (const rawLine of fs.readFileSync(envPath, 'utf8').split('\n')) {
     const line = rawLine.replace(/\r$/, '')
     const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/)
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^"|"$/g, '')
+    const key = m?.[1]; const val = m?.[2]
+    if (key && val !== undefined && !process.env[key]) process.env[key] = val.replace(/^"|"$/g, '')
   }
 }
 
