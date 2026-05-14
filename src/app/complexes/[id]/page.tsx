@@ -23,6 +23,7 @@ import { CafePostsList } from '@/components/complex/CafePostsList'
 import { getCafePostsByComplex } from '@/lib/data/cafe-posts'
 import { getManagementCostMonthly } from '@/lib/data/management-cost'
 import { ManagementCostCard } from '@/components/complex/ManagementCostCard'
+import { formatParkingPerUnit, formatElevatorPerBuilding } from '@/lib/utils/facility-format'
 
 export const revalidate = 86400
 
@@ -185,6 +186,15 @@ export default async function ComplexDetailPage({ params }: Props) {
   ])
 
   const facilityKapt = facilityKaptResult?.data ?? null
+
+  // UX-03 D-06/D-07 환산값 — 세대당 주차 + 동당 엘리베이터
+  const parkingPerUnit = formatParkingPerUnit(
+    (facilityKapt as { parking_count?: number | null } | null)?.parking_count ?? null,
+    complex.household_count,
+  )
+  const elevatorCount = (facilityKapt as { elevator_count?: number | null } | null)?.elevator_count ?? null
+  const buildingCount = (facilityKapt as { building_count?: number | null } | null)?.building_count ?? null
+  const elevatorPerBuilding = formatElevatorPerBuilding(elevatorCount, buildingCount)
 
   // 갭 라벨 계산: 매물가 평당가 - 실거래 평균 평당가 (만원 단위)
   const gap =
@@ -511,9 +521,11 @@ export default async function ComplexDetailPage({ params }: Props) {
                 {[
                   {
                     label: '주차대수',
-                    value: facilityKapt.parking_count != null
-                      ? `총 ${facilityKapt.parking_count.toLocaleString()}면`
-                      : null,
+                    value: parkingPerUnit != null
+                      ? `세대당 ${parkingPerUnit}대 (총 ${(facilityKapt.parking_count as number).toLocaleString()}면)`
+                      : (facilityKapt.parking_count != null
+                          ? `총 ${facilityKapt.parking_count.toLocaleString()}면`
+                          : null),
                   },
                   {
                     label: '세대수',
@@ -536,10 +548,17 @@ export default async function ComplexDetailPage({ params }: Props) {
                     value: ((facilityKapt as unknown) as { management_type?: string | null }).management_type ?? null,
                   },
                   {
+                    label: '동수',
+                    value: buildingCount != null ? `${buildingCount}동` : null,
+                  },
+                  {
                     label: '엘리베이터',
                     value: (() => {
-                      const cnt = ((facilityKapt as unknown) as { elevator_count?: number | null }).elevator_count
-                      return cnt != null ? `${cnt}대` : null
+                      if (elevatorCount == null) return null
+                      if (elevatorPerBuilding != null && buildingCount != null) {
+                        return `동당 ${elevatorPerBuilding}대 (총 ${elevatorCount}대, ${buildingCount}동)`
+                      }
+                      return `${elevatorCount}대`
                     })(),
                   },
                 ]
