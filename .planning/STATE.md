@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-14T00:00:00Z"
-last_activity: 2026-05-14 — Phase 9 PLANNED (5/5 plans — Wave 0~2, 단지 상세 UX 고도화)
+last_updated: "2026-05-14T12:00:00Z"
+last_activity: 2026-05-14 — Phase 6 COMPLETE (5/5 plans — AI·차별화 기술 전체 구현 완료)
 progress:
   total_phases: 9
-  completed_phases: 7
-  total_plans: 39
-  completed_plans: 34
-  percent: 87
+  completed_phases: 8
+  total_plans: 44
+  completed_plans: 39
+  percent: 89
 ---
 
 # Project State — 단지온도
@@ -34,15 +34,19 @@ Plans: 5/5 complete (05-00 ~ 05-04) — verified 2026-05-08
 
 ---
 
-**Phase 6: AI·차별화 기술** 📋 Planned
+**Phase 6: AI·차별화 기술** ✅ Complete
 
 Goal: Claude API RAG 봇 + SGIS 통계 + 광고 고도화 + GPS L2/L3 인증
 
 Requirements: DIFF-03, DATA-06~07, AD-01~02, AUTH-01
 
-Plans: 5 plans ready (06-00 ~ 06-04) — planned 2026-05-08
+Plans: 5/5 complete (06-00 ~ 06-04) — verified 2026-05-14
 
-Next step: /gsd-execute-phase 6 (start with Wave 0: 06-00-PLAN.md)
+Waves:
+- Wave 0: 06-00 (DB 마이그레이션 + @anthropic-ai/sdk + env vars) ✅
+- Wave 1: 06-01 (ratelimit·events·ROI·SGIS·갭 라벨), 06-02 (RAG chat·카피 검토·배치 스크립트) ✅
+- Wave 2: 06-03 (GapLabel·DistrictStatsCard·AiChatPanel·AdRoiTable·AdCopyReviewer UI) ✅
+- Wave 3: 06-04 (GPS L2/L3 인증·어드민 승인 UI·Phase 6 E2E 테스트) ✅
 
 ---
 
@@ -79,7 +83,7 @@ Waves:
 | 3 | 카드뉴스·법적·운영 | ✅ Complete (5/5 plans) |
 | 4 | 커뮤니티 기초 | ✅ Complete |
 | 5 | 데이터 확장·운영 안정성 | ✅ Complete |
-| 6 | AI·차별화 기술 | 📋 Planned |
+| 6 | AI·차별화 기술 | ✅ Complete |
 | 7 | 데이터 파이프라인 수리 | ✅ Complete |
 | 8 | 커뮤니티 심화·자동화 | ✅ Complete (7/7 plans) |
 | 9 | 단지 상세 UX 고도화 | 📋 Planned (5 plans) |
