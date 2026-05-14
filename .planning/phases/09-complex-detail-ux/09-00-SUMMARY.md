@@ -6,8 +6,8 @@ tags: [migration, rpc, kapt, tdd-red, facility]
 dependency_graph:
   requires: []
   provides:
-    - facility_kapt.building_count 컬럼 (마이그레이션 작성 완료, push 대기)
-    - complex_transactions_for_chart RPC (마이그레이션 작성 완료, push 대기)
+    - facility_kapt.building_count 컬럼 (Supabase MCP apply_migration 완료)
+    - complex_transactions_for_chart RPC (Supabase MCP apply_migration 완료)
     - kapt-facility-enrich.ts building_count upsert 경로
     - iqr.test.ts RED 테스트 (Wave 1 GREEN 전환 대상)
     - phase9-ux.test.ts RED 테스트 (Wave 1 GREEN 전환 대상)
@@ -35,7 +35,7 @@ decisions:
 metrics:
   duration: "~8 minutes"
   completed_date: "2026-05-14"
-  tasks_completed: 3
+  tasks_completed: 4
   tasks_total: 4
   files_created: 4
   files_modified: 1
@@ -52,7 +52,7 @@ Wave 1 병렬 실행을 unblock하기 위한 DB 마이그레이션 2개 + kapt-f
 | 1 | building_count 마이그레이션 + complex_transactions_for_chart RPC | DONE | 6e35bcf |
 | 2 | kapt-facility-enrich.ts fetchKaptBasicInfo + building_count upsert | DONE | f5c7882 |
 | 3 | iqr.test.ts + phase9-ux.test.ts RED 스캐폴드 | DONE | a8abbd2 |
-| 4 | supabase db push | CHECKPOINT — 사용자 실행 필요 | — |
+| 4 | supabase db push | DONE (Supabase MCP) | — |
 
 ## What Was Built
 
@@ -112,17 +112,12 @@ None — 계획대로 정확히 실행됨.
 
 없음 — 마이그레이션 파일은 supabase db push 경유만 사용. RPC 내부 cancel_date/superseded_by 필터 하드코딩 완료 (T-9-01).
 
-## Awaiting (Task 4)
+## Task 4 완료
 
-`supabase db push` 실행 필요 — Wave 1 시작 전 반드시 완료.
+`supabase db push` — Supabase MCP `apply_migration` 으로 직접 적용 완료.
 
-검증 명령:
-```powershell
-supabase db push
-supabase db diff  # No changes found 확인
-```
-
-성공 신호: "db-pushed" 입력 후 대화 재개.
+- `phase9_building_count` → `facility_kapt.building_count integer` 컬럼 추가 ✓
+- `phase9_transactions_for_chart` → `complex_transactions_for_chart` RPC 생성 ✓
 
 ## Self-Check: PASSED
 
