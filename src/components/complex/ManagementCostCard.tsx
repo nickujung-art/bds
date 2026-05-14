@@ -23,8 +23,21 @@ export function ManagementCostCard({ rows, householdCount }: Props) {
   if (rows.length === 0) return null
 
   const latest = rows[0]!
+  const oldest = rows[rows.length - 1]!
   const seasonal = getSeasonalAverages(rows, householdCount)
   const noUnitData = householdCount == null || householdCount <= 0
+
+  const hasBothSeasons = seasonal.summerCount > 0 && seasonal.winterCount > 0
+  const onlyWinter = seasonal.winterCount > 0 && seasonal.summerCount === 0
+  const onlySummer = seasonal.summerCount > 0 && seasonal.winterCount === 0
+
+  const gridStyle: React.CSSProperties = {
+    gap:          1,
+    background:   'var(--line-subtle)',
+    border:       '1px solid var(--line-subtle)',
+    borderRadius: 8,
+    overflow:     'hidden',
+  }
 
   return (
     <div className="card" style={{ padding: 20 }}>
@@ -42,43 +55,32 @@ export function ManagementCostCard({ rows, householdCount }: Props) {
         </span>
       </div>
 
-      <div
-        style={{
-          display:             'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap:                 1,
-          background:          'var(--line-subtle)',
-          border:              '1px solid var(--line-subtle)',
-          borderRadius:        8,
-          overflow:            'hidden',
-        }}
-      >
-        <CostBlock
-          label="월평균"
-          sub="전체"
-          perUnit={noUnitData ? null : seasonal.overallPerUnit}
-          count={rows.length}
-          noUnit={noUnitData}
-        />
-        <CostBlock
-          label="하절기"
-          sub="6~9월"
-          perUnit={noUnitData ? null : seasonal.summerPerUnit}
-          count={seasonal.summerCount}
-          noUnit={noUnitData}
-        />
-        <CostBlock
-          label="동절기"
-          sub="10~3월"
-          perUnit={noUnitData ? null : seasonal.winterPerUnit}
-          count={seasonal.winterCount}
-          noUnit={noUnitData}
-        />
-      </div>
+      {hasBothSeasons ? (
+        <div style={{ ...gridStyle, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+          <CostBlock label="월평균" sub="전체" perUnit={noUnitData ? null : seasonal.overallPerUnit} count={rows.length} noUnit={noUnitData} />
+          <CostBlock label="하절기" sub="6~9월" perUnit={noUnitData ? null : seasonal.summerPerUnit} count={seasonal.summerCount} noUnit={noUnitData} />
+          <CostBlock label="동절기" sub="10~3월" perUnit={noUnitData ? null : seasonal.winterPerUnit} count={seasonal.winterCount} noUnit={noUnitData} />
+        </div>
+      ) : (
+        <div style={{ ...gridStyle, display: 'block' }}>
+          <CostBlock label="월평균" sub="전체" perUnit={noUnitData ? null : seasonal.overallPerUnit} count={rows.length} noUnit={noUnitData} />
+        </div>
+      )}
 
       {noUnitData && (
         <p style={{ font: '500 11px/1.4 var(--font-sans)', color: 'var(--fg-tertiary)', margin: '10px 0 0' }}>
           세대수 정보가 없어 세대당 환산이 불가합니다.
+        </p>
+      )}
+
+      {onlyWinter && !noUnitData && (
+        <p style={{ font: '500 11px/1.4 var(--font-sans)', color: 'var(--fg-secondary)', margin: '10px 0 0' }}>
+          동절기({fmtMonth(oldest.year_month)}~{fmtMonth(latest.year_month)}) 데이터만 있습니다. 하절기 데이터는 6월 이후 표시됩니다.
+        </p>
+      )}
+      {onlySummer && !noUnitData && (
+        <p style={{ font: '500 11px/1.4 var(--font-sans)', color: 'var(--fg-secondary)', margin: '10px 0 0' }}>
+          하절기({fmtMonth(oldest.year_month)}~{fmtMonth(latest.year_month)}) 데이터만 있습니다. 동절기 데이터는 10월 이후 표시됩니다.
         </p>
       )}
     </div>
