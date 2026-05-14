@@ -27,18 +27,12 @@ export async function getComplexesForMap(
   return (data ?? []) as ComplexMapItem[]
 }
 
-// ── supercluster 래퍼 (순수 함수) ─────────────────────────
+// ── supercluster 래퍼 ──────────────────────────────────────
 
 export type ClusterFeature = ReturnType<Supercluster['getClusters']>[number]
 
-export function clusterComplexes(
-  complexes: ComplexMapItem[],
-  bounds: [number, number, number, number],  // [westLng, southLat, eastLng, northLat]
-  zoom: number,
-): ClusterFeature[] {
-  if (complexes.length === 0) return []
-
-  const index = new Supercluster({ radius: 60, maxZoom: 14 })
+export function buildClusterIndex(complexes: ComplexMapItem[]) {
+  const index = new Supercluster({ radius: 60, maxZoom: 12 })
   index.load(
     complexes.map((c) => ({
       type: 'Feature' as const,
@@ -46,6 +40,14 @@ export function clusterComplexes(
       properties: { id: c.id, name: c.canonical_name, cluster: false },
     })),
   )
+  return index
+}
 
-  return index.getClusters(bounds, zoom)
+export function clusterComplexes(
+  complexes: ComplexMapItem[],
+  bounds: [number, number, number, number],  // [westLng, southLat, eastLng, northLat]
+  zoom: number,
+): ClusterFeature[] {
+  if (complexes.length === 0) return []
+  return buildClusterIndex(complexes).getClusters(bounds, zoom)
 }

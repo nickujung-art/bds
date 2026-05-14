@@ -1,8 +1,8 @@
 'use client'
 
 import { Map, useKakaoLoader } from 'react-kakao-maps-sdk'
-import { useCallback, useState } from 'react'
-import { clusterComplexes, type ComplexMapItem, type ClusterFeature } from '@/lib/data/complexes-map'
+import { useCallback, useMemo, useState } from 'react'
+import { buildClusterIndex, type ComplexMapItem, type ClusterFeature } from '@/lib/data/complexes-map'
 import { ComplexMarker } from './ComplexMarker'
 import { ClusterMarker } from './ClusterMarker'
 
@@ -23,23 +23,21 @@ export function KakaoMap({ complexes, initialCenter = DEFAULT_CENTER, initialLev
   })
   const [clusters, setClusters] = useState<ClusterFeature[]>([])
 
-  const handleIdle = useCallback(
+  // Supercluster 인덱스는 complexes가 바뀔 때만 재생성
+  const clusterIndex = useMemo(() => buildClusterIndex(complexes), [complexes])
+
+  const computeClusters = useCallback(
     (map: kakao.maps.Map) => {
       const bounds = map.getBounds()
       const sw = bounds.getSouthWest()
       const ne = bounds.getNorthEast()
       // kakao level: 1=가장 확대, 14=가장 축소 → supercluster zoom 역변환
-      // 카카오 level 1 → zoom 19, level 14 → zoom 6 (maxZoom 16 초과 시 개별 핀 표시)
       const zoom = Math.max(0, 20 - map.getLevel())
       setClusters(
-        clusterComplexes(
-          complexes,
-          [sw.getLng(), sw.getLat(), ne.getLng(), ne.getLat()],
-          zoom,
-        ),
+        clusterIndex.getClusters([sw.getLng(), sw.getLat(), ne.getLng(), ne.getLat()], zoom),
       )
     },
-    [complexes],
+    [clusterIndex],
   )
 
   if (loading) return (
@@ -60,8 +58,9 @@ export function KakaoMap({ complexes, initialCenter = DEFAULT_CENTER, initialLev
       center={initialCenter}
       level={initialLevel}
       className="h-full w-full"
-      onIdle={handleIdle}
-      onTileLoaded={handleIdle}
+      onCreate={computeClusters}
+      onIdle={computeClusters}
+      onTileLoaded={computeClusters}
     >
       {clusters.map((feature, i) => {
         const lng = feature.geometry.coordinates[0] ?? 0

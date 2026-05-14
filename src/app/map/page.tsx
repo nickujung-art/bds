@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { UserMenu } from '@/components/auth/UserMenu'
 import { Suspense } from 'react'
 
-const TARGET_SGG = ['48121', '48123', '48125', '48127', '48129', '48250']
+const TARGET_SGG = ['48121', '48123', '48125', '48127', '48129', '48250', '48720']
 
 export const revalidate = 0
 
