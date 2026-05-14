@@ -35,9 +35,10 @@ if (!KAKAO_KEY) {
   process.exit(1)
 }
 
-const DRY_RUN = process.argv.includes('--dry-run')
-const sggIdx  = process.argv.indexOf('--sgg')
-const SGG_FILTER = sggIdx !== -1 ? (process.argv[sggIdx + 1] ?? '') : ''
+const DRY_RUN       = process.argv.includes('--dry-run')
+const MISSING_ONLY  = process.argv.includes('--missing-poi-only')
+const sggIdx        = process.argv.indexOf('--sgg')
+const SGG_FILTER    = sggIdx !== -1 ? (process.argv[sggIdx + 1] ?? '') : ''
 
 // ─── 카카오 API ────────────────────────────────────────────────────────────
 
@@ -96,10 +97,11 @@ function parseSchoolType(categoryName: string): 'elementary' | 'middle' | 'high'
 interface ComplexRow { id: string; lat: number; lng: number; si: string | null }
 
 function fetchComplexes(): ComplexRow[] {
-  const sggClause = SGG_FILTER
-    ? `AND si ILIKE '%${SGG_FILTER}%'`
+  const sggClause     = SGG_FILTER ? `AND si ILIKE '%${SGG_FILTER}%'` : ''
+  const missingClause = MISSING_ONLY
+    ? `AND id NOT IN (SELECT DISTINCT complex_id FROM facility_poi WHERE complex_id IS NOT NULL)`
     : ''
-  const query = `SELECT id, lat, lng, si FROM complexes WHERE lat IS NOT NULL AND lng IS NOT NULL ${sggClause} ORDER BY si, id`
+  const query = `SELECT id, lat, lng, si FROM complexes WHERE lat IS NOT NULL AND lng IS NOT NULL ${sggClause} ${missingClause} ORDER BY si, id`
   const raw = execSync(
     `supabase db query --linked ${JSON.stringify(query)}`,
     { encoding: 'utf8' },
@@ -168,18 +170,45 @@ WHERE id IN (${ids});`
 
 async function main() {
   console.log('[edu-collect] 시작 —', new Date().toISOString())
-  if (DRY_RUN) console.log('[edu-collect] *** DRY RUN — SQL만 생성, DB 미실행 ***')
-  if (SGG_FILTER) console.log(`[edu-collect] 필터: ${SGG_FILTER}`)
+  if (DRY_RUN)      console.log('[edu-collect] *** DRY RUN — SQL만 생성, DB 미실행 ***')
+  if (MISSING_ONLY) console.log('[edu-collect] 모드: POI 미수집 단지만')
+  if (SGG_FILTER)   console.log(`[edu-collect] 필터: ${SGG_FILTER}`)
 
   // 1. 단지 목록 로드
   const complexes = fetchComplexes()
   console.log(`[edu-collect] 단지 ${complexes.length}개`)
 
-  const schoolRows: SchoolRow[] = []
-  const poiRows:    PoiRow[]    = []
-  const hagwonScores: Array<{ id: string; score: number }> = []
+  let done         = 0
+  let totalSchool  = 0
+  let totalHagwon  = 0
+  let totalDaycare = 0
 
-  let done = 0
+  // 50개 단지마다 중간 flush → 끊겨도 완료분 보존
+  const FLUSH_EVERY = 50
+  const schoolBuf:   SchoolRow[]                         = []
+  const poiBuf:      PoiRow[]                            = []
+  const scoreBuf:    Array<{ id: string; score: number }> = []
+
+  function flushToDb(label: string) {
+    if (DRY_RUN) { schoolBuf.length = 0; poiBuf.length = 0; scoreBuf.length = 0; return }
+
+    // ON CONFLICT DO UPDATE는 같은 배치 내 중복 키를 허용하지 않으므로 사전 중복 제거
+    const dedupedSchool = [...new Map(schoolBuf.map(r => [`${r.complex_id}|${r.school_name}`, r])).values()]
+    const dedupedPoi    = [...new Map(poiBuf.map(r => [`${r.complex_id}|${r.category}|${r.poi_name}`, r])).values()]
+
+    const parts: string[] = []
+    if (dedupedSchool.length) parts.push(buildSchoolSql(dedupedSchool))
+    if (dedupedPoi.length)    parts.push(buildPoiSql(dedupedPoi))
+    if (scoreBuf.length)      parts.push(buildScoreSql(scoreBuf))
+    if (parts.length === 0) return
+
+    const tmpPath = path.join(process.cwd(), 'data', '_edu_flush.sql')
+    fs.writeFileSync(tmpPath, parts.join('\n\n'), 'utf8')
+    execSync(`supabase db query --linked --file "${tmpPath}"`, { stdio: 'inherit' })
+    fs.unlinkSync(tmpPath)
+    console.log(`\n  [flush ${label}] school:${schoolBuf.length} poi:${poiBuf.length} score:${scoreBuf.length}`)
+    schoolBuf.length = 0; poiBuf.length = 0; scoreBuf.length = 0
+  }
 
   for (const cx of complexes) {
     done++
@@ -191,12 +220,8 @@ async function main() {
       for (const doc of scResult.documents) {
         const type = parseSchoolType(doc.category_name)
         if (!type) continue
-        schoolRows.push({
-          complex_id:  cx.id,
-          school_name: doc.place_name,
-          school_type: type,
-          distance_m:  Math.round(parseFloat(doc.distance)),
-        })
+        schoolBuf.push({ complex_id: cx.id, school_name: doc.place_name, school_type: type, distance_m: Math.round(parseFloat(doc.distance)) })
+        totalSchool++
       }
       await sleep(80)
 
@@ -209,69 +234,39 @@ async function main() {
         if (ac.meta.is_end) break
       }
       for (const doc of hagwonDocs) {
-        poiRows.push({
-          complex_id: cx.id,
-          category:   'hagwon',
-          poi_name:   doc.place_name,
-          distance_m: Math.round(parseFloat(doc.distance)),
-        })
+        poiBuf.push({ complex_id: cx.id, category: 'hagwon', poi_name: doc.place_name, distance_m: Math.round(parseFloat(doc.distance)) })
+        totalHagwon++
       }
-
-      // 학원 밀도 점수 계산
       const cnt500  = hagwonDocs.filter(d => parseFloat(d.distance) <= 500).length
       const cntRest = hagwonDocs.length - cnt500
-      const score   = cnt500 * 3 + cntRest * 1
-      hagwonScores.push({ id: cx.id, score })
+      scoreBuf.push({ id: cx.id, score: cnt500 * 3 + cntRest * 1 })
 
       // ── 어린이집·유치원 (PS3) ────────────────────────────────
       const psResult = await kakaoCategory('PS3', cx.lat, cx.lng, 1000)
       for (const doc of psResult.documents) {
-        poiRows.push({
-          complex_id: cx.id,
-          category:   'daycare',
-          poi_name:   doc.place_name,
-          distance_m: Math.round(parseFloat(doc.distance)),
-        })
+        poiBuf.push({ complex_id: cx.id, category: 'daycare', poi_name: doc.place_name, distance_m: Math.round(parseFloat(doc.distance)) })
+        totalDaycare++
       }
       await sleep(80)
 
     } catch (e) {
       console.error(`\n  오류 (${cx.id}): ${e instanceof Error ? e.message : e}`)
     }
+
+    // 50개마다 중간 flush
+    if (done % FLUSH_EVERY === 0) flushToDb(`${done}/${complexes.length}`)
   }
+
+  // 나머지 flush
+  flushToDb('final')
 
   process.stdout.write('\n')
   console.log(`[edu-collect] 수집 완료`)
-  console.log(`  학교:     ${schoolRows.length}건`)
-  console.log(`  학원:     ${poiRows.filter(r => r.category === 'hagwon').length}건`)
-  console.log(`  어린이집: ${poiRows.filter(r => r.category === 'daycare').length}건`)
+  console.log(`  학교:     ${totalSchool}건`)
+  console.log(`  학원:     ${totalHagwon}건`)
+  console.log(`  어린이집: ${totalDaycare}건`)
 
-  // 2. SQL 생성 (1,000행씩 분할)
-  const BATCH = 1000
-  const sqlParts: string[] = []
-
-  for (let i = 0; i < schoolRows.length; i += BATCH)
-    sqlParts.push(buildSchoolSql(schoolRows.slice(i, i + BATCH)))
-  for (let i = 0; i < poiRows.length; i += BATCH)
-    sqlParts.push(buildPoiSql(poiRows.slice(i, i + BATCH)))
-  for (let i = 0; i < hagwonScores.length; i += BATCH)
-    sqlParts.push(buildScoreSql(hagwonScores.slice(i, i + BATCH)))
-
-  const sql = sqlParts.filter(Boolean).join('\n\n')
-  const outPath = path.join(process.cwd(), 'data', 'facility_edu.sql')
-  fs.writeFileSync(outPath, sql, 'utf8')
-  console.log(`[edu-collect] SQL 저장: ${outPath} (${(sql.length / 1024).toFixed(0)}KB)`)
-
-  if (DRY_RUN) {
-    console.log('[edu-collect] DRY RUN — DB 실행 건너뜀')
-    return
-  }
-
-  // 3. DB 실행
-  console.log('[edu-collect] DB 실행 중...')
-  execSync(`supabase db query --linked --file "${outPath}"`, {
-    stdio: 'inherit',
-  })
+  if (DRY_RUN) console.log('[edu-collect] DRY RUN 완료 — DB 미실행')
   console.log('[edu-collect] 완료 —', new Date().toISOString())
 }
 
