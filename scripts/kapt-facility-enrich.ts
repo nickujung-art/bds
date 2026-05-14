@@ -13,7 +13,7 @@
  */
 import { loadEnvConfig } from '@next/env'
 import { createClient } from '@supabase/supabase-js'
-import { fetchKaptDetailInfo } from '../src/services/kapt'
+import { fetchKaptBasicInfo, fetchKaptDetailInfo } from '../src/services/kapt'
 
 loadEnvConfig(process.cwd())
 
@@ -82,6 +82,15 @@ async function main(): Promise<void> {
 
     try {
       const { parsed, raw } = await fetchKaptDetailInfo(complex.kapt_code)
+      await delay(50) // BasicInfo와 DetailInfo 사이 짧은 대기
+
+      // BasicInfo 호출 (동수 — kaptDongCnt 수집)
+      let basicParsed = null as Awaited<ReturnType<typeof fetchKaptBasicInfo>>
+      try {
+        basicParsed = await fetchKaptBasicInfo(complex.kapt_code)
+      } catch (err) {
+        console.warn(`${progress} BasicInfo 호출 실패 (building_count = null로 진행):`, err instanceof Error ? err.message : err)
+      }
 
       // DEBUG 모드: 처음 3개 raw 응답 출력 후 종료
       if (DEBUG) {
@@ -116,6 +125,7 @@ async function main(): Promise<void> {
             parking_count: parkingTotal,
             elevator_count: parsed.kaptdEcnt ?? null,
             management_type: parsed.codeMgr ?? null,
+            building_count: basicParsed?.kaptDongCnt ?? null, // UX-03: 동수
             management_cost_m2: null, // 별도 월별 관리비 API 필요
             data_month: DATA_MONTH,
           },
@@ -129,6 +139,7 @@ async function main(): Promise<void> {
         const fields = [
           parkingTotal != null ? `주차=${parkingTotal}면` : null,
           parsed.kaptdEcnt != null ? `엘리베이터=${parsed.kaptdEcnt}대` : null,
+          basicParsed?.kaptDongCnt != null ? `동수=${basicParsed.kaptDongCnt}` : null,
         ].filter(Boolean).join(', ')
         console.log(`${progress} ${complex.canonical_name} → ${fields || '(데이터 없음)'} done`)
         successCount++
