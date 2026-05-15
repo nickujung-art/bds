@@ -40,15 +40,11 @@ export function KakaoMap({
   const clusterIndex = useMemo(() => buildClusterIndex(complexes), [complexes])
 
   // p95 기준값 계산 (클라이언트 1회 — 배지 계산에 사용)
-  const { p95ViewCount, p95TxCount } = useMemo(() => {
-    if (complexes.length === 0) return { p95ViewCount: 0, p95TxCount: 0 }
-    const viewCounts = [...complexes].map((c) => c.view_count).sort((a, b) => a - b)
-    const txCounts   = [...complexes].map((c) => c.tx_count_30d).sort((a, b) => a - b)
-    const p95Idx     = Math.floor(complexes.length * 0.95)
-    return {
-      p95ViewCount: viewCounts[p95Idx] ?? 0,
-      p95TxCount:   txCounts[p95Idx]   ?? 0,
-    }
+  const p95TxCount = useMemo(() => {
+    if (complexes.length === 0) return 0
+    const txCounts = [...complexes].map((c) => c.tx_count_30d).sort((a, b) => a - b)
+    const p95Idx   = Math.floor(complexes.length * 0.95)
+    return txCounts[p95Idx] ?? 0
   }, [complexes])
 
   // 줌 레벨 7 이하에서 평당가 라벨 표시 (카카오 레벨 — 숫자 클수록 축소)
@@ -130,15 +126,10 @@ export function KakaoMap({
           }
 
           const badge = determineBadge({
-            status:           props.status           ?? 'active',
-            built_year:       props.built_year        ?? null,
-            view_count:       props.view_count        ?? 0,
-            price_change_30d: props.price_change_30d  ?? null,
-            hagwon_grade:     props.hagwon_grade      ?? null,
-            household_count:  props.household_count   ?? null,
-            tx_count_30d:     props.tx_count_30d      ?? 0,
-            p95_view_count:   p95ViewCount,
-            p95_tx_count:     p95TxCount,
+            status:       props.status       ?? 'active',
+            built_year:   props.built_year   ?? null,
+            tx_count_30d: props.tx_count_30d ?? 0,
+            p95_tx_count: p95TxCount,
           })
 
           return (

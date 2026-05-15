@@ -1,7 +1,14 @@
 'use client'
 
 import type { BadgeType } from './badge-logic'
-import { getPriceColor } from './badge-logic'
+
+// 평당가(만원/평)에 따른 마커 색상 반환 — BadgeMarker 전용
+function getPriceColor(avgSalePerPyeong: number | null): string {
+  if (avgSalePerPyeong === null || avgSalePerPyeong === 0) return '#6B7280'
+  if (avgSalePerPyeong < 800) return '#10B981'
+  if (avgSalePerPyeong < 1500) return '#F59E0B'
+  return '#EF4444'
+}
 
 interface BadgeMarkerProps {
   badge:      BadgeType
@@ -121,16 +128,10 @@ function DefaultPin({ color }: { color: string }) {
 
 function BadgePin({ badge, color }: { badge: BadgeType; color: string }) {
   switch (badge) {
-    case 'pre_sale':      return <PreSalePin />
-    case 'new_build':     return <NewBuildPin />
-    case 'crown':         return <CrownPin />
-    case 'hot':           return <HotPin />
-    case 'surge':         return <SurgePin />
-    case 'drop':          return <DropPin />
-    case 'school':        return <SchoolPin />
-    case 'large_complex': return <LargeComplexPin />
-    case 'redevelop':     return <RedevelopPin />
-    default:              return <DefaultPin color={color} />
+    case 'pre_sale':  return <PreSalePin />
+    case 'new_build': return <NewBuildPin />
+    case 'hot':       return <HotPin />
+    default:          return <DefaultPin color={color} />
   }
 }
 

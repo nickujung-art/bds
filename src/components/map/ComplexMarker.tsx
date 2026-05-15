@@ -3,8 +3,15 @@
 import { CustomOverlayMap } from 'react-kakao-maps-sdk'
 import { useState } from 'react'
 import { BadgeMarker } from './markers/BadgeMarker'
-import { getPriceColor } from './markers/badge-logic'
 import type { BadgeType } from './markers/badge-logic'
+
+// 평당가(만원/평)에 따른 색상 — ComplexMarker 툴팁 전용
+function getPriceColor(avgSalePerPyeong: number | null): string {
+  if (avgSalePerPyeong === null || avgSalePerPyeong === 0) return '#6B7280'
+  if (avgSalePerPyeong < 800) return '#10B981'
+  if (avgSalePerPyeong < 1500) return '#F59E0B'
+  return '#EF4444'
+}
 
 interface Props {
   id:               string
