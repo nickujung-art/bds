@@ -1,6 +1,6 @@
 # Roadmap — 단지온도
 
-**9 phases** | **41 requirements mapped** | v1~v4 requirements covered ✓
+**10 phases** | **46 requirements mapped** | v1~v5 requirements covered ✓
 
 ## Overview
 
@@ -15,6 +15,7 @@
 | 7 | 데이터 파이프라인 수리 | V2.0 | 단지↔거래 연결 + KAPT 단지정보 적재 — 서비스 데이터 기반 완성 | DATA-08~10 | ✅ Complete |
 | 8 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
 | 9 | 단지 상세 UX 고도화 | V2.1 | 실거래가 그래프·시설·관리비 실수요자 관점 개선 | UX-01~04 | 📋 Planned (5 plans) |
+| 10 | 교육 환경 고도화 | V2.2 | 학구도 기반 배정학교 + 교육 카드 UX 전면 개선 | EDU-01~05 | 📋 Planned (4 plans) |
 
 ---
 
@@ -416,6 +417,44 @@
 3. 평형 칩 선택 시 그래프·목록이 해당 평형 데이터만 표시된다 (URL 공유 가능)
 4. 시설 카드에 주차가 "세대당 N.N대", 엘리베이터가 "동당 N대"로 표시된다
 5. 관리비 카드에 하절기/동절기 월평균이 표시된다
+
+**UI hint**: yes
+
+---
+
+### Phase 10: 교육 환경 고도화
+
+**Goal:** 학구도 shapefile 기반 배정학교 정확 표시 + 교육 카드 UX 전면 개선으로 실수요자의 "이 동네 학교 어때?" 질문에 정확하게 답한다.
+
+**Version:** V2.2
+
+**Requirements:**
+- EDU-01: 배정학교 표시 — 학구도 shapefile(초/중/고) PostGIS import + ST_Within 매핑 + facility_school.is_assignment 플래그 업데이트 + UI에서 배정학교 강조/구분 표시
+- EDU-02: 어린이집/유치원 분리 표시 — facility_poi.poi_name 기반 유치원 분리 + 어린이집 3개·유치원 3개 각각 표시 (현재 혼합 10개)
+- EDU-03: 학원 UX 개선 — "외 N개" 클릭 시 전체 목록 펼치기 + 시군구 단위 상위 X% 라벨 (현재 창원+김해 통합)
+- EDU-04: 학교 도보 시간 색깔 아이콘 — distance_m÷67 도보 분 계산 + 10분 이내(녹색)/10~15분(노랑)/15분 초과(빨강) 3단계 색상 표시
+- EDU-05: 학원 종류별 분류 표시 — poi_name 파싱으로 수학/영어/예체능 등 카테고리 태그 표시
+
+**Plans:** 4 plans / 4 waves
+
+**Wave 0** *(BLOCKING — autonomous: false, supabase db push 필요)*
+- [ ] 10-00-PLAN.md — DB 마이그레이션 (school_districts + RLS + hagwon_score_percentile_by_si) + 순수 유틸(hagwon-category.ts) + RED 테스트 [BLOCKING supabase db push] (EDU-01~05)
+
+**Wave 1** *(blocked on Wave 0)*
+- [ ] 10-01-PLAN.md — Shapefile import 스크립트 (SHP/DBF 파싱 → school_districts 적재) (EDU-01)
+
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 10-02-PLAN.md — is_assignment 업데이트 스크립트 (ST_Within) + facility-edu.ts 수정 (유치원 분리 + si 백분위) (EDU-01, EDU-02, EDU-03)
+
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 10-03-PLAN.md — EducationCard.tsx UI 전면 개선 (도보 색깔 + 유치원 분리 + 학원 펼치기 + 카테고리 태그 + si 백분위) + page.tsx 타입 수정 (EDU-01~05)
+
+**Success Criteria:**
+1. 배정 초등학교가 단지 좌표 기반으로 정확히 표시되고 UI에서 "배정" 배지로 구분된다
+2. 어린이집 3개·유치원 3개가 분리 표시된다 (기존 혼합 최대 10개 → 분리 각 3개)
+3. 학원 목록에서 "외 N개"를 클릭하면 전체 펼쳐보기가 된다
+4. 학교 목록에 도보 시간 색깔 아이콘이 3단계(녹/노/빨)로 표시된다
+5. 학원 목록에 수학/영어/예체능 등 카테고리 태그가 표시된다
 
 **UI hint**: yes
 
