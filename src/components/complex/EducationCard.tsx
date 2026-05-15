@@ -145,7 +145,12 @@ function SchoolList({ schools }: { schools: SchoolItem[] }) {
 
   const filtered = schools
     .filter(s => s.school_type === schoolTab)
-    .sort((a, b) => (a.distance_m ?? 99999) - (b.distance_m ?? 99999))
+    .sort((a, b) => {
+      // 배정 학교 우선 → 거리순
+      if (a.is_assignment !== b.is_assignment) return a.is_assignment ? -1 : 1
+      return (a.distance_m ?? 99999) - (b.distance_m ?? 99999)
+    })
+    .slice(0, 3)
 
   return (
     <div>

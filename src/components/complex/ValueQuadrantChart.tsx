@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  ReferenceArea,
 } from 'recharts'
 
 export interface QuadrantPoint {
@@ -27,27 +28,28 @@ interface ValueQuadrantChartProps {
   totalCount: number
 }
 
-export function ValueQuadrantChart({
-  data,
-  medianX,
-  medianY,
-  regionLabel,
-  totalCount,
-}: ValueQuadrantChartProps) {
+type Quadrant = '가성비' | '프리미엄' | '주의' | '고위험'
+
+const Q_META: Record<Quadrant, { color: string; bg: string; fill: string; desc: string }> = {
+  '가성비':   { color: '#15803d', bg: '#dcfce7', fill: '#dcfce7', desc: '평당가 낮고 전세가율 높음 — 실거주·투자 모두 유리' },
+  '프리미엄': { color: '#2563eb', bg: '#dbeafe', fill: '#dbeafe', desc: '평당가 높지만 전세가율도 높아 안정적인 고가 단지' },
+  '주의':     { color: '#b45309', bg: '#fef3c7', fill: '#fef9c3', desc: '저렴하지만 전세가율 낮아 갭 투자 위험 있음' },
+  '고위험':   { color: '#dc2626', bg: '#fee2e2', fill: '#fee2e2', desc: '평당가 높은데 전세가율 낮아 가격 부담 큼' },
+}
+
+function classifyQuadrant(x: number, y: number, mx: number, my: number): Quadrant {
+  if (x <= mx && y >= my) return '가성비'
+  if (x > mx && y >= my) return '프리미엄'
+  if (x <= mx && y < my) return '주의'
+  return '고위험'
+}
+
+export function ValueQuadrantChart({ data, medianX, medianY, regionLabel, totalCount }: ValueQuadrantChartProps) {
   const validPoints = data.filter(p => p.x > 0 && p.y >= 0)
 
   if (validPoints.length < 3) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          height: 280,
-          alignItems: 'center',
-          justifyContent: 'center',
-          font: '500 13px/1.6 var(--font-sans)',
-          color: 'var(--fg-tertiary)',
-        }}
-      >
+      <div style={{ display: 'flex', height: 280, alignItems: 'center', justifyContent: 'center', font: '500 13px/1.6 var(--font-sans)', color: 'var(--fg-tertiary)' }}>
         이 지역 단지 데이터가 부족하여 차트를 표시할 수 없습니다.
       </div>
     )
@@ -56,56 +58,92 @@ export function ValueQuadrantChart({
   const backgroundPoints = validPoints.filter(p => !p.isTarget)
   const targetPoints = validPoints.filter(p => p.isTarget)
 
+  // 축 범위 명시적 계산 — Recharts 'auto'는 0 포함 가능성 있음
+  const xVals = validPoints.map(p => p.x)
+  const yVals = validPoints.map(p => p.y)
+  const xMin = Math.min(...xVals)
+  const xMax = Math.max(...xVals)
+  const yMin = Math.min(...yVals)
+  const yMax = Math.max(...yVals)
+  const xPad = Math.max((xMax - xMin) * 0.12, 50)
+  const yPad = Math.max((yMax - yMin) * 0.12, 3)
+  const xDomain: [number, number] = [Math.floor(xMin - xPad), Math.ceil(xMax + xPad)]
+  const yDomain: [number, number] = [Math.floor(yMin - yPad), Math.ceil(yMax + yPad)]
+
+  const target = targetPoints[0]
+  const targetQuadrant = target ? classifyQuadrant(target.x, target.y, medianX, medianY) : null
+  const qMeta = targetQuadrant ? Q_META[targetQuadrant] : null
+
   return (
     <div className="card" style={{ padding: 24 }}>
+      {/* 헤더 */}
       <div style={{ marginBottom: 16 }}>
-        <h3
-          style={{
-            font: '700 16px/1.4 var(--font-sans)',
-            margin: '0 0 4px',
-            color: 'var(--fg-pri)',
-          }}
-        >
-          단지 가성비 분석
-        </h3>
-        <p
-          style={{
-            font: '500 11px/1.4 var(--font-sans)',
-            color: 'var(--fg-tertiary)',
-            margin: 0,
-          }}
-        >
-          평당가(X) · 전세가율(Y) 기준 {regionLabel} 내 {totalCount}개 단지 분포
-        </p>
-        <p
-          style={{
-            font: '500 11px/1.4 var(--font-sans)',
-            color: 'var(--fg-tertiary)',
-            margin: '2px 0 0',
-          }}
-        >
-          왼쪽 위(가성비) ↔ 오른쪽 아래(고위험) · 주황 점 = 이 단지
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <h3 style={{ font: '700 16px/1.4 var(--font-sans)', margin: 0, color: 'var(--fg-pri)' }}>
+            주변 단지 대비 가격 위치
+          </h3>
+          {qMeta && targetQuadrant && (
+            <span style={{
+              font: '600 11px/1 var(--font-sans)',
+              color: qMeta.color,
+              background: qMeta.bg,
+              padding: '3px 9px',
+              borderRadius: 20,
+              flexShrink: 0,
+            }}>
+              {targetQuadrant}
+            </span>
+          )}
+        </div>
+
+        {qMeta && (
+          <p style={{ font: '500 12px/1.5 var(--font-sans)', color: 'var(--fg-secondary)', margin: '0 0 4px' }}>
+            {qMeta.desc}
+          </p>
+        )}
+
+        <p style={{ font: '500 11px/1.4 var(--font-sans)', color: 'var(--fg-tertiary)', margin: 0 }}>
+          {regionLabel} 내 {totalCount}개 단지 · X: 평당가(만원/평), Y: 전세가율(%)
         </p>
       </div>
 
-      {/* 차트 + 4분면 라벨 오버레이 */}
-      <div
-        style={{ position: 'relative' }}
-        role="img"
-        aria-label={`단지 가성비 분석 산점도 — ${regionLabel} 내 단지 평당가와 전세가율 비교`}
-      >
-        <p className="sr-only">
-          현재 단지는 {regionLabel} 내 {totalCount}개 단지와 비교한 평당가×전세가율 분포입니다.
-        </p>
+      {/* 축 설명 바 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 8,
+        marginBottom: 12,
+        fontSize: 11,
+        color: 'var(--fg-tertiary)',
+        fontWeight: 500,
+      }}>
+        <div style={{ padding: '5px 10px', borderRadius: 6, background: 'var(--bg-surface-2)', textAlign: 'center' }}>
+          ← 평당가 낮음 · 높음 →
+        </div>
+        <div style={{ padding: '5px 10px', borderRadius: 6, background: 'var(--bg-surface-2)', textAlign: 'center' }}>
+          ↑ 전세가율 높음(안전) · 낮음 ↓
+        </div>
+      </div>
 
-        <ResponsiveContainer width="100%" height={280}>
-          <ScatterChart margin={{ top: 24, right: 24, bottom: 24, left: 8 }}>
+      {/* 차트 */}
+      <div style={{ position: 'relative' }} role="img" aria-label={`${regionLabel} 내 단지 평당가·전세가율 분포`}>
+        <p className="sr-only">현재 단지는 {regionLabel} 내 {totalCount}개 단지와 비교한 평당가×전세가율 분포입니다.</p>
+
+        <ResponsiveContainer width="100%" height={260}>
+          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+
+            {/* 4분면 배경 */}
+            <ReferenceArea x1={xDomain[0]} x2={medianX} y1={medianY} y2={yDomain[1]} fill="#dcfce7" fillOpacity={0.5} />
+            <ReferenceArea x1={medianX} x2={xDomain[1]} y1={medianY} y2={yDomain[1]} fill="#dbeafe" fillOpacity={0.5} />
+            <ReferenceArea x1={xDomain[0]} x2={medianX} y1={yDomain[0]} y2={medianY} fill="#fef9c3" fillOpacity={0.5} />
+            <ReferenceArea x1={medianX} x2={xDomain[1]} y1={yDomain[0]} y2={medianY} fill="#fee2e2" fillOpacity={0.5} />
+
             <XAxis
               dataKey="x"
               name="평당가"
               type="number"
-              domain={['auto', 'auto']}
+              domain={xDomain}
               tickFormatter={(v: number) => `${Math.round(v)}만`}
               tick={{ fontSize: 11, fill: '#9ca3af' }}
             />
@@ -113,18 +151,13 @@ export function ValueQuadrantChart({
               dataKey="y"
               name="전세가율"
               type="number"
-              domain={['auto', 'auto']}
+              domain={yDomain}
               tickFormatter={(v: number) => `${Math.round(v)}%`}
               tick={{ fontSize: 11, fill: '#9ca3af' }}
               width={38}
             />
             <Tooltip
-              contentStyle={{
-                fontSize: 12,
-                fontFamily: 'var(--font-sans)',
-                border: '1px solid rgba(112,115,124,.22)',
-                borderRadius: 8,
-              }}
+              contentStyle={{ fontSize: 12, fontFamily: 'var(--font-sans)', border: '1px solid rgba(112,115,124,.22)', borderRadius: 8 }}
               formatter={(value, name) => {
                 const num = typeof value === 'number' ? value : Number(value)
                 return name === '평당가'
@@ -135,36 +168,16 @@ export function ValueQuadrantChart({
             />
             <ReferenceLine x={medianX} stroke="#d1d5db" strokeDasharray="4 2" strokeWidth={1.5} />
             <ReferenceLine y={medianY} stroke="#d1d5db" strokeDasharray="4 2" strokeWidth={1.5} />
-            <Scatter
-              name="배경단지"
-              data={backgroundPoints}
-              fill="#d1d5db"
-              opacity={0.6}
-              isAnimationActive={false}
-            />
-            <Scatter
-              name="현재단지"
-              data={targetPoints}
-              fill="#ea580c"
-              r={6}
-              isAnimationActive={false}
-            />
+            <Scatter name="배경단지" data={backgroundPoints} fill="#d1d5db" opacity={0.6} isAnimationActive={false} />
+            <Scatter name="현재단지" data={targetPoints} fill="#ea580c" r={6} isAnimationActive={false} />
           </ScatterChart>
         </ResponsiveContainer>
 
-        {/* 4분면 라벨 */}
-        <div style={{ position: 'absolute', top: 28, left: 44, font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)', pointerEvents: 'none' }}>
-          가성비
-        </div>
-        <div style={{ position: 'absolute', top: 28, right: 12, font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)', pointerEvents: 'none' }}>
-          프리미엄
-        </div>
-        <div style={{ position: 'absolute', bottom: 28, left: 44, font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)', pointerEvents: 'none' }}>
-          주의
-        </div>
-        <div style={{ position: 'absolute', bottom: 28, right: 12, font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)', pointerEvents: 'none' }}>
-          고위험
-        </div>
+        {/* 4분면 라벨 — 색상으로 구분 */}
+        <div style={{ position: 'absolute', top: 24, left: 44, font: '600 10px/1 var(--font-sans)', color: '#15803d', pointerEvents: 'none' }}>가성비</div>
+        <div style={{ position: 'absolute', top: 24, right: 12, font: '600 10px/1 var(--font-sans)', color: '#2563eb', pointerEvents: 'none' }}>프리미엄</div>
+        <div style={{ position: 'absolute', bottom: 24, left: 44, font: '600 10px/1 var(--font-sans)', color: '#b45309', pointerEvents: 'none' }}>주의</div>
+        <div style={{ position: 'absolute', bottom: 24, right: 12, font: '600 10px/1 var(--font-sans)', color: '#dc2626', pointerEvents: 'none' }}>고위험</div>
       </div>
     </div>
   )

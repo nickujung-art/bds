@@ -129,7 +129,12 @@ export function AiChatPanel({ complexId, complexName }: AiPanelProps) {
         }),
       })
 
-      if (!res.ok || !res.body) throw new Error('stream error')
+      if (!res.ok || !res.body) {
+        const errMsg = res.status === 401
+          ? '로그인 후 이용할 수 있습니다.'
+          : '요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+        throw new Error(errMsg)
+      }
 
       // SSE 스트리밍 처리
       const reader = res.body.getReader()
@@ -175,14 +180,15 @@ export function AiChatPanel({ complexId, complexName }: AiPanelProps) {
         }
         return updated
       })
-    } catch {
+    } catch (err) {
+      const errContent = err instanceof Error ? err.message : '요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
       setMessages((prev) => {
         const updated = [...prev]
         const lastIdx = updated.length - 1
         if (updated[lastIdx]?.isPending) {
           updated[lastIdx] = {
             role: 'assistant',
-            content: '요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+            content: errContent,
             isError: true,
           }
         }
