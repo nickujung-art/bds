@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: milestone
 status: complete
-last_updated: "2026-05-14T14:30:00Z"
-last_activity: 2026-05-14 — Phase 9 COMPLETE (5/5 plans — 단지 상세 UX 고도화 완료)
+last_updated: "2026-05-16T15:30:00Z"
+last_activity: 2026-05-16 — Phase 11 COMPLETE (5/5 plans — 지도 고도화 완료)
 progress:
-  total_phases: 9
-  completed_phases: 9
-  total_plans: 44
-  completed_plans: 44
+  total_phases: 11
+  completed_phases: 11
+  total_plans: 49
+  completed_plans: 49
   percent: 100
 ---
 
@@ -87,6 +87,8 @@ Waves:
 | 7 | 데이터 파이프라인 수리 | ✅ Complete |
 | 8 | 커뮤니티 심화·자동화 | ✅ Complete (7/7 plans) |
 | 9 | 단지 상세 UX 고도화 | ✅ Complete (5/5 plans) |
+| 10 | 교육 환경 고도화 | ✅ Complete |
+| 11 | 지도 고도화 | ✅ Complete (5/5 plans) |
 
 ---
 
@@ -104,6 +106,22 @@ Waves:
 - Wave 2: 09-03 (FacilitiesCard 세대당/동당 표시), 09-04 (K-apt building_count 적재 — 669개) ✅
 
 Key fixes (UAT): nuqs shallow:true, Recharts Scatter dataKey, building_count 667/669 DB 적재
+
+---
+
+**Phase 11: 지도 고도화** ✅ Complete
+
+Goal: 클러스터 줌인 + SVG 배지 마커 + 평당가 라벨 + 사이드 패널 + view_count 파이프라인으로 지도를 게임화된 인터랙티브 지도로 전환
+
+Requirements: MAP-01~MAP-05
+
+Plans: 5/5 complete (11-00 ~ 11-04) — verified 2026-05-16
+
+Waves:
+- Wave 0: 11-00 (DB 마이그레이션 — avg_sale_per_pyeong/view_count/price_change_30d/tx_count_30d + RPC 2개) ✅
+- Wave 1: 11-01 (ComplexMapItem 확장 + badge-logic.ts), 11-02 (map-panel API Route) ✅
+- Wave 2: 11-03 (BadgeMarker SVG + ComplexMarker CustomOverlayMap + ClusterMarker 줌인 + KakaoMap 통합) ✅
+- Wave 3: 11-04 (MapSidePanel 슬라이드인/바텀시트 + ViewCountTracker + daily cron 연결) ✅
 
 ## Key Context for Agents
 

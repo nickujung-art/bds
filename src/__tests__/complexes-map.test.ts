@@ -77,10 +77,21 @@ describe.skipIf(!SKEY)('getComplexesForMap', () => {
 import { clusterComplexes } from '@/lib/data/complexes-map'
 
 describe('clusterComplexes', () => {
+  const BASE_COMPLEX = {
+    avg_sale_per_pyeong: null,
+    view_count:          0,
+    price_change_30d:    null,
+    tx_count_30d:        0,
+    status:              'active',
+    built_year:          null,
+    household_count:     null,
+    hagwon_grade:        null,
+  }
+
   const complexes = [
-    { id: 'a', canonical_name: '아파트A', lat: 35.2286, lng: 128.6816, sgg_code: '48121' },
-    { id: 'b', canonical_name: '아파트B', lat: 35.2287, lng: 128.6817, sgg_code: '48121' }, // A에서 ~13m
-    { id: 'c', canonical_name: '아파트C', lat: 35.2500, lng: 128.7000, sgg_code: '48121' }, // 멀리 있음
+    { id: 'a', canonical_name: '아파트A', lat: 35.2286, lng: 128.6816, sgg_code: '48121', ...BASE_COMPLEX },
+    { id: 'b', canonical_name: '아파트B', lat: 35.2287, lng: 128.6817, sgg_code: '48121', ...BASE_COMPLEX }, // A에서 ~13m
+    { id: 'c', canonical_name: '아파트C', lat: 35.2500, lng: 128.7000, sgg_code: '48121', ...BASE_COMPLEX }, // 멀리 있음
   ]
 
   const BOUNDS: [number, number, number, number] = [128.5, 35.1, 128.9, 35.4]

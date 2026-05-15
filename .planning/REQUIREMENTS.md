@@ -96,6 +96,16 @@
 
 ---
 
+## v6 Requirements (지도 고도화)
+
+- [ ] **MAP-01**: 클러스터 클릭 줌인 + 마커 hover 미리보기 카드 — ClusterMarker 클릭 시 해당 클러스터 bounds로 fitBounds 자동 줌인, ComplexMarker hover 카드에 평당가·세대수 표시
+- [ ] **MAP-02**: 평당가 라벨 마커 — complexes.avg_sale_per_pyeong(integer, 만원/평) 컬럼 신규 추가, transactions 최근 1년 평균 집계 함수, 줌 레벨 연동 라벨 on/off, 가격대별(저/중/고) 색상
+- [ ] **MAP-03**: 사이드 패널 — 마커 클릭 시 우측 슬라이드인(PC) / 하단 시트(모바일), 단지명·최근 실거래·학원등급·상세 링크 표시
+- [ ] **MAP-04**: 게임화 마커 배지 시스템 — SVG 일체형(이모지 금지), 1순위(분양·신축·광고), 2순위(왕관·핫·급등·급락), 3순위(가성비·학군·대단지·재건축)
+- [ ] **MAP-05**: 지도 마커 DB 확장 — complexes.view_count(integer, 단순 카운터), complexes.price_change_30d(numeric, 30일 변동률), 단지 상세 페이지 view_count +1 RPC
+
+---
+
 ## Out of Scope
 
 - NextAuth.js 전환 — Supabase Auth로 이미 완전 구현됨. 전환 시 이득 없이 재작성 비용만 발생

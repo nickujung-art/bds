@@ -26,6 +26,7 @@ import { ManagementCostCard } from '@/components/complex/ManagementCostCard'
 import { getComplexFacilityEdu } from '@/lib/data/facility-edu'
 import { EducationCard } from '@/components/complex/EducationCard'
 import { formatParkingPerUnit, formatElevatorPerBuilding } from '@/lib/utils/facility-format'
+import { ViewCountTracker } from './ViewCountTracker'
 
 export const revalidate = 86400
 
@@ -243,6 +244,7 @@ export default async function ComplexDetailPage({ params }: Props) {
         fontFamily: 'var(--font-sans)',
       }}
     >
+      <ViewCountTracker complexId={id} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

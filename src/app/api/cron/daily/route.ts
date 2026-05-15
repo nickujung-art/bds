@@ -101,5 +101,12 @@ export async function GET(request: Request): Promise<Response> {
   }
   totalUpserted += presaleUpserted
 
+  // ── Phase 11: 평당가·30일 변동률·거래량 배치 집계 (MAP-02, MAP-05) ──────────
+  try {
+    await supabase.rpc('refresh_complex_price_stats')
+  } catch (err) {
+    errors.push(`refresh_complex_price_stats: ${err instanceof Error ? err.message : String(err)}`)
+  }
+
   return Response.json({ ok: errors.length === 0, totalUpserted, kaptUpserted, presaleUpserted, errors })
 }
