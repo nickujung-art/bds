@@ -620,7 +620,7 @@ export default async function ComplexDetailPage({ params }: Props) {
           />
 
           {/* 교육 환경 */}
-          <EducationCard data={facilityEdu} />
+          <EducationCard data={facilityEdu} si={complex.si ?? undefined} />
 
           {/* 재건축 타임라인 — status='in_redevelopment' 단지만 표시 */}
           {complex.status === 'in_redevelopment' && redevelopmentProject && (

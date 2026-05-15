@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import type { FacilityEduData, SchoolItem, PoiItem } from '@/lib/data/facility-edu'
+import { classifyHagwon, walkColor, WALK_COLOR_HEX } from '@/lib/hagwon-category'
 
 // ─── 아이콘 ────────────────────────────────────────────────────────────────
 
-function WalkIcon() {
+function WalkIcon({ color }: { color?: string }) {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={color ?? 'currentColor'} strokeWidth="2">
       <circle cx="12" cy="5" r="2" />
       <path d="M8 21l2-6 2 2 2-6 2 6" />
       <path d="M10 15l-2 6m6-6l2 6" />
@@ -52,7 +53,7 @@ function fmtDist(m: number | null): string {
 
 function fmtWalk(m: number | null): string {
   if (m == null) return ''
-  const min = Math.round(m / 67)  // 도보 67m/분 기준
+  const min = Math.round(m / 67)
   return `도보 ${min}분`
 }
 
@@ -76,6 +77,16 @@ const GRADE_BG: Record<string, string> = {
   D: '#f9fafb',
 }
 
+const CATEGORY_COLOR: Record<string, { color: string; bg: string }> = {
+  '수학':        { color: '#2563eb', bg: '#eff6ff' },
+  '영어':        { color: '#16a34a', bg: '#f0fdf4' },
+  '예체능':      { color: '#d97706', bg: '#fffbeb' },
+  '국어':        { color: '#dc2626', bg: '#fef2f2' },
+  '과학':        { color: '#0891b2', bg: '#ecfeff' },
+  '중국어/일어': { color: '#7c3aed', bg: '#f5f3ff' },
+  '기타':        { color: '#9ca3af', bg: '#f9fafb' },
+}
+
 // ─── 서브 컴포넌트 ─────────────────────────────────────────────────────────
 
 function EmptyNote({ text }: { text: string }) {
@@ -92,6 +103,43 @@ function EmptyNote({ text }: { text: string }) {
   )
 }
 
+function PoiRow({ item, icon, isLast }: { item: PoiItem; icon: React.ReactNode; isLast: boolean }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '9px 0',
+      borderBottom: isLast ? 'none' : '1px solid var(--line-subtle)',
+    }}>
+      <div style={{
+        width: 28, height: 28, borderRadius: 7,
+        background: 'var(--bg-surface-2)',
+        display: 'grid', placeItems: 'center',
+        flexShrink: 0, color: 'var(--fg-sec)',
+      }}>
+        {icon}
+      </div>
+      <span style={{ flex: 1, font: '500 13px/1.3 var(--font-sans)', color: 'var(--fg-pri)' }}>
+        {item.poi_name}
+      </span>
+      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        <div style={{ font: '600 13px/1 var(--font-sans)', color: 'var(--fg-sec)' }}>
+          {fmtDist(item.distance_m)}
+        </div>
+        {item.distance_m != null && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end',
+            marginTop: 2,
+            font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)',
+          }}>
+            <WalkIcon />
+            {fmtWalk(item.distance_m)}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function SchoolList({ schools }: { schools: SchoolItem[] }) {
   const [schoolTab, setSchoolTab] = useState<'elementary' | 'middle' | 'high'>('elementary')
 
@@ -101,7 +149,6 @@ function SchoolList({ schools }: { schools: SchoolItem[] }) {
 
   return (
     <div>
-      {/* 초/중/고 탭 */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
         {(['elementary', 'middle', 'high'] as const).map(type => {
           const count = schools.filter(s => s.school_type === type).length
@@ -139,83 +186,89 @@ function SchoolList({ schools }: { schools: SchoolItem[] }) {
         <EmptyNote text="반경 1.5km 내 해당 학교가 없습니다." />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {filtered.map((s, i) => (
-            <div
-              key={i}
-              style={{
-                display:      'flex',
-                alignItems:   'center',
-                gap:          10,
-                padding:      '10px 0',
-                borderBottom: i < filtered.length - 1 ? '1px solid var(--line-subtle)' : 'none',
-              }}
-            >
-              {/* 아이콘 */}
-              <div style={{
-                width: 28, height: 28, borderRadius: 7,
-                background: 'var(--bg-surface-2)',
-                display: 'grid', placeItems: 'center',
-                flexShrink: 0, color: 'var(--fg-sec)',
-              }}>
-                <SchoolIcon />
-              </div>
+          {filtered.map((s, i) => {
+            const wc = walkColor(s.distance_m)
+            return (
+              <div
+                key={i}
+                style={{
+                  display:      'flex',
+                  alignItems:   'center',
+                  gap:          10,
+                  padding:      '10px 0',
+                  borderBottom: i < filtered.length - 1 ? '1px solid var(--line-subtle)' : 'none',
+                }}
+              >
+                <div style={{
+                  width: 28, height: 28, borderRadius: 7,
+                  background: 'var(--bg-surface-2)',
+                  display: 'grid', placeItems: 'center',
+                  flexShrink: 0, color: 'var(--fg-sec)',
+                }}>
+                  <SchoolIcon />
+                </div>
 
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ font: '600 13px/1.3 var(--font-sans)', color: 'var(--fg-pri)' }}>
-                    {s.school_name}
-                  </span>
-                  {s.is_assignment && (
-                    <span style={{
-                      font: '600 10px/1 var(--font-sans)',
-                      color: '#2563eb', background: '#eff6ff',
-                      padding: '2px 5px', borderRadius: 4,
-                      flexShrink: 0,
-                    }}>
-                      배정
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ font: '600 13px/1.3 var(--font-sans)', color: 'var(--fg-pri)' }}>
+                      {s.school_name}
                     </span>
+                    {s.is_assignment && (
+                      <span style={{
+                        font: '600 10px/1 var(--font-sans)',
+                        color: '#2563eb', background: '#eff6ff',
+                        padding: '2px 5px', borderRadius: 4,
+                        flexShrink: 0,
+                      }}>
+                        배정
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ font: '600 13px/1 var(--font-sans)', color: 'var(--fg-pri)' }}>
+                    {fmtDist(s.distance_m)}
+                  </div>
+                  {s.distance_m != null && (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end',
+                      marginTop: 3,
+                      font: '500 11px/1 var(--font-sans)', color: WALK_COLOR_HEX[wc],
+                    }}>
+                      <WalkIcon color={WALK_COLOR_HEX[wc]} />
+                      {fmtWalk(s.distance_m)}
+                    </div>
                   )}
                 </div>
               </div>
-
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ font: '600 13px/1 var(--font-sans)', color: 'var(--fg-pri)' }}>
-                  {fmtDist(s.distance_m)}
-                </div>
-                {s.distance_m != null && (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end',
-                    marginTop: 3,
-                    font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)',
-                  }}>
-                    <WalkIcon />
-                    {fmtWalk(s.distance_m)}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
   )
 }
 
-function HagwonSection({ hagwons, stats }: {
+function HagwonSection({ hagwons, stats, si }: {
   hagwons: PoiItem[]
   stats: FacilityEduData['hagwonStats']
+  si?: string
 }) {
+  const [expanded, setExpanded] = useState(false)
+
   if (!stats && hagwons.length === 0) {
     return <EmptyNote text="학원 데이터를 수집 중입니다." />
   }
 
-  const topHagwons = hagwons.slice(0, 8)
+  const INITIAL_LIMIT = 8
+  const visibleHagwons = expanded ? hagwons : hagwons.slice(0, INITIAL_LIMIT)
   const grade = stats?.grade ?? 'D'
   const above = stats ? 100 - stats.percentile : null
+  const siLabel = si ? `${si} 상위 ${above}%` : `창원·김해 상위 ${above}%`
 
   return (
     <div>
-      {/* 등급 카드 */}
       {stats && (
         <div style={{
           display:      'flex',
@@ -227,7 +280,6 @@ function HagwonSection({ hagwons, stats }: {
           border:       `1px solid ${GRADE_COLOR[grade] ?? '#e5e7eb'}22`,
           marginBottom: 16,
         }}>
-          {/* 등급 뱃지 */}
           <div style={{
             width: 48, height: 48, borderRadius: 12,
             background: GRADE_COLOR[grade],
@@ -248,7 +300,7 @@ function HagwonSection({ hagwons, stats }: {
                   font: '500 12px/1 var(--font-sans)',
                   color: GRADE_COLOR[grade],
                 }}>
-                  창원·김해 상위 {above}%
+                  {siLabel}
                 </span>
               )}
             </div>
@@ -260,35 +312,54 @@ function HagwonSection({ hagwons, stats }: {
         </div>
       )}
 
-      {/* 학원 목록 */}
-      {topHagwons.length > 0 && (
+      {visibleHagwons.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {topHagwons.map((h, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '9px 0',
-              borderBottom: i < topHagwons.length - 1 ? '1px solid var(--line-subtle)' : 'none',
-            }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: 7,
-                background: 'var(--bg-surface-2)',
-                display: 'grid', placeItems: 'center',
-                flexShrink: 0, color: 'var(--fg-sec)',
+          {visibleHagwons.map((h, i) => {
+            const cat = classifyHagwon(h.poi_name)
+            const catStyle = CATEGORY_COLOR[cat] ?? CATEGORY_COLOR['기타']
+            return (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '9px 0',
+                borderBottom: i < visibleHagwons.length - 1 ? '1px solid var(--line-subtle)' : 'none',
               }}>
-                <HagwonIcon />
+                <div style={{
+                  width: 28, height: 28, borderRadius: 7,
+                  background: 'var(--bg-surface-2)',
+                  display: 'grid', placeItems: 'center',
+                  flexShrink: 0, color: 'var(--fg-sec)',
+                }}>
+                  <HagwonIcon />
+                </div>
+                <span style={{ flex: 1, font: '500 13px/1.3 var(--font-sans)', color: 'var(--fg-pri)' }}>
+                  {h.poi_name}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  <span style={{
+                    font: '500 10px/1 var(--font-sans)',
+                    color: catStyle?.color, background: catStyle?.bg,
+                    padding: '2px 5px', borderRadius: 4,
+                  }}>
+                    {cat}
+                  </span>
+                  <span style={{ font: '600 13px/1 var(--font-sans)', color: 'var(--fg-sec)' }}>
+                    {fmtDist(h.distance_m)}
+                  </span>
+                </div>
               </div>
-              <span style={{ flex: 1, font: '500 13px/1.3 var(--font-sans)', color: 'var(--fg-pri)' }}>
-                {h.poi_name}
-              </span>
-              <span style={{ font: '600 13px/1 var(--font-sans)', color: 'var(--fg-sec)', flexShrink: 0 }}>
-                {fmtDist(h.distance_m)}
-              </span>
-            </div>
-          ))}
-          {hagwons.length > 8 && (
-            <p style={{ font: '500 12px/1 var(--font-sans)', color: 'var(--fg-tertiary)', textAlign: 'center', padding: '10px 0 0', margin: 0 }}>
-              외 {hagwons.length - 8}개
-            </p>
+            )
+          })}
+          {hagwons.length > INITIAL_LIMIT && (
+            <button
+              onClick={() => setExpanded(v => !v)}
+              style={{
+                font: '500 12px/1 var(--font-sans)', color: 'var(--fg-tertiary)',
+                textAlign: 'center', padding: '10px 0 0', margin: 0,
+                background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+              }}
+            >
+              {expanded ? '접기' : `외 ${hagwons.length - INITIAL_LIMIT}개 더보기`}
+            </button>
           )}
         </div>
       )}
@@ -296,51 +367,55 @@ function HagwonSection({ hagwons, stats }: {
   )
 }
 
-function DaycareList({ daycares }: { daycares: PoiItem[] }) {
-  if (daycares.length === 0) {
-    return <EmptyNote text="반경 1km 내 보육시설 데이터를 수집 중입니다." />
-  }
+function DaycareSection({ daycares, kindergartens }: {
+  daycares: PoiItem[]
+  kindergartens: PoiItem[]
+}) {
+  const hasBoth = daycares.length > 0 && kindergartens.length > 0
+  const hasAny  = daycares.length > 0 || kindergartens.length > 0
+
+  if (!hasAny) return <EmptyNote text="반경 1km 내 보육시설 데이터를 수집 중입니다." />
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {daycares.slice(0, 10).map((d, i) => (
-        <div key={i} style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '9px 0',
-          borderBottom: i < Math.min(daycares.length, 10) - 1 ? '1px solid var(--line-subtle)' : 'none',
-        }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: 7,
-            background: 'var(--bg-surface-2)',
-            display: 'grid', placeItems: 'center',
-            flexShrink: 0, color: 'var(--fg-sec)',
-          }}>
-            <DaycareIcon />
-          </div>
-          <span style={{ flex: 1, font: '500 13px/1.3 var(--font-sans)', color: 'var(--fg-pri)' }}>
-            {d.poi_name}
-          </span>
-          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ font: '600 13px/1 var(--font-sans)', color: 'var(--fg-sec)' }}>
-              {fmtDist(d.distance_m)}
+    <div>
+      {kindergartens.length > 0 && (
+        <>
+          {hasBoth && (
+            <div style={{ font: '600 12px/1 var(--font-sans)', color: 'var(--fg-sec)', marginBottom: 8 }}>
+              유치원
             </div>
-            {d.distance_m != null && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end',
-                marginTop: 2,
-                font: '500 11px/1 var(--font-sans)', color: 'var(--fg-tertiary)',
-              }}>
-                <WalkIcon />
-                {fmtWalk(d.distance_m)}
-              </div>
-            )}
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', marginBottom: hasBoth ? 16 : 0 }}>
+            {kindergartens.slice(0, 3).map((k, i) => (
+              <PoiRow
+                key={i}
+                item={k}
+                icon={<DaycareIcon />}
+                isLast={i === Math.min(kindergartens.length, 3) - 1}
+              />
+            ))}
           </div>
-        </div>
-      ))}
-      {daycares.length > 10 && (
-        <p style={{ font: '500 12px/1 var(--font-sans)', color: 'var(--fg-tertiary)', textAlign: 'center', padding: '10px 0 0', margin: 0 }}>
-          외 {daycares.length - 10}개
-        </p>
+        </>
+      )}
+
+      {daycares.length > 0 && (
+        <>
+          {hasBoth && (
+            <div style={{ font: '600 12px/1 var(--font-sans)', color: 'var(--fg-sec)', marginBottom: 8 }}>
+              어린이집
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {daycares.slice(0, 3).map((d, i) => (
+              <PoiRow
+                key={i}
+                item={d}
+                icon={<DaycareIcon />}
+                isLast={i === Math.min(daycares.length, 3) - 1}
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   )
@@ -352,18 +427,19 @@ type Tab = 'school' | 'hagwon' | 'daycare'
 
 interface Props {
   data: FacilityEduData
+  si?: string
 }
 
-export function EducationCard({ data }: Props) {
+export function EducationCard({ data, si }: Props) {
   const [tab, setTab] = useState<Tab>('school')
-  const { schools, hagwons, daycares, hagwonStats } = data
+  const { schools, hagwons, daycares, kindergartens, hagwonStats } = data
 
-  const hasData = schools.length > 0 || hagwons.length > 0 || daycares.length > 0
+  const hasData = schools.length > 0 || hagwons.length > 0 || daycares.length > 0 || kindergartens.length > 0
 
   const tabs: Array<{ key: Tab; label: string; count?: number }> = [
-    { key: 'school',  label: '학교',         count: schools.length },
-    { key: 'hagwon',  label: '학원·교육',     count: hagwons.length },
-    { key: 'daycare', label: '어린이집·유치원', count: daycares.length },
+    { key: 'school',  label: '학교',           count: schools.length },
+    { key: 'hagwon',  label: '학원·교육',       count: hagwons.length },
+    { key: 'daycare', label: '어린이집·유치원', count: daycares.length + kindergartens.length },
   ]
 
   return (
@@ -372,7 +448,6 @@ export function EducationCard({ data }: Props) {
         교육 환경
       </h3>
 
-      {/* 탭 */}
       <div style={{
         display:      'flex',
         borderBottom: '1px solid var(--line-default)',
@@ -417,17 +492,17 @@ export function EducationCard({ data }: Props) {
       ) : (
         <>
           {tab === 'school'  && <SchoolList schools={schools} />}
-          {tab === 'hagwon'  && <HagwonSection hagwons={hagwons} stats={hagwonStats} />}
-          {tab === 'daycare' && <DaycareList daycares={daycares} />}
+          {tab === 'hagwon'  && <HagwonSection hagwons={hagwons} stats={hagwonStats} si={si} />}
+          {tab === 'daycare' && <DaycareSection daycares={daycares} kindergartens={kindergartens} />}
         </>
       )}
 
       <p style={{
-        font:       '500 11px/1 var(--font-sans)',
-        color:      'var(--fg-tertiary)',
-        marginTop:  14,
+        font:         '500 11px/1 var(--font-sans)',
+        color:        'var(--fg-tertiary)',
+        marginTop:    14,
         marginBottom: 0,
-        textAlign:  'right',
+        textAlign:    'right',
       }}>
         카카오맵 기준 · 반경 1~1.5km
       </p>
