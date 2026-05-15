@@ -122,6 +122,7 @@ export function DealTypeTabs({ rawSaleData, rawJeonseData }: Props) {
                   onClick={() => void setArea(String(m2))}
                   className={`btn btn-sm ${isActive ? 'btn-orange' : 'btn-secondary'}`}
                   style={{ minHeight: 32, padding: '4px 12px' }}
+                  title={`약 ${Math.round(m2 / 3.3058)}평`}
                 >
                   {m2}㎡
                 </button>

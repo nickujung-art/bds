@@ -70,12 +70,21 @@ export function ValueQuadrantChart({
         </h3>
         <p
           style={{
-            font: '500 11px/1 var(--font-sans)',
+            font: '500 11px/1.4 var(--font-sans)',
             color: 'var(--fg-tertiary)',
             margin: 0,
           }}
         >
-          {regionLabel} 내 단지 비교 ({totalCount}개 단지)
+          평당가(X) · 전세가율(Y) 기준 {regionLabel} 내 {totalCount}개 단지 분포
+        </p>
+        <p
+          style={{
+            font: '500 11px/1.4 var(--font-sans)',
+            color: 'var(--fg-tertiary)',
+            margin: '2px 0 0',
+          }}
+        >
+          왼쪽 위(가성비) ↔ 오른쪽 아래(고위험) · 주황 점 = 이 단지
         </p>
       </div>
 
@@ -96,6 +105,7 @@ export function ValueQuadrantChart({
               dataKey="x"
               name="평당가"
               type="number"
+              domain={['auto', 'auto']}
               tickFormatter={(v: number) => `${Math.round(v)}만`}
               tick={{ fontSize: 11, fill: '#9ca3af' }}
             />
