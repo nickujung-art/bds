@@ -86,6 +86,13 @@ describe('clusterComplexes', () => {
     built_year:          null,
     household_count:     null,
     hagwon_grade:        null,
+    // Phase 12 추가 필드
+    si:                  null,
+    gu:                  null,
+    dong:                null,
+    recent_price:        null,
+    recent_date:         null,
+    recent_area_m2:      null,
   }
 
   const complexes = [
