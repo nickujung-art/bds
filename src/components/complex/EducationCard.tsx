@@ -380,7 +380,7 @@ function DaycareSection({ daycares, kindergartens }: {
   const hasBoth = daycares.length > 0 && kindergartens.length > 0
   const hasAny  = daycares.length > 0 || kindergartens.length > 0
 
-  if (!hasAny) return <EmptyNote text="반경 1km 내 보육시설 데이터를 수집 중입니다." />
+  if (!hasAny) return <EmptyNote text="반경 1km 내 어린이집·유치원 정보가 없습니다." />
 
   return (
     <div>

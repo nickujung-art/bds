@@ -19,7 +19,8 @@ export async function searchComplexes(
   supabase: SupabaseClient,
   limit = 20,
 ): Promise<ComplexSearchResult[]> {
-  const q = query.trim()
+  // name_normalized는 공백·특수문자 제거 + 소문자 — 쿼리도 동일하게 정규화해야 매칭 정확도가 높아짐
+  const q = query.trim().replace(/[\s\-\(\)\[\],\.·]/g, '').toLowerCase()
   if (!q || sggCodes.length === 0) return []
 
   const { data, error } = await supabase.rpc('search_complexes', {

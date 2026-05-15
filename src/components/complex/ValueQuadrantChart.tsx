@@ -102,6 +102,19 @@ export function ValueQuadrantChart({ data, medianX, medianY, regionLabel, totalC
           </p>
         )}
 
+        {!target && (
+          <p style={{
+            font: '500 12px/1.5 var(--font-sans)',
+            color: 'var(--fg-tertiary)',
+            margin: '0 0 4px',
+            padding: '6px 10px',
+            borderRadius: 6,
+            background: 'var(--bg-surface-2)',
+          }}>
+            이 단지는 전세 거래 데이터가 부족하여 차트에 표시되지 않습니다.
+          </p>
+        )}
+
         <p style={{ font: '500 11px/1.4 var(--font-sans)', color: 'var(--fg-tertiary)', margin: 0 }}>
           {regionLabel} 내 {totalCount}개 단지 · X: 평당가(만원/평), Y: 전세가율(%)
         </p>
