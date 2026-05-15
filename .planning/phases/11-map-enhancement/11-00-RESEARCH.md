@@ -343,8 +343,8 @@ export function determineBadge(input: BadgeInput): BadgeType {
   if (input.built_year !== null && input.built_year >= 2021) return 'new_build'
   if (input.tx_count_30d >= input.p95_tx_count) return 'crown'
   if (input.view_count >= input.p95_view_count) return 'hot'
-  if (input.price_change_30d !== null && input.price_change_30d > 5) return 'surge'
-  if (input.price_change_30d !== null && input.price_change_30d < -5) return 'drop'
+  if (input.price_change_30d !== null && input.price_change_30d > 0.05) return 'surge'
+  if (input.price_change_30d !== null && input.price_change_30d < -0.05) return 'drop'
   if (input.hagwon_grade && ['A+', 'A'].includes(input.hagwon_grade)) return 'school'
   if (input.household_count !== null && input.household_count >= 1000) return 'large_complex'
   if (input.status === 'in_redevelopment') return 'redevelop'
@@ -518,7 +518,7 @@ export function getPriceColor(avgSalePerPyeong: number | null): string {
 ALTER TABLE public.complexes
   ADD COLUMN IF NOT EXISTS avg_sale_per_pyeong integer,       -- 만원/평, 최근 1년 평균
   ADD COLUMN IF NOT EXISTS view_count integer NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS price_change_30d numeric;          -- %, 양수=상승 음수=하락
+  ADD COLUMN IF NOT EXISTS price_change_30d numeric(5,4);      -- 비율(0~1), 양수=상승 음수=하락
 
 -- view_count 인덱스 (상위 5% 계산용)
 CREATE INDEX IF NOT EXISTS complexes_view_count_idx ON public.complexes(view_count);
@@ -568,7 +568,7 @@ RETURNS void LANGUAGE sql AS $$
       )
       SELECT CASE
         WHEN prev.avg_p IS NULL OR prev.avg_p = 0 THEN NULL
-        ELSE round(((recent.avg_p - prev.avg_p) / prev.avg_p * 100)::numeric, 2)
+        ELSE round(((recent.avg_p - prev.avg_p) / prev.avg_p)::numeric, 4)
       END
       FROM recent, prev
     ),
@@ -604,22 +604,25 @@ $$;
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **사이드 패널이 기존 SidePanel(검색)과 공존하는 방법**
    - What we know: 현재 MapPage에 좌측 검색 SidePanel(width: 320)이 있음. MAP-03은 "PC 우측 슬라이드인"이라고 명시
    - What's unclear: 검색 패널과 단지 상세 패널을 동시에 표시할지, 아니면 전환할지
    - Recommendation: 별도 Panel로 분리. 우측 absolute position으로 오버레이. 마커 클릭 시 우측에서 슬라이드인, 닫기 버튼으로 닫힘.
+   - **RESOLVED:** MapSidePanel은 지도 우측에 고정(position:fixed, right:0). 검색 SidePanel(있다면 좌측)과 별도 레이어로 공존. 동시 표시 가능.
 
 2. **tx_count_30d (최근 30일 거래량)를 ComplexMapItem에 포함할지**
    - What we know: 왕관 배지 조건이 "상위 5% 거래량". 이를 위해 각 단지의 30일 거래량이 필요.
    - What's unclear: 지도 초기 로드 시 669개 단지 × 트랜잭션 집계 쿼리는 부하가 큼
    - Recommendation: DB 함수 refresh_complex_price_stats()에 tx_count_30d 컬럼도 추가하여 배치로 저장. getComplexesForMap에서 함께 조회.
+   - **RESOLVED:** 포함. refresh_complex_price_stats()에 tx_count_30d 컬럼 집계 추가. getComplexesForMap에서 함께 조회. (11-01 플랜에 반영됨)
 
 3. **단지 상세 페이지에서 view_count 중복 카운팅 방지**
    - What we know: ISR 페이지(revalidate=86400)에서 Server Action 호출
    - What's unclear: 같은 사용자가 back/forward로 돌아올 때 중복 카운팅 방지
    - Recommendation: sessionStorage로 방문 단지 ID 기록. 세션 내 최초 방문 시에만 increment 호출.
+   - **RESOLVED:** sessionStorage(vc_{complexId} 키)로 세션당 1회 제한. ViewCountTracker.tsx에 구현. (11-04 플랜에 반영됨)
 
 ---
 
@@ -742,3 +745,5 @@ $$;
 
 **Research date:** 2026-05-15
 **Valid until:** 2026-06-15 (react-kakao-maps-sdk API는 안정적, supercluster API는 안정적)
+
+
