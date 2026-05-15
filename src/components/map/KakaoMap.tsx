@@ -47,8 +47,12 @@ export function KakaoMap({
     return txCounts[p95Idx] ?? 0
   }, [complexes])
 
-  // 줌 레벨 7 이하에서 평당가 라벨 표시 (카카오 레벨 — 숫자 클수록 축소)
-  const showLabel = mapLevel <= 7
+  // Phase 12 줌 레벨 3단계 정책
+  // level ≥ 10: 클러스터만 (마커 렌더 안 함)
+  // level 7~9: HouseMarker + 가격 (단지명 없음)
+  // level ≤ 6: HouseMarker + 단지명 + 가격
+  const showLabel = mapLevel <= 9
+  const showName  = mapLevel <= 6
 
   const computeClusters = useCallback(
     (map: kakao.maps.Map) => {
@@ -123,7 +127,17 @@ export function KakaoMap({
             built_year:          number | null
             household_count:     number | null
             hagwon_grade:        string | null
+            // Phase 12 추가
+            si:                  string | null
+            gu:                  string | null
+            dong:                string | null
+            recent_price:        number | null
+            recent_date:         string | null
+            recent_area_m2:      number | null
           }
+
+          // level ≥ 10: 개별 마커 렌더 안 함 (클러스터만 표시)
+          if (mapLevel >= 10) return null
 
           const badge = determineBadge({
             status:       props.status       ?? 'active',
@@ -139,11 +153,17 @@ export function KakaoMap({
               name={props.name}
               lat={lat}
               lng={lng}
-              avgSalePerPyeong={props.avg_sale_per_pyeong ?? null}
               showLabel={showLabel}
+              showName={showName}
               badge={badge}
               onSelect={setSelectedComplexId}
               householdCount={props.household_count ?? null}
+              si={props.si ?? null}
+              gu={props.gu ?? null}
+              recentPrice={props.recent_price ?? null}
+              recentDate={props.recent_date ?? null}
+              recentAreaM2={props.recent_area_m2 ?? null}
+              builtYear={props.built_year ?? null}
             />
           )
         })}

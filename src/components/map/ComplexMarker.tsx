@@ -1,16 +1,17 @@
 'use client'
 
 import { CustomOverlayMap } from 'react-kakao-maps-sdk'
-import { useState } from 'react'
-import { BadgeMarker } from './markers/BadgeMarker'
+import { memo, useState } from 'react'
+import { HouseMarker } from './markers/HouseMarker'
 import type { BadgeType } from './markers/badge-logic'
 
-// 평당가(만원/평)에 따른 색상 — ComplexMarker 툴팁 전용
-function getPriceColor(avgSalePerPyeong: number | null): string {
-  if (avgSalePerPyeong === null || avgSalePerPyeong === 0) return '#6B7280'
-  if (avgSalePerPyeong < 800) return '#10B981'
-  if (avgSalePerPyeong < 1500) return '#F59E0B'
-  return '#EF4444'
+// 1억 기준 포맷: 9,500만 / 1억 5,000만
+function formatPrice(price: number): string {
+  const eok = Math.floor(price / 10000)
+  const man = price % 10000
+  if (eok > 0 && man > 0) return `${eok}억 ${man.toLocaleString()}만`
+  if (eok > 0) return `${eok}억`
+  return `${price.toLocaleString()}만`
 }
 
 interface Props {
@@ -18,19 +19,35 @@ interface Props {
   name:             string
   lat:              number
   lng:              number
-  avgSalePerPyeong: number | null
   showLabel:        boolean
+  showName:         boolean        // true면 단지명 표시 (level ≤ 6)
   badge:            BadgeType
   onSelect:         (id: string) => void
   householdCount:   number | null
+  // Phase 12 추가 — hover 툴팁 카드
+  si:               string | null
+  gu:               string | null
+  recentPrice:      number | null
+  recentDate:       string | null
+  recentAreaM2:     number | null
+  builtYear:        number | null
 }
 
-export function ComplexMarker({
+export const ComplexMarker = memo(function ComplexMarker({
   id, name, lat, lng,
-  avgSalePerPyeong, showLabel, badge, onSelect, householdCount,
+  showLabel, showName, badge, onSelect, householdCount,
+  si, gu, recentPrice, recentDate, recentAreaM2, builtYear,
 }: Props) {
   const [hover, setHover] = useState(false)
-  const priceColor = getPriceColor(avgSalePerPyeong)
+
+  // HouseMarker에 전달할 가격: showLabel=false면 null (줌 레벨 낮을 때 가격 숨김)
+  const displayPrice = showLabel ? recentPrice : null
+
+  // 평수 변환: m² / 3.3058 → X.X평
+  const pyeong = recentAreaM2 !== null ? (recentAreaM2 / 3.3058).toFixed(1) : null
+
+  // 시구 조합
+  const sigu = [si, gu].filter(Boolean).join(' ')
 
   return (
     <>
@@ -45,36 +62,73 @@ export function ComplexMarker({
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(id) }}
         >
-          <BadgeMarker badge={badge} priceLabel={showLabel ? avgSalePerPyeong : null} />
+          <HouseMarker
+            badge={badge}
+            recentPrice={displayPrice}
+            showName={showName}
+            name={name}
+          />
         </div>
       </CustomOverlayMap>
 
+      {/* hover 툴팁 카드 (D-02 locked 레이아웃) */}
       {hover && (
         <CustomOverlayMap position={{ lat, lng }} yAnchor={2.4} zIndex={20}>
           <div
             style={{
               background: 'white',
               border: '1px solid #E5E7EB',
-              borderRadius: 6,
-              padding: '6px 8px',
-              fontSize: 12,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-              whiteSpace: 'nowrap',
+              borderRadius: 8,
+              padding: '10px 12px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
               pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              minWidth: 180,
+              fontFamily: 'inherit',
             }}
           >
-            <div style={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}>{name}</div>
-            {avgSalePerPyeong !== null && (
-              <div style={{ color: priceColor, fontWeight: 500 }}>
-                {avgSalePerPyeong.toLocaleString()}만원/평
+            {/* 상단: 단지명 + 시구 */}
+            <div style={{ fontWeight: 700, fontSize: 13, color: '#111827', marginBottom: 1 }}>
+              {name}
+            </div>
+            {sigu && (
+              <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 6 }}>
+                {sigu}
               </div>
             )}
-            {householdCount !== null && (
-              <div style={{ color: '#6B7280', fontSize: 11 }}>{householdCount.toLocaleString()}세대</div>
+
+            {/* 중단: 최근 실거래 */}
+            {(recentPrice !== null || recentDate !== null || pyeong !== null) && (
+              <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: 6, marginBottom: 6 }}>
+                <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 2 }}>최근 실거래</div>
+                {recentPrice !== null && (
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>
+                    {formatPrice(recentPrice)}
+                  </div>
+                )}
+                {recentDate && (
+                  <div style={{ fontSize: 11, color: '#6B7280' }}>{recentDate}</div>
+                )}
+                {pyeong !== null && (
+                  <div style={{ fontSize: 11, color: '#6B7280' }}>{pyeong}평</div>
+                )}
+              </div>
+            )}
+
+            {/* 하단: 세대수 · 준공연도 */}
+            {(householdCount !== null || builtYear !== null) && (
+              <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: 6, fontSize: 11, color: '#6B7280' }}>
+                {[
+                  householdCount !== null ? `${householdCount.toLocaleString()}세대` : null,
+                  builtYear !== null ? `${builtYear}년` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </div>
             )}
           </div>
         </CustomOverlayMap>
       )}
     </>
   )
-}
+})
