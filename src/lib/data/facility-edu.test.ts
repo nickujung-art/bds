@@ -56,9 +56,9 @@ describe('getComplexFacilityEdu', () => {
     })
     const result = await getComplexFacilityEdu('cx-1', supabase)
     expect(result.kindergartens).toHaveLength(1)
-    expect(result.kindergartens[0].poi_name).toBe('행복유치원')
+    expect(result.kindergartens.at(0)?.poi_name).toBe('행복유치원')
     expect(result.daycares).toHaveLength(1)
-    expect(result.daycares[0].poi_name).toBe('해달별어린이집')
+    expect(result.daycares.at(0)?.poi_name).toBe('해달별어린이집')
   })
 
   it('병설 포함 시 kindergartens에 분류', async () => {

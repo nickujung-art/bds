@@ -21,10 +21,11 @@ export interface HagwonStats {
 }
 
 export interface FacilityEduData {
-  schools:   SchoolItem[]
-  hagwons:   PoiItem[]
-  daycares:  PoiItem[]
-  hagwonStats: HagwonStats | null
+  schools:       SchoolItem[]
+  hagwons:       PoiItem[]
+  daycares:      PoiItem[]
+  kindergartens: PoiItem[]
+  hagwonStats:   HagwonStats | null
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,31 +47,41 @@ export async function getComplexFacilityEdu(
       .in('category', ['hagwon', 'daycare'])
       .order('distance_m', { ascending: true, nullsFirst: false }),
 
-    // 이 단지의 학원 점수 + 전체 백분위 계산 (창원/김해 통합)
+    // 이 단지의 학원 점수 + si 기반 백분위 계산
     supabase
       .from('complexes')
-      .select('hagwon_score')
+      .select('hagwon_score, si')
       .eq('id', complexId)
       .maybeSingle(),
   ])
 
   const schools = (schoolRes.data ?? []) as SchoolItem[]
-  const allPois  = poiRes.data ?? []
-  const hagwons  = allPois
+  const allPois = poiRes.data ?? []
+  const hagwons = allPois
     .filter(p => p.category === 'hagwon')
     .map(p => ({ poi_name: p.poi_name, distance_m: p.distance_m }))
+
+  const isKindergarten = (name: string) =>
+    name.includes('유치원') || name.includes('병설')
+
+  const kindergartens = allPois
+    .filter(p => p.category === 'daycare' && isKindergarten(p.poi_name))
+    .map(p => ({ poi_name: p.poi_name, distance_m: p.distance_m }))
+
   const daycares = allPois
-    .filter(p => p.category === 'daycare')
+    .filter(p => p.category === 'daycare' && !isKindergarten(p.poi_name))
     .map(p => ({ poi_name: p.poi_name, distance_m: p.distance_m }))
 
   // 학원 통계
   let hagwonStats: HagwonStats | null = null
-  const rawScore = (scoreRes.data as { hagwon_score?: number | null } | null)?.hagwon_score
+  const complexData = scoreRes.data as { hagwon_score?: number | null; si?: string | null } | null
+  const rawScore = complexData?.hagwon_score
+  const si = complexData?.si
   if (rawScore != null) {
-    // 백분위: 전체 단지의 hagwon_score 분포에서 이 단지 위치
-    const percentileRes = await supabase.rpc('hagwon_score_percentile', {
-      target_score: rawScore,
-    })
+    // 백분위: si(시) 기반 또는 전체 분포에서 이 단지 위치
+    const percentileRes = si
+      ? await supabase.rpc('hagwon_score_percentile_by_si', { target_score: rawScore, p_si: si })
+      : await supabase.rpc('hagwon_score_percentile', { target_score: rawScore })
     const percentile: number = (percentileRes.data as number | null) ?? 50
 
     hagwonStats = {
@@ -93,5 +104,5 @@ export async function getComplexFacilityEdu(
     }
   }
 
-  return { schools, hagwons, daycares, hagwonStats }
+  return { schools, hagwons, daycares, kindergartens, hagwonStats }
 }
