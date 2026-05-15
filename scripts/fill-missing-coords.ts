@@ -73,6 +73,7 @@ async function main() {
 
   for (let i = 0; i < complexes.length; i++) {
     const cx = complexes[i]
+    if (!cx) continue
     process.stdout.write(`\r  [${i + 1}/${complexes.length}] ${cx.canonical_name} ...`)
 
     try {
