@@ -35,10 +35,11 @@ if (!KAKAO_KEY) {
   process.exit(1)
 }
 
-const DRY_RUN       = process.argv.includes('--dry-run')
-const MISSING_ONLY  = process.argv.includes('--missing-poi-only')
-const sggIdx        = process.argv.indexOf('--sgg')
-const SGG_FILTER    = sggIdx !== -1 ? (process.argv[sggIdx + 1] ?? '') : ''
+const DRY_RUN            = process.argv.includes('--dry-run')
+const MISSING_ONLY       = process.argv.includes('--missing-poi-only')
+const MISSING_DAYCARE    = process.argv.includes('--missing-daycare-only')
+const sggIdx             = process.argv.indexOf('--sgg')
+const SGG_FILTER         = sggIdx !== -1 ? (process.argv[sggIdx + 1] ?? '') : ''
 
 // ─── 카카오 API ────────────────────────────────────────────────────────────
 
@@ -100,6 +101,8 @@ function fetchComplexes(): ComplexRow[] {
   const sggClause     = SGG_FILTER ? `AND si ILIKE '%${SGG_FILTER}%'` : ''
   const missingClause = MISSING_ONLY
     ? `AND id NOT IN (SELECT DISTINCT complex_id FROM facility_poi WHERE complex_id IS NOT NULL)`
+    : MISSING_DAYCARE
+    ? `AND id NOT IN (SELECT DISTINCT complex_id FROM facility_poi WHERE category = 'daycare')`
     : ''
   const query = `SELECT id, lat, lng, si FROM complexes WHERE lat IS NOT NULL AND lng IS NOT NULL ${sggClause} ${missingClause} ORDER BY si, id`
   const raw = execSync(
@@ -170,9 +173,10 @@ WHERE id IN (${ids});`
 
 async function main() {
   console.log('[edu-collect] 시작 —', new Date().toISOString())
-  if (DRY_RUN)      console.log('[edu-collect] *** DRY RUN — SQL만 생성, DB 미실행 ***')
-  if (MISSING_ONLY) console.log('[edu-collect] 모드: POI 미수집 단지만')
-  if (SGG_FILTER)   console.log(`[edu-collect] 필터: ${SGG_FILTER}`)
+  if (DRY_RUN)         console.log('[edu-collect] *** DRY RUN — SQL만 생성, DB 미실행 ***')
+  if (MISSING_ONLY)    console.log('[edu-collect] 모드: POI 미수집 단지만')
+  if (MISSING_DAYCARE) console.log('[edu-collect] 모드: daycare 미수집 단지만 (PS3만 호출)')
+  if (SGG_FILTER)      console.log(`[edu-collect] 필터: ${SGG_FILTER}`)
 
   // 1. 단지 목록 로드
   const complexes = fetchComplexes()
@@ -215,34 +219,36 @@ async function main() {
     process.stdout.write(`\r  [${done}/${complexes.length}] ${cx.si ?? ''} ...`)
 
     try {
-      // ── 학교 (SC4) ──────────────────────────────────────────
-      const scResult = await kakaoCategory('SC4', cx.lat, cx.lng, 1500)
-      for (const doc of scResult.documents) {
-        const type = parseSchoolType(doc.category_name)
-        if (!type) continue
-        schoolBuf.push({ complex_id: cx.id, school_name: doc.place_name, school_type: type, distance_m: Math.round(parseFloat(doc.distance)) })
-        totalSchool++
-      }
-      await sleep(80)
-
-      // ── 학원 (AC5, 최대 3페이지) ────────────────────────────
-      let hagwonDocs: KakaoDoc[] = []
-      for (let page = 1; page <= 3; page++) {
-        const ac = await kakaoCategory('AC5', cx.lat, cx.lng, 1000, page)
-        hagwonDocs = hagwonDocs.concat(ac.documents)
+      if (!MISSING_DAYCARE) {
+        // ── 학교 (SC4) ──────────────────────────────────────────
+        const scResult = await kakaoCategory('SC4', cx.lat, cx.lng, 1500)
+        for (const doc of scResult.documents) {
+          const type = parseSchoolType(doc.category_name)
+          if (!type) continue
+          schoolBuf.push({ complex_id: cx.id, school_name: doc.place_name, school_type: type, distance_m: Math.round(parseFloat(doc.distance)) })
+          totalSchool++
+        }
         await sleep(80)
-        if (ac.meta.is_end) break
+
+        // ── 학원 (AC5, 최대 3페이지) ────────────────────────────
+        let hagwonDocs: KakaoDoc[] = []
+        for (let page = 1; page <= 3; page++) {
+          const ac = await kakaoCategory('AC5', cx.lat, cx.lng, 1000, page)
+          hagwonDocs = hagwonDocs.concat(ac.documents)
+          await sleep(80)
+          if (ac.meta.is_end) break
+        }
+        for (const doc of hagwonDocs) {
+          poiBuf.push({ complex_id: cx.id, category: 'hagwon', poi_name: doc.place_name, distance_m: Math.round(parseFloat(doc.distance)) })
+          totalHagwon++
+        }
+        // 거리 가중치 점수: 100m 구간당 1점 감소 (0~99m=10pt, 100~199m=9pt, ..., 900~999m=1pt)
+        const score = hagwonDocs.reduce((sum, d) => {
+          const dist = parseFloat(d.distance)
+          return sum + Math.max(0, 10 - Math.floor(dist / 100))
+        }, 0)
+        scoreBuf.push({ id: cx.id, score })
       }
-      for (const doc of hagwonDocs) {
-        poiBuf.push({ complex_id: cx.id, category: 'hagwon', poi_name: doc.place_name, distance_m: Math.round(parseFloat(doc.distance)) })
-        totalHagwon++
-      }
-      // 거리 가중치 점수: 100m 구간당 1점 감소 (0~99m=10pt, 100~199m=9pt, ..., 900~999m=1pt)
-      const score = hagwonDocs.reduce((sum, d) => {
-        const dist = parseFloat(d.distance)
-        return sum + Math.max(0, 10 - Math.floor(dist / 100))
-      }, 0)
-      scoreBuf.push({ id: cx.id, score })
 
       // ── 어린이집·유치원 (PS3) ────────────────────────────────
       const psResult = await kakaoCategory('PS3', cx.lat, cx.lng, 1000)
