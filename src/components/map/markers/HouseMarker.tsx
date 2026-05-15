@@ -4,129 +4,73 @@ import { memo } from 'react'
 import type { BadgeType } from './badge-logic'
 
 export interface HouseMarkerProps {
-  badge:       BadgeType     // 색상 결정 + 왕관 오버레이
-  recentPrice: number | null // 만원 단위 — null이면 숨김
-  showName:    boolean       // true면 단지명 표시
+  badge:       BadgeType
+  recentPrice: number | null
   name:        string
 }
 
-// 1억 기준 포맷: 9,500만 / 1억 5,000만
-function formatPrice(price: number): string {
-  const eok = Math.floor(price / 10000)
-  const man = price % 10000
-  if (eok > 0 && man > 0) return `${eok}억 ${man.toLocaleString()}만`
-  if (eok > 0) return `${eok}억`
-  return `${price.toLocaleString()}만`
+// 핀 내부용 축약 가격: 1.5억, 12.5억, 9500만
+function formatPriceShort(price: number): string {
+  if (price >= 10000) {
+    const tenths = Math.round(price / 1000)
+    return tenths % 10 === 0 ? `${tenths / 10}억` : `${(tenths / 10).toFixed(1)}억`
+  }
+  return `${Math.round(price / 100) * 100}만`
 }
 
-// 마커 색상 결정
 function getColors(badge: BadgeType): { roofColor: string; bodyColor: string } {
   if (badge === 'pre_sale') return { roofColor: '#EF4444', bodyColor: '#EF4444' }
   if (badge === 'new_build') return { roofColor: '#14B8A6', bodyColor: '#14B8A6' }
-  // hot / none → 오렌지 바디, 회색 지붕
   return { roofColor: '#9CA3AF', bodyColor: '#F97316' }
 }
 
 export const HouseMarker = memo(function HouseMarker({
-  badge, recentPrice, showName, name,
+  badge, recentPrice, name,
 }: HouseMarkerProps) {
   const { roofColor, bodyColor } = getColors(badge)
 
-  const ariaLabel =
-    badge === 'pre_sale' ? `${name} — 분양` :
-    badge === 'new_build' ? `${name} — 신축` :
-    badge === 'hot' ? `${name} — 거래활발` :
-    `${name} — 단지`
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {/* 집 모양 SVG — viewBox 0 0 40 48 */}
-      <svg
-        width="40"
-        height="48"
-        viewBox="0 0 40 48"
-        fill="none"
-        aria-label={ariaLabel}
-        style={{ display: 'block', overflow: 'visible' }}
-      >
-        {/* hot 왕관: 지붕 위 — badge=hot일 때만 */}
-        {badge === 'hot' && (
-          <g transform="translate(10, -8)">
-            <path
-              d="M0,8 L4,2 L8,6 L12,0 L16,6 L20,2 L20,8 Z"
-              fill="#FCD34D"
-              stroke="#D97706"
-              strokeWidth="0.5"
-            />
-          </g>
-        )}
-
-        {/* 굴뚝: 지붕 왼쪽 위 작은 돌기 */}
-        <rect
-          x="26"
-          y="2"
-          width="6"
-          height="8"
-          rx="1"
-          fill={roofColor}
-        />
-
-        {/* 지붕 삼각형 */}
-        <polygon
-          points="4,22 20,6 36,22"
-          fill={roofColor}
-        />
-
-        {/* 바디: C형 (오른쪽 약간 열린 형태) */}
+    <svg
+      width="44"
+      height="58"
+      viewBox="0 0 44 58"
+      fill="none"
+      aria-label={name}
+      style={{ display: 'block', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))' }}
+    >
+      {/* 왕관 (hot만) — y=0~10 영역에 배치, viewBox 안에 있어 클리핑 없음 */}
+      {badge === 'hot' && (
         <path
-          d="M8 22 L8 44 L28 44 L28 22 Z"
-          fill={bodyColor}
+          d="M12,10 L15,4 L19,8 L22,2 L25,8 L29,4 L32,10 Z"
+          fill="#FCD34D"
+          stroke="#D97706"
+          strokeWidth="0.8"
         />
-        {/* 오른쪽 개구부 — 흰색으로 덮어 C형 연출 */}
-        <rect x="28" y="22" width="8" height="22" fill="white" />
-      </svg>
+      )}
 
-      {/* 실거래가 라벨 */}
+      {/* 지붕 삼각형 — y=10~28 */}
+      <polygon points="0,28 22,10 44,28" fill={roofColor} />
+
+      {/* 바디 — y=28~50 */}
+      <rect x="0" y="28" width="44" height="22" fill={bodyColor} />
+
+      {/* 실거래가 (바디 안, 흰색) */}
       {recentPrice !== null && (
-        <div
-          data-testid="price-label"
-          style={{
-            marginTop: 2,
-            padding: '1px 4px',
-            background: 'white',
-            border: '1px solid #E5E7EB',
-            borderRadius: 3,
-            fontSize: 10,
-            fontWeight: 600,
-            color: bodyColor,
-            whiteSpace: 'nowrap',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.10)',
-            lineHeight: 1.3,
-          }}
+        <text
+          x="22"
+          y="43"
+          textAnchor="middle"
+          fontSize="10"
+          fontWeight="600"
+          fill="white"
+          fontFamily="system-ui, -apple-system, sans-serif"
         >
-          {formatPrice(recentPrice)}
-        </div>
+          {formatPriceShort(recentPrice)}
+        </text>
       )}
 
-      {/* 단지명 */}
-      {showName && (
-        <div
-          data-testid="complex-name"
-          style={{
-            marginTop: 1,
-            fontSize: 11,
-            fontWeight: 500,
-            color: '#374151',
-            whiteSpace: 'nowrap',
-            textAlign: 'center',
-            maxWidth: 80,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {name}
-        </div>
-      )}
-    </div>
+      {/* 포인터 — y=50~58, 바디와 동색 */}
+      <polygon points="14,50 22,58 30,50" fill={bodyColor} />
+    </svg>
   )
 })

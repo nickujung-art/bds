@@ -2,13 +2,14 @@
 
 import { memo } from 'react'
 import { CustomOverlayMap, useMap } from 'react-kakao-maps-sdk'
-import type Supercluster from 'supercluster'
 
-interface Props {
-  lat:          number
-  lng:          number
-  clusterId:    number
-  clusterIndex: Supercluster
+export interface GuChip {
+  gu:         string
+  lat:        number
+  lng:        number
+  maxPrice:   number | null
+  memberLats: number[]
+  memberLngs: number[]
 }
 
 function formatPrice(price: number): string {
@@ -20,32 +21,14 @@ function formatPrice(price: number): string {
 }
 
 export const DongClusterChip = memo(function DongClusterChip({
-  lat, lng, clusterId, clusterIndex,
-}: Props) {
+  gu, lat, lng, maxPrice, memberLats, memberLngs,
+}: GuChip) {
   const map = useMap('DongClusterChip')
-
-  const leaves = clusterIndex.getLeaves(clusterId, Infinity)
-
-  // 구/동 이름: 첫 번째 leave 기준
-  const firstProps = leaves[0]?.properties as {
-    gu?: string | null
-    dong?: string | null
-    recent_price?: number | null
-  } | undefined
-  const areaName = firstProps?.gu ?? firstProps?.dong ?? '기타'
-
-  // 최근 최고 실거래가
-  const maxPrice = leaves.reduce<number | null>((max, leaf) => {
-    const p = (leaf.properties as { recent_price?: number | null }).recent_price ?? null
-    if (p === null) return max
-    return max === null ? p : Math.max(max, p)
-  }, null)
 
   const handleClick = () => {
     const bounds = new window.kakao.maps.LatLngBounds()
-    for (const leaf of leaves) {
-      const coords = leaf.geometry.coordinates as [number, number]
-      bounds.extend(new window.kakao.maps.LatLng(coords[1] ?? 0, coords[0] ?? 0))
+    for (let i = 0; i < memberLats.length; i++) {
+      bounds.extend(new window.kakao.maps.LatLng(memberLats[i] ?? 0, memberLngs[i] ?? 0))
     }
     map.setBounds(bounds)
   }
@@ -55,26 +38,25 @@ export const DongClusterChip = memo(function DongClusterChip({
       <div
         onClick={handleClick}
         role="button"
-        aria-label={`${areaName} 지역 ${leaves.length}개 단지. 클릭하면 해당 단지들로 확대됩니다`}
+        aria-label={`${gu} 클릭하면 해당 지역으로 확대됩니다`}
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick() }}
         style={{
           background: 'white',
           border: '1px solid #E5E7EB',
           borderRadius: 6,
-          padding: '8px 12px',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
+          padding: '6px 10px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
           cursor: 'pointer',
           userSelect: 'none',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-start',
-          gap: 2,
-          minWidth: 80,
+          gap: 1,
         }}
       >
         <span style={{ fontSize: 12, fontWeight: 700, color: '#111827', lineHeight: 1.3 }}>
-          {areaName}
+          {gu}
         </span>
         {maxPrice !== null && (
           <span style={{ fontSize: 11, fontWeight: 500, color: '#F97316', lineHeight: 1.2 }}>

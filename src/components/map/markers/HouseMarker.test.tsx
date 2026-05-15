@@ -5,70 +5,63 @@ import { HouseMarker } from './HouseMarker'
 // ── Test 1: badge='none' → 오렌지 색상 (#F97316)
 test('badge none일 때 오렌지 색상(#F97316) SVG가 렌더된다', () => {
   const { container } = render(
-    <HouseMarker badge="none" recentPrice={null} showName={false} name="테스트 단지" />
+    <HouseMarker badge="none" recentPrice={null} name="테스트 단지" />
   )
-  const svgContent = container.innerHTML
-  expect(svgContent).toContain('F97316')
+  expect(container.innerHTML).toContain('F97316')
 })
 
 // ── Test 2: badge='pre_sale' → 빨강 (#EF4444)
 test('badge pre_sale일 때 빨간 색상(#EF4444) 요소가 렌더된다', () => {
   const { container } = render(
-    <HouseMarker badge="pre_sale" recentPrice={null} showName={false} name="분양 단지" />
+    <HouseMarker badge="pre_sale" recentPrice={null} name="분양 단지" />
   )
-  const svgContent = container.innerHTML
-  expect(svgContent).toContain('EF4444')
+  expect(container.innerHTML).toContain('EF4444')
 })
 
 // ── Test 3: badge='new_build' → 민트 (#14B8A6)
 test('badge new_build일 때 민트 색상(#14B8A6) 요소가 렌더된다', () => {
   const { container } = render(
-    <HouseMarker badge="new_build" recentPrice={null} showName={false} name="신축 단지" />
+    <HouseMarker badge="new_build" recentPrice={null} name="신축 단지" />
   )
-  const svgContent = container.innerHTML
-  expect(svgContent).toContain('14B8A6')
+  expect(container.innerHTML).toContain('14B8A6')
 })
 
 // ── Test 4: badge='hot' → 왕관 path (fill='#FCD34D')
 test('badge hot일 때 왕관 path(fill=#FCD34D)가 렌더된다', () => {
   const { container } = render(
-    <HouseMarker badge="hot" recentPrice={null} showName={false} name="핫 단지" />
+    <HouseMarker badge="hot" recentPrice={null} name="핫 단지" />
   )
-  const svgContent = container.innerHTML
-  expect(svgContent).toContain('FCD34D')
+  expect(container.innerHTML).toContain('FCD34D')
 })
 
-// ── Test 5: recentPrice=95000 → '9억 5,000만' 텍스트
-test('recentPrice=95000일 때 "9억 5,000만" 텍스트가 렌더된다', () => {
+// ── Test 5: recentPrice=95000 → '9.5억' (축약 포맷, 핀 내부)
+test('recentPrice=95000일 때 핀 내부에 "9.5억" 텍스트가 렌더된다', () => {
   render(
-    <HouseMarker badge="none" recentPrice={95000} showName={false} name="테스트 단지" />
+    <HouseMarker badge="none" recentPrice={95000} name="테스트 단지" />
   )
-  expect(screen.getByText('9억 5,000만')).toBeTruthy()
+  expect(screen.getByText('9.5억')).toBeTruthy()
 })
 
-// ── Test 6: recentPrice=null → 가격 텍스트 없음
-test('recentPrice=null일 때 가격 텍스트가 없다', () => {
+// ── Test 6: recentPrice=null → SVG text 요소 없음
+test('recentPrice=null일 때 가격 텍스트 요소가 없다', () => {
   const { container } = render(
-    <HouseMarker badge="none" recentPrice={null} showName={false} name="테스트 단지" />
+    <HouseMarker badge="none" recentPrice={null} name="테스트 단지" />
   )
-  // 가격 관련 텍스트가 없어야 함 (억/만 텍스트)
-  expect(container.querySelector('[data-testid="price-label"]')).toBeNull()
+  expect(container.querySelector('text')).toBeNull()
 })
 
-// ── Test 7: showName=true → name 텍스트가 렌더된다
-test('showName=true일 때 단지명이 렌더된다', () => {
+// ── Test 7: 1억 단위 가격 → '1억' 표시
+test('recentPrice=10000일 때 "1억"이 표시된다', () => {
   render(
-    <HouseMarker badge="none" recentPrice={null} showName={true} name="용지아이파크" />
+    <HouseMarker badge="none" recentPrice={10000} name="테스트 단지" />
   )
-  expect(screen.getByText('용지아이파크')).toBeTruthy()
+  expect(screen.getByText('1억')).toBeTruthy()
 })
 
-// ── Test 8: showName=false → name 텍스트가 없다
-test('showName=false일 때 단지명이 없다', () => {
-  const { container } = render(
-    <HouseMarker badge="none" recentPrice={null} showName={false} name="용지아이파크" />
+// ── Test 8: 1억 미만 → 만 단위 표시
+test('recentPrice=8500일 때 "8500만"이 표시된다', () => {
+  render(
+    <HouseMarker badge="none" recentPrice={8500} name="테스트 단지" />
   )
-  // 단지명 텍스트가 렌더되지 않아야 함
-  const nameEl = container.querySelector('[data-testid="complex-name"]')
-  expect(nameEl).toBeNull()
+  expect(screen.getByText('8500만')).toBeTruthy()
 })

@@ -1,6 +1,6 @@
 'use client'
 
-import { Map, useKakaoLoader } from 'react-kakao-maps-sdk'
+import { Map as KakaoMapView, useKakaoLoader } from 'react-kakao-maps-sdk'
 import { useCallback, useMemo, useState } from 'react'
 import {
   buildClusterIndex,
@@ -9,7 +9,7 @@ import {
 } from '@/lib/data/complexes-map'
 import { determineBadge } from '@/components/map/markers/badge-logic'
 import { ComplexMarker } from './ComplexMarker'
-import { DongClusterChip } from './DongClusterChip'
+import { DongClusterChip, type GuChip } from './DongClusterChip'
 import { MapSidePanel } from './MapSidePanel'
 
 interface Props {
@@ -18,7 +18,6 @@ interface Props {
   initialLevel?:  number
 }
 
-// 창원·김해 중심 좌표
 const DEFAULT_CENTER = { lat: 35.2278, lng: 128.6817 }
 const DEFAULT_LEVEL  = 8
 
@@ -33,13 +32,10 @@ export function KakaoMap({
   })
   const [clusters,          setClusters]         = useState<ClusterFeature[]>([])
   const [mapLevel,          setMapLevel]          = useState<number>(DEFAULT_LEVEL)
-  // selectedComplexId: MapSidePanel에 전달
   const [selectedComplexId, setSelectedComplexId] = useState<string | null>(null)
 
-  // Supercluster 인덱스는 complexes가 바뀔 때만 재생성
   const clusterIndex = useMemo(() => buildClusterIndex(complexes), [complexes])
 
-  // p95 기준값 계산 (클라이언트 1회 — 배지 계산에 사용)
   const p95TxCount = useMemo(() => {
     if (complexes.length === 0) return 0
     const txCounts = [...complexes].map((c) => c.tx_count_30d).sort((a, b) => a - b)
@@ -48,12 +44,60 @@ export function KakaoMap({
   }, [complexes])
 
   // Phase 12 줌 레벨 3단계 정책
-  // level ≥ 10: 클러스터만 (마커 렌더 안 함)
-  // level 7~9: HouseMarker + 가격 (단지명 없음)
-  // level ≤ 6: HouseMarker + 단지명 + 가격
-  const showLabel       = mapLevel <= 9   // 실거래가 라벨: level 7~9, ≤6 모두 표시
-  const showName        = mapLevel <= 6   // 단지명: level ≤6에서만
-  const showOnlyCluster = mapLevel >= 10  // level ≥10: 클러스터 칩만
+  // level ≥ 10: 구 단위 칩만 (개별 마커 없음)
+  // level 7~9: HouseMarker + 가격
+  // level ≤ 6: HouseMarker + 가격
+  const showOnlyCluster = mapLevel >= 10
+
+  // 구 단위 칩: level ≥ 10일 때만 계산 (complexes를 구별로 1개씩)
+  const guChips = useMemo<GuChip[]>(() => {
+    if (!showOnlyCluster) return []
+
+    type AccEntry = {
+      totalLat: number
+      totalLng: number
+      count:    number
+      maxPrice: number | null
+      lats:     number[]
+      lngs:     number[]
+    }
+    const guMap = new Map<string, AccEntry>()
+
+    for (const c of complexes) {
+      const key = c.gu ?? '기타'
+      const entry = guMap.get(key)
+      if (!entry) {
+        guMap.set(key, {
+          totalLat: c.lat,
+          totalLng: c.lng,
+          count:    1,
+          maxPrice: c.recent_price ?? null,
+          lats:     [c.lat],
+          lngs:     [c.lng],
+        })
+      } else {
+        entry.totalLat += c.lat
+        entry.totalLng += c.lng
+        entry.count    += 1
+        entry.lats.push(c.lat)
+        entry.lngs.push(c.lng)
+        if (c.recent_price !== null) {
+          entry.maxPrice = entry.maxPrice !== null
+            ? Math.max(entry.maxPrice, c.recent_price)
+            : c.recent_price
+        }
+      }
+    }
+
+    return Array.from(guMap.entries()).map(([gu, e]) => ({
+      gu,
+      lat:        e.totalLat / e.count,
+      lng:        e.totalLng / e.count,
+      maxPrice:   e.maxPrice,
+      memberLats: e.lats,
+      memberLngs: e.lngs,
+    }))
+  }, [showOnlyCluster, complexes])
 
   const computeClusters = useCallback(
     (map: kakao.maps.Map) => {
@@ -61,7 +105,6 @@ export function KakaoMap({
       const bounds = map.getBounds()
       const sw     = bounds.getSouthWest()
       const ne     = bounds.getNorthEast()
-      // kakao level: 1=가장 확대, 14=가장 축소 → supercluster zoom 역변환
       const zoom   = Math.max(0, 20 - map.getLevel())
       setClusters(
         clusterIndex.getClusters(
@@ -92,7 +135,7 @@ export function KakaoMap({
 
   return (
     <>
-      <Map
+      <KakaoMapView
         center={initialCenter}
         level={initialLevel}
         className="h-full w-full"
@@ -100,24 +143,18 @@ export function KakaoMap({
         onIdle={computeClusters}
         onTileLoaded={computeClusters}
       >
-        {clusters.map((feature, i) => {
+        {/* level ≥ 10: 구 단위 칩 1개씩 */}
+        {showOnlyCluster && guChips.map((chip) => (
+          <DongClusterChip key={chip.gu} {...chip} />
+        ))}
+
+        {/* level ≤ 9: 개별 단지 마커 */}
+        {!showOnlyCluster && clusters.map((feature, i) => {
+          // supercluster 클러스터 피처는 건너뜀 (개별 마커만 렌더)
+          if (feature.properties.cluster) return null
+
           const lng = feature.geometry.coordinates[0] ?? 0
           const lat = feature.geometry.coordinates[1] ?? 0
-
-          if (feature.properties.cluster) {
-            return (
-              <DongClusterChip
-                key={`cluster-${(feature.properties.cluster_id as number | undefined) ?? i}`}
-                lat={lat}
-                lng={lng}
-                clusterId={feature.properties.cluster_id as number}
-                clusterIndex={clusterIndex}
-              />
-            )
-          }
-
-          // level ≥ 10: 개별 마커 렌더 안 함 (클러스터만 표시)
-          if (showOnlyCluster) return null
 
           const props = feature.properties as {
             id:                  string
@@ -130,7 +167,6 @@ export function KakaoMap({
             built_year:          number | null
             household_count:     number | null
             hagwon_grade:        string | null
-            // Phase 12 추가
             si:                  string | null
             gu:                  string | null
             dong:                string | null
@@ -148,13 +184,11 @@ export function KakaoMap({
 
           return (
             <ComplexMarker
-              key={props.id}
+              key={props.id ?? i}
               id={props.id}
               name={props.name}
               lat={lat}
               lng={lng}
-              showLabel={showLabel}
-              showName={showName}
               badge={badge}
               onSelect={setSelectedComplexId}
               householdCount={props.household_count ?? null}
@@ -167,7 +201,7 @@ export function KakaoMap({
             />
           )
         })}
-      </Map>
+      </KakaoMapView>
       <MapSidePanel
         selectedComplexId={selectedComplexId}
         onClose={() => setSelectedComplexId(null)}
