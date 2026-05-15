@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: milestone
 status: complete
-last_updated: "2026-05-16T15:30:00Z"
-last_activity: 2026-05-15 — Phase 12 PLANNED (4 plans — 지도 마커·클러스터 개편)
+last_updated: "2026-05-15T07:58:00Z"
+last_activity: 2026-05-15 — Phase 12 Plan 01 COMPLETE (HouseMarker SVG + badge-logic 3종 단순화)
 progress:
   total_phases: 12
   completed_phases: 11
   total_plans: 53
-  completed_plans: 49
-  percent: 92
+  completed_plans: 50
+  percent: 94
 ---
 
 # Project State — 단지온도
@@ -89,6 +89,7 @@ Waves:
 | 9 | 단지 상세 UX 고도화 | ✅ Complete (5/5 plans) |
 | 10 | 교육 환경 고도화 | ✅ Complete |
 | 11 | 지도 고도화 | ✅ Complete (5/5 plans) |
+| 12 | 지도 마커·클러스터 개편 | 🔄 In Progress (1/4 plans) |
 
 ---
 
@@ -148,6 +149,9 @@ Waves:
 | 2026-05-07 | MOLIT 백필 workflow_dispatch 전용 (schedule 없음) — 1회성이므로 자동 실행 불필요 | 05-00 |
 | 2026-05-07 | timeout-minutes: 300 — API 한도(일 10,000회)로 창원+김해 전체 3일 분할 실행 최대 5시간 | 05-00 |
 | 2026-05-07 | MOLIT 백필 실행은 Wave 1과 병행하여 별도로 진행 — 05-00 COMPLETE, Wave 1 블로킹 해제 | 05-00 |
+
+| 2026-05-15 | badge-logic 10종 → 4종(pre_sale/new_build/hot/none) 단순화 — crown=hot 통합, surge/drop/school 제거 | 12-01 |
+| 2026-05-15 | getPriceColor를 badge-logic에서 분리 → BadgeMarker/ComplexMarker 로컬 함수로 이관 | 12-01 |
 
 ---
 *Initialized: 2026-05-06*
