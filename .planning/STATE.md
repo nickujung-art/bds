@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: milestone
 status: complete
-last_updated: "2026-05-15T07:58:00Z"
-last_activity: 2026-05-15 — Phase 12 Plan 01 COMPLETE (HouseMarker SVG + badge-logic 3종 단순화)
+last_updated: "2026-05-15T17:15:00Z"
+last_activity: 2026-05-15 — Phase 12 Plan 03 COMPLETE (ComplexMapItem 확장 + ComplexMarker hover 툴팁 카드)
 progress:
   total_phases: 12
   completed_phases: 11
   total_plans: 53
-  completed_plans: 50
-  percent: 94
+  completed_plans: 51
+  percent: 96
 ---
 
 # Project State — 단지온도
@@ -89,7 +89,7 @@ Waves:
 | 9 | 단지 상세 UX 고도화 | ✅ Complete (5/5 plans) |
 | 10 | 교육 환경 고도화 | ✅ Complete |
 | 11 | 지도 고도화 | ✅ Complete (5/5 plans) |
-| 12 | 지도 마커·클러스터 개편 | 🔄 In Progress (1/4 plans) |
+| 12 | 지도 마커·클러스터 개편 | 🔄 In Progress (3/4 plans) |
 
 ---
 
@@ -152,6 +152,8 @@ Waves:
 
 | 2026-05-15 | badge-logic 10종 → 4종(pre_sale/new_build/hot/none) 단순화 — crown=hot 통합, surge/drop/school 제거 | 12-01 |
 | 2026-05-15 | getPriceColor를 badge-logic에서 분리 → BadgeMarker/ComplexMarker 로컬 함수로 이관 | 12-01 |
+| 2026-05-15 | avgSalePerPyeong 제거 — recentPrice(최근 실거래)로 대체, hover 툴팁에서 직접 사용 | 12-03 |
+| 2026-05-15 | KakaoMap 줌 레벨 3단계 정책: level≥10 마커 숨김 / level7-9 가격만 / level≤6 이름+가격 | 12-03 |
 
 ---
 *Initialized: 2026-05-06*
