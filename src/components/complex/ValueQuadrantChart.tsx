@@ -169,7 +169,22 @@ export function ValueQuadrantChart({ data, medianX, medianY, regionLabel, totalC
             <ReferenceLine x={medianX} stroke="#d1d5db" strokeDasharray="4 2" strokeWidth={1.5} />
             <ReferenceLine y={medianY} stroke="#d1d5db" strokeDasharray="4 2" strokeWidth={1.5} />
             <Scatter name="배경단지" data={backgroundPoints} fill="#d1d5db" opacity={0.6} isAnimationActive={false} />
-            <Scatter name="현재단지" data={targetPoints} fill="#ea580c" r={6} isAnimationActive={false} />
+            <Scatter
+              name="현재단지"
+              data={targetPoints}
+              isAnimationActive={false}
+              shape={(props) => {
+                const { cx, cy } = props as { cx?: number; cy?: number }
+                if (cx === undefined || cy === undefined) return <g />
+                return (
+                  <g>
+                    <circle cx={cx} cy={cy} r={13} fill="white" />
+                    <circle cx={cx} cy={cy} r={9} fill="#ea580c" />
+                    <circle cx={cx} cy={cy} r={13} fill="none" stroke="#ea580c" strokeWidth={1.5} />
+                  </g>
+                )
+              }}
+            />
           </ScatterChart>
         </ResponsiveContainer>
 

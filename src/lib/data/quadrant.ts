@@ -77,7 +77,7 @@ export async function getQuadrantData(
     const acc = new Map<string, number[]>()
     for (const tx of rows) {
       if (!tx.complex_id || !tx.price || !tx.area_m2) continue
-      const ppp = (tx.price as number) / ((tx.area_m2 as number) / 3.3058) / 10000
+      const ppp = (tx.price as number) / ((tx.area_m2 as number) / 3.3058)
       if (!acc.has(tx.complex_id)) acc.set(tx.complex_id, [])
       acc.get(tx.complex_id)!.push(ppp)
     }

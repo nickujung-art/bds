@@ -237,9 +237,12 @@ async function main() {
         poiBuf.push({ complex_id: cx.id, category: 'hagwon', poi_name: doc.place_name, distance_m: Math.round(parseFloat(doc.distance)) })
         totalHagwon++
       }
-      const cnt500  = hagwonDocs.filter(d => parseFloat(d.distance) <= 500).length
-      const cntRest = hagwonDocs.length - cnt500
-      scoreBuf.push({ id: cx.id, score: cnt500 * 3 + cntRest * 1 })
+      // 거리 가중치 점수: 100m 구간당 1점 감소 (0~99m=10pt, 100~199m=9pt, ..., 900~999m=1pt)
+      const score = hagwonDocs.reduce((sum, d) => {
+        const dist = parseFloat(d.distance)
+        return sum + Math.max(0, 10 - Math.floor(dist / 100))
+      }, 0)
+      scoreBuf.push({ id: cx.id, score })
 
       // ── 어린이집·유치원 (PS3) ────────────────────────────────
       const psResult = await kakaoCategory('PS3', cx.lat, cx.lng, 1000)
