@@ -64,17 +64,17 @@ const SCHOOL_TYPE_LABEL: Record<string, string> = {
 }
 
 const GRADE_COLOR: Record<string, string> = {
-  A: '#16a34a',
-  B: '#2563eb',
-  C: '#d97706',
-  D: '#9ca3af',
+  'A+': '#15803d', A: '#16a34a', 'A-': '#22c55e',
+  'B+': '#1d4ed8', B: '#2563eb', 'B-': '#3b82f6',
+  'C+': '#b45309', C: '#d97706', 'C-': '#f59e0b',
+  D:    '#9ca3af',
 }
 
 const GRADE_BG: Record<string, string> = {
-  A: '#f0fdf4',
-  B: '#eff6ff',
-  C: '#fffbeb',
-  D: '#f9fafb',
+  'A+': '#dcfce7', A: '#f0fdf4', 'A-': '#f0fdf4',
+  'B+': '#dbeafe', B: '#eff6ff', 'B-': '#eff6ff',
+  'C+': '#fef3c7', C: '#fffbeb', 'C-': '#fffbeb',
+  D:    '#f9fafb',
 }
 
 const CATEGORY_COLOR: Record<string, { color: string; bg: string }> = {
@@ -286,12 +286,13 @@ function HagwonSection({ hagwons, stats, si }: {
           marginBottom: 16,
         }}>
           <div style={{
-            width: 48, height: 48, borderRadius: 12,
+            minWidth: 52, height: 48, borderRadius: 12,
+            padding: '0 8px',
             background: GRADE_COLOR[grade],
             display: 'grid', placeItems: 'center',
             flexShrink: 0,
           }}>
-            <span style={{ font: '800 22px/1 var(--font-sans)', color: '#fff' }}>
+            <span style={{ font: '800 20px/1 var(--font-sans)', color: '#fff', letterSpacing: '-0.5px' }}>
               {grade}
             </span>
           </div>

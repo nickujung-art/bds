@@ -17,7 +17,7 @@ export interface HagwonStats {
   cnt1000:    number   // 1km 이내 전체
   rawScore:   number   // 밀도 점수
   percentile: number   // 창원/김해 내 백분위 (0-100, 높을수록 좋음)
-  grade:      'A' | 'B' | 'C' | 'D'
+  grade:      'A+' | 'A' | 'A-' | 'B+' | 'B' | 'B-' | 'C+' | 'C' | 'C-' | 'D'
 }
 
 export interface FacilityEduData {
@@ -89,7 +89,10 @@ export async function getComplexFacilityEdu(
       cnt1000:    hagwons.length,
       rawScore,
       percentile: Math.round(percentile * 100),
-      grade:      percentile >= 0.8 ? 'A' : percentile >= 0.5 ? 'B' : percentile >= 0.2 ? 'C' : 'D',
+      grade:      percentile >= 0.933 ? 'A+' : percentile >= 0.867 ? 'A' : percentile >= 0.800 ? 'A-'
+                : percentile >= 0.700 ? 'B+' : percentile >= 0.600 ? 'B' : percentile >= 0.500 ? 'B-'
+                : percentile >= 0.400 ? 'C+' : percentile >= 0.300 ? 'C' : percentile >= 0.200 ? 'C-'
+                : 'D',
     }
   } else if (hagwons.length > 0) {
     // DB 점수가 없지만 POI는 있는 경우 (배치 전 임시)
