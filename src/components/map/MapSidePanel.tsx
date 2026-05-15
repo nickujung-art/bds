@@ -56,12 +56,13 @@ export function MapSidePanel({ selectedComplexId, onClose }: Props) {
 
   // PC: 우측 슬라이드인 (w-[360px], h-full, right-0)
   // 모바일: 바텀 시트 (w-full, h-[60vh], bottom-0, rounded-t-xl)
+  // display 는 Tailwind className("hidden md:flex" / "flex md:hidden")이 제어.
+  // 인라인에 display:flex 를 넣으면 hidden 클래스를 덮어써서 양쪽 모두 열리는 버그가 생김.
   const panelStyle: React.CSSProperties = {
     position:      'fixed',
     zIndex:        200,
     background:    'white',
     transition:    'transform 200ms cubic-bezier(0.16,1,0.3,1)',
-    display:       'flex',
     flexDirection: 'column',
     overflow:      'hidden',
   }
