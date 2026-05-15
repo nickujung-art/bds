@@ -86,6 +86,16 @@
 
 ---
 
+## v5 Requirements (교육 환경 고도화)
+
+- [ ] **EDU-01**: 배정학교 표시 — 학구도 shapefile(초/중/고) PostGIS import + ST_Within 매핑 + facility_school.is_assignment 플래그 업데이트 + UI에서 배정학교 강조/구분 표시
+- [ ] **EDU-02**: 어린이집/유치원 분리 표시 — facility_poi.poi_name 기반 유치원 분리 + 어린이집 3개·유치원 3개 각각 표시 (현재 혼합 10개)
+- [ ] **EDU-03**: 학원 UX 개선 — "외 N개" 클릭 시 전체 목록 펼치기 + 시군구 단위 상위 X% 라벨 (현재 창원+김해 통합)
+- [ ] **EDU-04**: 학교 도보 시간 색깔 아이콘 — distance_m÷67 도보 분 계산 + 10분 이내(녹색)/10~15분(노랑)/15분 초과(빨강) 3단계 색상 표시
+- [ ] **EDU-05**: 학원 종류별 분류 표시 — poi_name 파싱으로 수학/영어/예체능 등 카테고리 태그 표시
+
+---
+
 ## Out of Scope
 
 - NextAuth.js 전환 — Supabase Auth로 이미 완전 구현됨. 전환 시 이득 없이 재작성 비용만 발생

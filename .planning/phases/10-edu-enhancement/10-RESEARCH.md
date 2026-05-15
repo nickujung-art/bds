@@ -528,22 +528,17 @@ function HagwonSection({ hagwons, stats }: HagwonSectionProps) {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **고등학교 배정 정책**
-   - What we know: 창원+김해 고등학교 학군 폴리곤 3개. 각 폴리곤 내 복수 고등학교 포함.
-   - What's unclear: 복수 학교 중 어느 학교를 "배정"으로 표시할지. 평준화 지역은 추첨/선택이므로 배정이 아님.
-   - Recommendation: 고등학교는 is_assignment를 업데이트하지 않거나, "학군 내" 배지로 표현을 변경. 플래너가 요구사항 명확화 필요.
+1. **고등학교 배정 정책** — RESOLVED
+   - **Decision: 고등학교 is_assignment 업데이트 제외.** 창원·김해는 고교 평준화 지역이므로 특정 학교 배정 개념이 없다. update-assignment-flags.ts에서 school_type = 'high'인 facility_school 레코드는 업데이트하지 않는다. UI에서도 고등학교에는 "배정" 배지 없이 반경 내 학교 목록만 표시한다.
+   - 근거: 학구도 shapefile 고등학교 폴리곤이 전국 73개(창원+김해 3개)뿐으로 광역 단위임. 평준화 지역 고교는 추첨/선택제라 1:1 배정 불가.
 
-2. **초등학교 다중 배정 학구 50건**
-   - What we know: CSV에서 1개 HAKGUDO_ID에 2개 이상 초등학교 매핑 50건.
-   - What's unclear: 이런 경우 단지가 어떤 학구도 폴리곤에 위치하는지, 두 학교 모두 배정인지.
-   - Recommendation: ST_Within으로 단지가 속한 폴리곤의 school_names를 전부 is_assignment=true로 설정. 이중 배정 지역이면 실제로 두 학교가 모두 가능.
+2. **초등학교 다중 배정 학구 50건** — RESOLVED
+   - **Decision: ST_Within으로 단지가 속한 폴리곤의 모든 school_name에 is_assignment=true 설정.** school_district_schools N:M 테이블이 복수 학교를 허용하므로, 해당 학구에 매핑된 학교 전부를 배정으로 표시한다. 이중 배정 지역에서는 두 학교 모두 배정 배지가 표시되며 이는 실제 상황을 정확히 반영한다.
 
-3. **school_name 정규화 불일치 가능성**
-   - What we know: facility_school.school_name은 카카오맵 API에서 수집 (예: "수남초등학교"). CSV school_name도 동일 형식.
-   - What's unclear: 학교 공식명과 카카오맵 표시명이 다를 경우 JOIN 실패.
-   - Recommendation: import 스크립트에서 dry-run 시 불일치 목록 출력. 불일치 비율이 낮으면 school_code(B000xxxxx) 기반 매핑도 검토.
+3. **school_name 정규화 불일치 가능성** — RESOLVED
+   - **Decision: dry-run 출력으로 불일치 목록을 사전 확인 후 진행.** import 스크립트 --dry-run 실행 시 CSV school_name vs facility_school.school_name 불일치 목록을 출력한다. 불일치율이 20% 이하면 정상 진행하고 SUMMARY.md에 기록. 20% 초과 시 school_code(B000xxxxx) 기반 fallback 매핑 검토.
 
 ---
 
