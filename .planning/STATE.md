@@ -4,13 +4,13 @@ milestone: v2.1
 milestone_name: milestone
 status: complete
 last_updated: "2026-05-16T15:30:00Z"
-last_activity: 2026-05-16 — Phase 11 COMPLETE (5/5 plans — 지도 고도화 완료)
+last_activity: 2026-05-15 — Phase 12 PLANNED (4 plans — 지도 마커·클러스터 개편)
 progress:
-  total_phases: 11
+  total_phases: 12
   completed_phases: 11
-  total_plans: 49
+  total_plans: 53
   completed_plans: 49
-  percent: 100
+  percent: 92
 ---
 
 # Project State — 단지온도

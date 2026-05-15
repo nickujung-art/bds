@@ -106,6 +106,15 @@
 
 ---
 
+## v7 Requirements (지도 마커·클러스터 개편)
+
+- [ ] **MAP-06**: 로고 기반 집 모양 SVG 마커 교체 — 회색 지붕+굴뚝 돌기+오렌지 C형 바디 (일반), 빨간 바디 (pre_sale), 민트 바디 (new_build, built_year≥2021). hot(tx_count_30d 상위 5%) 단지는 지붕 위 왕관 SVG 추가. 기존 핀/티어드롭 BadgeMarker 완전 교체. 이모지/backdrop-blur/glow 금지
+- [ ] **MAP-07**: hover 툴팁 — ComplexMarker hover 시 단지명·시/구·최근 실거래 1건(가격·날짜·평수)·세대수·준공 표시하는 카드형 툴팁. 클릭 전 표시, 클릭 후 MapSidePanel 유지
+- [ ] **MAP-08**: 동/구 단위 클러스터 칩 — supercluster 숫자 원형 클러스터를 사각형 칩으로 교체. 구/동 이름 + 최근 3개월 최고 실거래가(cancel_date IS NULL AND superseded_by IS NULL 필수) 표시. 클릭 시 줌인 동작 유지
+- [ ] **MAP-09**: 줌 레벨 정책 재정의 + 배지 단순화 — level≥10 클러스터 칩만 표시(단지 마커 숨김), level 7~9 집 마커+실거래가(단지명 없음), level≤6 집 마커+단지명+실거래가. 배지 3종만 유지(pre_sale 빨강·new_build 민트·hot 왕관), 기존 surge/drop/school/large_complex/redevelop/none 제거
+
+---
+
 ## Out of Scope
 
 - NextAuth.js 전환 — Supabase Auth로 이미 완전 구현됨. 전환 시 이득 없이 재작성 비용만 발생
