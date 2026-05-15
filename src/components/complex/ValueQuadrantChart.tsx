@@ -157,14 +157,26 @@ export function ValueQuadrantChart({ data, medianX, medianY, regionLabel, totalC
               width={38}
             />
             <Tooltip
-              contentStyle={{ fontSize: 12, fontFamily: 'var(--font-sans)', border: '1px solid rgba(112,115,124,.22)', borderRadius: 8 }}
-              formatter={(value, name) => {
-                const num = typeof value === 'number' ? value : Number(value)
-                return name === '평당가'
-                  ? [`${Math.round(num)}만원/평`, '평당가']
-                  : [`${num.toFixed(1)}%`, '전세가율']
+              content={({ payload }) => {
+                if (!payload?.length) return null
+                const d = payload[0]?.payload as QuadrantPoint | undefined
+                if (!d) return null
+                return (
+                  <div style={{
+                    fontSize: 12, fontFamily: 'var(--font-sans)',
+                    border: '1px solid rgba(112,115,124,.22)',
+                    borderRadius: 8, background: '#fff',
+                    padding: '8px 12px', lineHeight: 1.6,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  }}>
+                    <div style={{ fontWeight: 700, marginBottom: 4, color: d.isTarget ? '#ea580c' : 'var(--fg-pri)' }}>
+                      {d.isTarget ? '★ ' : ''}{d.complexName}
+                    </div>
+                    <div style={{ color: 'var(--fg-secondary)' }}>평당가: {Math.round(d.x)}만원/평</div>
+                    <div style={{ color: 'var(--fg-secondary)' }}>전세가율: {d.y.toFixed(1)}%</div>
+                  </div>
+                )
               }}
-              labelFormatter={(label) => String(label ?? '')}
             />
             <ReferenceLine x={medianX} stroke="#d1d5db" strokeDasharray="4 2" strokeWidth={1.5} />
             <ReferenceLine y={medianY} stroke="#d1d5db" strokeDasharray="4 2" strokeWidth={1.5} />
@@ -178,9 +190,14 @@ export function ValueQuadrantChart({ data, medianX, medianY, regionLabel, totalC
                 if (cx === undefined || cy === undefined) return <g />
                 return (
                   <g>
-                    <circle cx={cx} cy={cy} r={13} fill="white" />
+                    {/* 외곽 글로우 */}
+                    <circle cx={cx} cy={cy} r={18} fill="#ea580c" opacity={0.15} />
+                    {/* 흰 테두리 */}
+                    <circle cx={cx} cy={cy} r={12} fill="white" />
+                    {/* 주황 채움 */}
                     <circle cx={cx} cy={cy} r={9} fill="#ea580c" />
-                    <circle cx={cx} cy={cy} r={13} fill="none" stroke="#ea580c" strokeWidth={1.5} />
+                    {/* 주황 링 */}
+                    <circle cx={cx} cy={cy} r={12} fill="none" stroke="#ea580c" strokeWidth={2} />
                   </g>
                 )
               }}
