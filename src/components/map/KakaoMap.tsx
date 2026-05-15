@@ -9,7 +9,7 @@ import {
 } from '@/lib/data/complexes-map'
 import { determineBadge } from '@/components/map/markers/badge-logic'
 import { ComplexMarker } from './ComplexMarker'
-import { ClusterMarker } from './ClusterMarker'
+import { DongClusterChip } from './DongClusterChip'
 import { MapSidePanel } from './MapSidePanel'
 
 interface Props {
@@ -51,8 +51,9 @@ export function KakaoMap({
   // level ≥ 10: 클러스터만 (마커 렌더 안 함)
   // level 7~9: HouseMarker + 가격 (단지명 없음)
   // level ≤ 6: HouseMarker + 단지명 + 가격
-  const showLabel = mapLevel <= 9
-  const showName  = mapLevel <= 6
+  const showLabel       = mapLevel <= 9   // 실거래가 라벨: level 7~9, ≤6 모두 표시
+  const showName        = mapLevel <= 6   // 단지명: level ≤6에서만
+  const showOnlyCluster = mapLevel >= 10  // level ≥10: 클러스터 칩만
 
   const computeClusters = useCallback(
     (map: kakao.maps.Map) => {
@@ -105,16 +106,18 @@ export function KakaoMap({
 
           if (feature.properties.cluster) {
             return (
-              <ClusterMarker
+              <DongClusterChip
                 key={`cluster-${(feature.properties.cluster_id as number | undefined) ?? i}`}
                 lat={lat}
                 lng={lng}
-                count={feature.properties.point_count as number}
                 clusterId={feature.properties.cluster_id as number}
                 clusterIndex={clusterIndex}
               />
             )
           }
+
+          // level ≥ 10: 개별 마커 렌더 안 함 (클러스터만 표시)
+          if (showOnlyCluster) return null
 
           const props = feature.properties as {
             id:                  string
@@ -135,9 +138,6 @@ export function KakaoMap({
             recent_date:         string | null
             recent_area_m2:      number | null
           }
-
-          // level ≥ 10: 개별 마커 렌더 안 함 (클러스터만 표시)
-          if (mapLevel >= 10) return null
 
           const badge = determineBadge({
             status:       props.status       ?? 'active',
