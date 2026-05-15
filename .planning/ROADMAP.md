@@ -1,6 +1,6 @@
 # Roadmap — 단지온도
 
-**10 phases** | **46 requirements mapped** | v1~v5 requirements covered ✓
+**11 phases** | **51 requirements mapped** | v1~v6 requirements covered ✓
 
 ## Overview
 
@@ -16,6 +16,7 @@
 | 8 | 커뮤니티 심화 | V2.0 | V2.0 완성 — 게이미피케이션 + 자동화 | DIFF-01~02, DIFF-04~06, OPS-02 | ⬜ Not Started |
 | 9 | 단지 상세 UX 고도화 | V2.1 | 실거래가 그래프·시설·관리비 실수요자 관점 개선 | UX-01~04 | 📋 Planned (5 plans) |
 | 10 | 교육 환경 고도화 | V2.2 | 학구도 기반 배정학교 + 교육 카드 UX 전면 개선 | EDU-01~05 | 📋 Planned (4 plans) |
+| 11 | 지도 고도화 | V2.3 | 카카오맵 게임화 — 클러스터 줌인·평당가 라벨·사이드 패널·배지 마커 | MAP-01~05 | 📋 Planned (5 plans) |
 
 ---
 
@@ -71,9 +72,9 @@
 **Version:** V1.0 (2주차 목표)
 
 **Requirements:**
-- RANK-01: 지역 인기 단지 풀 정의 SQL + 일배치
-- RANK-02: 랭킹 4종 산식 (신고가·거래량·평당가·관심도) + 1h cron
-- RANK-03: 랜딩 완성 — 오늘 신고가 카드 + 4종 랭킹 탭 (ISR 60s)
+- RANK-01: 지역 인기 단지 풀 정의 SQL + 일배치 갱신
+- RANK-02: 랭킹 4종 산식 (신고가·거래량·평당가·관심도) + 1시간 cron
+- RANK-03: 랜딩 페이지 완성 — 오늘 신고가 카드 + 4종 랭킹 탭 (ISR 60s)
 - SHARE-01: 단지별 동적 OG 이미지 (`next/og` 내장)
 - SHARE-02: 카카오톡·네이버 공유 버튼 + 단지 상세 공유 UX
 
@@ -395,7 +396,7 @@
 **Requirements:**
 - UX-01: 실거래가 그래프 — 월세 탭 제거 + 기간 필터(1년/3년/5년/전체) + IQR 이상치 투명 점 표시
 - UX-02: 실거래가·관리비 평형별 필터 — 전용면적 기준 칩 셀렉터(nuqs URL 상태), 기본값 최다 거래 평형
-- UX-03: 시설 정보 표시 개선 — 주차 세대당 + 엘리베이터 동당 표시
+- UX-03: 시설 정보 표시 개선 — 주차 세대당 대수(총주차÷세대수) + 엘리베이터 동당 대수(총엘리베이터÷동수)
 - UX-04: 관리비 계절별 표시 — 상세내역 제거 + 하절기/동절기 월평균 + 세대당 평균 (단지 합계 ÷ 세대수, 평형별 분리 없음)
 
 **Plans:** 5 plans / 3 waves
@@ -455,6 +456,54 @@
 3. 학원 목록에서 "외 N개"를 클릭하면 전체 펼쳐보기가 된다
 4. 학교 목록에 도보 시간 색깔 아이콘이 3단계(녹/노/빨)로 표시된다
 5. 학원 목록에 수학/영어/예체능 등 카테고리 태그가 표시된다
+
+**UI hint**: yes
+
+---
+
+### Phase 11: 지도 고도화
+
+**Goal:** 카카오맵을 단순 핀 지도에서 게임화된 인터랙티브 지도로 전환. 클러스터 줌인·평당가 라벨·사이드 패널·배지 마커 시스템으로 지도 체류 시간과 정보 밀도를 높인다.
+
+**Version:** V2.3
+
+**Requirements:**
+- MAP-01: 클러스터 클릭 줌인 + 마커 hover 미리보기 카드
+- MAP-02: 평당가 라벨 마커 (avg_sale_per_pyeong 컬럼 추가 포함)
+- MAP-03: 사이드 패널 (PC 우측 슬라이드인 / 모바일 바텀 시트)
+- MAP-04: 게임화 마커 배지 시스템 (SVG 일체형, 1~3순위 배지)
+- MAP-05: 지도 마커 DB 확장 (view_count, price_change_30d, view_count RPC)
+
+**Plans:** 5 plans / 4 waves
+
+**Wave 0** *(BLOCKING — autonomous: false, supabase db push)*
+- [ ] 11-00-PLAN.md — DB 마이그레이션 (4컬럼 + 2함수 + GRANT) + [BLOCKING] supabase db push + 테스트 스캐폴드 (MAP-01~05)
+
+**Wave 1** *(blocked on Wave 0; 11-01/11-02 병렬 실행 가능 — files_modified 무중복)*
+- [ ] 11-01-PLAN.md — ComplexMapItem 확장 + getComplexesForMap 쿼리 확장 + badge-logic.ts 순수 함수 (MAP-02, MAP-04, MAP-05)
+- [ ] 11-02-PLAN.md — map-panel.ts 데이터 레이어 + GET /api/complexes/[id]/map-panel Route Handler (MAP-03)
+
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 11-03-PLAN.md — BadgeMarker.tsx + ClusterMarker 줌인 + ComplexMarker CustomOverlayMap 전환 + KakaoMap 통합 (MAP-01, MAP-02, MAP-04)
+
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 11-04-PLAN.md — MapSidePanel.tsx + KakaoMap 연결 + incrementViewCount Server Action + daily cron 연결 (MAP-03, MAP-05)
+
+**Cross-cutting constraints:**
+- 모든 transactions 쿼리: `cancel_date IS NULL AND superseded_by IS NULL` 필수 (배치 SQL 함수 포함)
+- 클라이언트 컴포넌트에서 Supabase 직접 쿼리 금지 — 반드시 API Route 경유 (CLAUDE.md)
+- 이모지 아이콘 금지 — SVG path만 사용 (CLAUDE.md)
+- AI 슬롭 금지: backdrop-blur, gradient-text, glow, 보라/인디고, gradient orb
+- useMap()은 Map 컴포넌트 children 내에서만 호출 가능 (ClusterMarker만 해당)
+- view_count 증가는 클라이언트 useEffect + Server Action (ISR 빌드 타임 실행 방지)
+
+**Success Criteria:**
+1. 클러스터 클릭 시 해당 단지들이 뷰포트에 들어오도록 자동 줌인된다
+2. 줌 레벨 충분 시 마커에 평당가 라벨이 표시되고 가격대별로 색상이 다르다
+3. 마커 클릭 시 사이드 패널(PC) 또는 바텀 시트(모바일)가 슬라이드인된다
+4. 분양 단지는 골드 마커, 신축(2021년 이후)은 민트 마커로 구분된다
+5. 상위 5% 거래량 단지는 왕관 형태 SVG 마커, 조회수 상위 5%는 불꽃 곡선 마커로 표시된다
+6. 급등/급락 단지는 마커 색으로 구분되어 한눈에 식별된다
 
 **UI hint**: yes
 
