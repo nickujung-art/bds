@@ -526,8 +526,8 @@
 
 **Wave 1** *(독립 실행 가능 — 병렬 실행)*
 - [x] 12-01-PLAN.md — HouseMarker SVG 집 마커 + badge-logic.ts 3종 단순화 (MAP-06, MAP-09) `completed 2026-05-15`
-- [ ] 12-02-PLAN.md — DongClusterChip 동/구 사각형 클러스터 칩 (MAP-08)
-- [ ] 12-03-PLAN.md — ComplexMapItem 확장 (si/gu/recent_price 추가) + ComplexMarker hover 툴팁 개선 (MAP-07)
+- [x] 12-02-PLAN.md — DongClusterChip 동/구 사각형 클러스터 칩 (MAP-08) `completed 2026-05-15`
+- [x] 12-03-PLAN.md — ComplexMapItem 확장 (si/gu/recent_price 추가) + ComplexMarker hover 툴팁 개선 (MAP-07) `completed 2026-05-15`
 
 **Wave 2** *(blocked on Wave 1; 12-04)*
 - [ ] 12-04-PLAN.md — KakaoMap 통합: 줌 레벨 3단계 정책 + DongClusterChip 교체 + ComplexMarker 연결 (MAP-09) [CHECKPOINT]

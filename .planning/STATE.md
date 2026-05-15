@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: milestone
 status: complete
-last_updated: "2026-05-15T17:15:00Z"
-last_activity: 2026-05-15 — Phase 12 Plan 03 COMPLETE (ComplexMapItem 확장 + ComplexMarker hover 툴팁 카드)
+last_updated: "2026-05-15T17:20:00Z"
+last_activity: 2026-05-15 — Phase 12 Plan 02 COMPLETE (DongClusterChip 구/동 이름 + 최고 실거래가 사각형 클러스터 칩)
 progress:
   total_phases: 12
   completed_phases: 11
   total_plans: 53
-  completed_plans: 51
-  percent: 96
+  completed_plans: 52
+  percent: 98
 ---
 
 # Project State — 단지온도
@@ -89,7 +89,7 @@ Waves:
 | 9 | 단지 상세 UX 고도화 | ✅ Complete (5/5 plans) |
 | 10 | 교육 환경 고도화 | ✅ Complete |
 | 11 | 지도 고도화 | ✅ Complete (5/5 plans) |
-| 12 | 지도 마커·클러스터 개편 | 🔄 In Progress (3/4 plans) |
+| 12 | 지도 마커·클러스터 개편 | 🔄 In Progress (4/4 plans — 02 complete) |
 
 ---
 
@@ -154,6 +154,7 @@ Waves:
 | 2026-05-15 | getPriceColor를 badge-logic에서 분리 → BadgeMarker/ComplexMarker 로컬 함수로 이관 | 12-01 |
 | 2026-05-15 | avgSalePerPyeong 제거 — recentPrice(최근 실거래)로 대체, hover 툴팁에서 직접 사용 | 12-03 |
 | 2026-05-15 | KakaoMap 줌 레벨 3단계 정책: level≥10 마커 숨김 / level7-9 가격만 / level≤6 이름+가격 | 12-03 |
+| 2026-05-15 | DongClusterChip 구 이름 추출: 첫 번째 leave의 gu 우선 → dong → '기타' (다수결 불필요) | 12-02 |
 
 ---
 *Initialized: 2026-05-06*
