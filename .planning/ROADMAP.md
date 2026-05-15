@@ -1,6 +1,6 @@
 # Roadmap — 단지온도
 
-**11 phases** | **51 requirements mapped** | v1~v6 requirements covered ✓
+**12 phases** | **55 requirements mapped** | v1~v7 requirements covered ✓
 
 ## Overview
 
@@ -17,6 +17,7 @@
 | 9 | 단지 상세 UX 고도화 | V2.1 | 실거래가 그래프·시설·관리비 실수요자 관점 개선 | UX-01~04 | 📋 Planned (5 plans) |
 | 10 | 교육 환경 고도화 | V2.2 | 학구도 기반 배정학교 + 교육 카드 UX 전면 개선 | EDU-01~05 | 📋 Planned (4 plans) |
 | 11 | 지도 고도화 | V2.3 | 카카오맵 게임화 — 클러스터 줌인·평당가 라벨·사이드 패널·배지 마커 | MAP-01~05 | 📋 Planned (5 plans) |
+| 12 | 지도 마커·클러스터 개편 | V2.4 | 로고 기반 집 모양 SVG 마커 + 동 단위 최고가 클러스터 칩 + hover 툴팁으로 지도 UX 호갱노노 수준 고도화 | MAP-06~09 | 📋 Planned (4 plans) |
 
 ---
 
@@ -504,6 +505,40 @@
 4. 분양 단지는 골드 마커, 신축(2021년 이후)은 민트 마커로 구분된다
 5. 상위 5% 거래량 단지는 왕관 형태 SVG 마커, 조회수 상위 5%는 불꽃 곡선 마커로 표시된다
 6. 급등/급락 단지는 마커 색으로 구분되어 한눈에 식별된다
+
+**UI hint**: yes
+
+---
+
+### Phase 12: 지도 마커·클러스터 개편
+
+**Goal:** 로고 기반 집 모양 SVG 마커로 핀 마커를 완전 교체하고, 동/구 단위 사각형 클러스터 칩(최근 최고 실거래가 표시)과 hover 툴팁을 추가하여 지도 UX를 호갱노노 수준으로 고도화한다.
+
+**Version:** V2.4
+
+**Requirements:**
+- MAP-06: 로고 기반 집 모양 SVG 마커 — 회색 지붕+굴뚝+오렌지 C형 바디 (일반), 빨간 바디 (분양), 민트 바디 (신축 2021+), hot 왕관 SVG 추가. 기존 핀/티어드롭 완전 교체
+- MAP-07: hover 툴팁 — 단지명·시/구·최근 실거래 1건(가격·날짜·평수)·세대수·준공 표시. 클릭 전 카드 형태
+- MAP-08: 동/구 단위 클러스터 칩 — supercluster 숫자 클러스터를 사각형 칩으로 교체, 구/동 이름 + 최근 3개월 최고 실거래가 표시, 클릭 시 줌인 유지
+- MAP-09: 줌 레벨 정책 재정의 + 배지 단순화 — level ≥10(클러스터만), 7~9(집 마커+실거래가), ≤6(집 마커+단지명+실거래가). 배지 3종으로 단순화(pre_sale/new_build/hot-왕관), 기존 10종 제거
+
+**Plans:** 4 plans / 2 waves
+
+**Wave 1** *(독립 실행 가능 — 병렬 실행)*
+- [ ] 12-01-PLAN.md — HouseMarker SVG 집 마커 + badge-logic.ts 3종 단순화 (MAP-06, MAP-09)
+- [ ] 12-02-PLAN.md — DongClusterChip 동/구 사각형 클러스터 칩 (MAP-08)
+- [ ] 12-03-PLAN.md — ComplexMapItem 확장 (si/gu/recent_price 추가) + ComplexMarker hover 툴팁 개선 (MAP-07)
+
+**Wave 2** *(blocked on Wave 1; 12-04)*
+- [ ] 12-04-PLAN.md — KakaoMap 통합: 줌 레벨 3단계 정책 + DongClusterChip 교체 + ComplexMarker 연결 (MAP-09) [CHECKPOINT]
+
+**Success Criteria:**
+1. 지도에 핀 모양 마커가 사라지고 로고 기반 집 모양 SVG 마커가 표시된다
+2. 마커 hover 시 단지명·최근 실거래(가격·날짜·평수)·세대수·준공 툴팁이 나타난다
+3. 줌 레벨 ≥10에서 동/구 이름과 최근 최고 실거래가를 표시하는 사각형 클러스터 칩이 보인다
+4. 분양 단지는 빨간 바디, 신축(2021+)은 민트 바디, hot 단지는 왕관 SVG 마커를 표시한다
+5. 줌 레벨 ≤6에서는 마커에 단지명이 함께 표시된다
+6. 이모지/backdrop-blur/gradient-text/glow/보라색 없이 순수 SVG path로만 구성된다
 
 **UI hint**: yes
 
