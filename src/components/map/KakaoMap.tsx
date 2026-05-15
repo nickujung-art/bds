@@ -43,11 +43,10 @@ export function KakaoMap({
     return txCounts[p95Idx] ?? 0
   }, [complexes])
 
-  // Phase 12 줌 레벨 3단계 정책
-  // level ≥ 10: 구 단위 칩만 (개별 마커 없음)
-  // level 7~9: HouseMarker + 가격
-  // level ≤ 6: HouseMarker + 가격
-  const showOnlyCluster = mapLevel >= 10
+  // 줌 레벨 2단계 정책
+  // level ≥ 8: 구 단위 칩만 (개별 마커 없음)
+  // level ≤ 7: HouseMarker + 가격
+  const showOnlyCluster = mapLevel >= 8
 
   // 구 단위 칩: level ≥ 10일 때만 계산 (complexes를 구별로 1개씩)
   const guChips = useMemo<GuChip[]>(() => {
